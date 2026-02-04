@@ -1,0 +1,65 @@
+### NEW 3-STEP REGISTRATION FLOW
+### Both Web (/register/step/{step}) and API (/api/v1/register/step/{step}) work identically
+
+### STEP 1: Register with Full Name and Email
+POST http://localhost/api/v1/register/step/1
+Content-Type: application/json
+
+{
+    "full_name": "Ahmed Mostafa Test",
+    "email": "ahmedmostafa.swe1+test@gmail.com"
+}
+
+###
+# Expected Response:
+# {
+#   "success": true,
+#   "message": "Verification email sent",
+#   "data": {
+#     "message": "Please check your email to verify your account.",
+#     "expires_at": "2026-02-02T15:30:00+00:00"
+#   }
+# }
+
+### STEP 2: Email Verification (Auto via Link Click)
+# User clicks link in email: http://localhost:8000/api/v1/auth/verify-email/{token}
+# This automatically:
+#   1. Verifies email
+#   2. Redirects to: http://localhost:3000/register/step-3?token=<step3_token>&verified=true&user_id=<id>
+# Frontend extracts token from URL and uses it for Step 3
+
+### STEP 3: Complete Profile with Username, Password, University, Faculty
+POST http://localhost/api/v1/register/step/3
+Content-Type: application/json
+
+{
+    "verification_token": "<token from email redirect>",
+    "username": "ahmed_test_user",
+    "password": "SecurePass123!",
+    "password_confirmation": "SecurePass123!",
+    "university_id": 1,
+    "faculty_id": 1,
+    "referral_code": "OPTIONAL123"
+}
+
+###
+# Expected Response:
+# {
+#   "success": true,
+#   "message": "Registration completed successfully",
+#   "data": {
+#     "user": { ... },
+#     "token": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+#   }
+# }
+
+### WEB API (Same Flow)
+### Use /register/step/{step} instead of /api/v1/register/step/{step}
+
+POST http://localhost/register/step/1
+Content-Type: application/json
+
+{
+    "full_name": "Ahmed Mostafa Web Test",
+    "email": "ahmedmostafa.swe1+webtest@gmail.com"
+}

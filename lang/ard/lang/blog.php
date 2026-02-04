@@ -1,0 +1,15 @@
+<?php return array (
+  'blog' => 'مدونة',
+  'blog_categories' => 'فئات المدونة',
+  'create_category' => 'فئة مدونة جديدة',
+  'page_lists_lead' => 'قائمة منشورات المدونة. يمكنك تعديل أو حذف أي إدخال.',
+  'comments_lists_lead' => 'قائمة تعليقات المدونة. يمكنك تعديل أو حذف أي إدخال.',
+  'comments_reports_lists_lead' => 'قائمة تقارير التعليق. يمكنك تعديل أو حذف أي إدخال.',
+  'author' => 'مؤلف',
+  'create_blog' => 'مشاركة مدونة جديدة',
+  'new_post' => 'مشاركة مدونة جديدة',
+  'edit_blog' => 'تحرير مشاركة المدونة',
+  'comments_section' => 'تمكين قسم التعليقات',
+  'meta_description' => 'الوصف التعريفي لكبار المسئولين الاقتصاديين',
+  'meta_description_placeholder' => '155-160 حرفًا.',
+);

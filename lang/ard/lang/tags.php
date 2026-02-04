@@ -1,0 +1,15 @@
+<?php return array (
+  'tags_list_page_title' => 'قائمة العلامات',
+  'tag' => 'علامة',
+  'tags' => 'العلامات',
+  'title' => 'عنوان',
+  'create_field_title_placeholder' => 'أدخل عنوانا.',
+  'tags_count' => 'عدد العلامات',
+  'new_page_lead' => 'إنشاء علامة جديدة.',
+  'page_lists_lead' => 'قائمة العلامات. يمكنك تعديل أو حذف أي إدخال.',
+  'admin_tags' => 'العلامات',
+  'admin_tags_list' => 'قائمة العلامات',
+  'admin_tags_create' => 'إنشاء علامة',
+  'admin_tags_edit' => 'تحرير العلامة',
+  'admin_tags_delete' => 'حذف العلامة',
+);

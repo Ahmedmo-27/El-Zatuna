@@ -1,0 +1,18 @@
+<?php return array (
+  'role' => 'دور',
+  'roles' => 'الأدوار',
+  'select_sections_level' => 'حدد مستوى الأقسام',
+  'page_lists_title' => 'أدوار المستخدم',
+  'page_lists_lead' => 'قائمة الأدوار. يمكنك تعديل أو حذف أي صف.',
+  'new_page_title' => 'دور جديد',
+  'sections' => 'الأقسام',
+  'new_page_lead' => 'يمكنك إنشاء دور جديد.',
+  'select_type' => 'حدد النوع',
+  'create_field_name_placeholder' => 'على سبيل المثال: المشرف',
+  'is_admin' => 'الوصول إلى لوحة الإدارة',
+  'admin_roles' => 'الأدوار',
+  'admin_roles_list' => 'قائمة الأدوار',
+  'admin_roles_create' => 'إنشاء دور',
+  'admin_roles_edit' => 'تحرير الدور',
+  'admin_roles_delete' => 'حذف الدور',
+);

@@ -1,0 +1,16 @@
+<?php return array (
+  'discount_list_page_title' => 'قائمة الخصومات',
+  'discount' => 'تخفيض',
+  'title' => 'عنوان',
+  'tags_count' => 'عدد العلامات',
+  'new_page_lead' => 'يمكنك إنشاء خصم جديد.',
+  'parent_name' => 'اسم الوالدين',
+  'select_parent_name' => 'حدد اسم ولي الأمر',
+  'discount_count' => 'عدد الخصومات',
+  'page_lists_lead' => 'قائمة الخصومات. يمكنك تعديل أو حذف أي إدخال.',
+  'sub_discount' => 'الخصم الفرعي',
+  'has_sub_discount' => 'لديه خصم فرعي',
+  'add_sub_discount' => 'إضافة خصم فرعي',
+  'add' => 'يضيف',
+  'remove' => 'يزيل',
+);
