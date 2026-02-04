@@ -15,7 +15,7 @@ class AddEmailVerifiedAtToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'email_verified_at')) {
-                $table->timestamp('email_verified_at')->nullable()->after('email');
+                $table->integer('email_verified_at')->unsigned()->nullable()->after('email');
             }
         });
     }
