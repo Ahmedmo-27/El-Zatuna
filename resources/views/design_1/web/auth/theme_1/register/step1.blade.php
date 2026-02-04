@@ -1,8 +1,8 @@
 @extends('design_1.web.auth.theme_1.layout')
 
 @section('page_content')
-    <form method="Post" action="/register/step/1" class="mt-16" id="step1Form">
-        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+    <form method="POST" action="/register/step/1" class="mt-16" id="step1Form">
+        @csrf
 
         <div class="pl-16">
             <div class="font-16 font-weight-bold">{{ trans('update.join_us_now!') }} 😊</div>

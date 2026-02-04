@@ -12,8 +12,8 @@
 @endphp
 
 @section('page_content')
-    <form method="Post" action="/register" class="mt-16">
-        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+    <form method="POST" action="/register" class="mt-16">
+        @csrf
 
         <div class="pl-16 ">
             <div class="font-16 font-weight-bold">{{ trans('update.join_us_now!') }} 😊</div>

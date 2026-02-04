@@ -1,8 +1,8 @@
 @extends('design_1.web.auth.theme_1.layout')
 
 @section('page_content')
-    <form method="Post" action="/register/step/3" class="mt-16" id="step3Form">
-        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+    <form method="POST" action="/register/step/3" class="mt-16" id="step3Form">
+        @csrf
         <input type="hidden" name="verification_token" value="{{ $verificationToken ?? '' }}">
 
         <div class="pl-16">
