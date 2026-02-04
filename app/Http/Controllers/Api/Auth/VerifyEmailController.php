@@ -59,7 +59,7 @@ class VerifyEmailController extends Controller
         // Mark email as verified
         if (empty($user->email_verified_at)) {
             $user->update([
-                'email_verified_at' => now(),
+                'email_verified_at' => time(),
             ]);
         }
 
