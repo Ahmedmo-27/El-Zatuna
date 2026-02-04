@@ -18,3 +18,5 @@ npm-debug.log
 yarn-error.log
 storage/debugbar/.gitignore
 /.env
+# Firebase credentials (sensitive)
+firebase-auth.json
