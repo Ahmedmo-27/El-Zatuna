@@ -262,7 +262,7 @@ Contact us at [support@elzatuna.com](mailto:support@elzatuna.com) to discuss:
 
 This project is proprietary software. All rights reserved.
 
-© 2025 El Zatuna. ALL RIGHTS RESERVED
+© 2026 El Zatuna. ALL RIGHTS RESERVED
 
 For licensing inquiries, contact: [support@elzatuna.com](mailto:support@elzatuna.com)
 
@@ -291,22 +291,6 @@ For licensing inquiries, contact: [support@elzatuna.com](mailto:support@elzatuna
 
 ---
 
-## 🗺️ Roadmap
-
-### Upcoming Features
-
-- [ ] AI-powered course recommendations
-- [ ] Advanced analytics dashboard
-- [ ] Gamification system
-- [ ] Mobile app improvements
-- [ ] WebRTC peer-to-peer live streaming
-- [ ] Advanced quiz types (coding challenges, simulations)
-- [ ] Learning path builder
-- [ ] Marketplace for selling courses
-- [ ] Integration with external LTI systems
-- [ ] Enhanced reporting and exports
-
----
 
 <div align="center">
 
