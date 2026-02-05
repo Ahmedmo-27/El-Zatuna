@@ -1,11 +1,11 @@
 @extends('design_1.web.layouts.app')
 
 @section('content')
-    <main class="home-page bg-[#FAFFE0] text-[#072923] min-h-screen space-y-12 md:space-y-20">
+    <main class="home-page bg-[#FAFFE0] text-[#072923] min-h-screen space-y-12 md:space-y-20" style="transform: scale(0.97); transform-origin: top center;">
 
         <section class="max-w-[1700px] mx-auto px-12 md:px-24 lg:px-32 xl:px-44 pt-24 pb-32">
             <div class="grid lg:grid-cols-[1.1fr_0.9fr] gap-16 lg:gap-24 items-center">
-                <div class="hero-left-col pl-6 md:pl-16 lg:pl-24 xl:pl-32">
+                <div class="hero-left-col pl-14 md:pl-24 lg:pl-32 xl:pl-40">
                     <h1 class="text-5xl md:text-7xl lg:text-8xl font-semibold leading-tight">
                         Got <span class="text-[#C8CD06]">El Zatuna</span> !<br>
                         You're Already<br> <span id="typing-text" class="text-[#C8CD06]">Ahead It</span><span class="cursor">|</span>

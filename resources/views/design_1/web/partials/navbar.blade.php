@@ -1,8 +1,8 @@
 <nav class="bg-[#F5F9E8] border-b border-[#ECF4B8] sticky top-0 z-50 shadow-sm">
-    <div class="max-w-7xl mx-auto px-8 py-6">
+    <div class="max-w-7xl mx-auto px-6 py-6">
         <div class="flex items-center justify-between gap-6">
-            <a href="/" class="flex items-center gap-3">
-                <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="h-16 md:h-20 lg:h-24 w-auto object-contain" />
+            <a href="/" class="flex items-center gap-3 -ml-2 md:-ml-4">
+                <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="h-12 md:h-14 lg:h-16 w-auto object-contain" />
             </a>
 
             <div class="hidden lg:flex items-center gap-10 text-lg font-semibold text-[#072923]">

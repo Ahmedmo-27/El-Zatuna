@@ -337,6 +337,18 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         return view('design_1.web.pages.about');
     });
 
+    Route::get('/terms', function () {
+        return view('design_1.web.pages.terms');
+    });
+
+    Route::get('/privacy', function () {
+        return view('design_1.web.pages.privacy');
+    });
+
+    Route::get('/faq', function () {
+        return view('design_1.web.pages.faq');
+    });
+
     Route::group(['prefix' => 'instructors'], function () {
         Route::get('/', 'InstructorsController@instructors');
     });
