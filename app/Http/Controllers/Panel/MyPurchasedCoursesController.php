@@ -17,9 +17,7 @@ class MyPurchasedCoursesController extends Controller
 {
     public function index(Request $request)
     {
-        // Students and users can view their own purchases - no special permission needed
-        // Only check if user is authenticated (already handled by panel middleware)
-        // $this->authorize("panel_webinars_my_purchases");
+        $this->authorize("panel_webinars_my_purchases");
 
         $user = auth()->user();
 
