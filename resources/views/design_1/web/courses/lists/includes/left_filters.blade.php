@@ -43,7 +43,7 @@
             </div>
 
             <div id="leftFiltersTypes" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach(['webinar','course','text_lesson'] as $typeOption)
+                @foreach(['webinar','course'] as $typeOption)
                     <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
                         <input type="checkbox" name="type[]" value="{{ $typeOption }}" id="filter_type_{{ $typeOption }}" class="custom-control-input">
                         <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_type_{{ $typeOption }}">{{ trans('webinars.'.$typeOption) }}</label>

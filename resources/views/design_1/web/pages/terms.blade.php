@@ -18,44 +18,44 @@
                 <p class="text-xl md:text-2xl text-[#072923]/80 mb-8">By using our platform, you agree to the following terms:</p>
 
                 <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-[#FAFFE0] rounded-2xl p-6 border border-[#ECF4B8]">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-2xl p-6 border border-[#0D3B32]">
                         <div class="flex items-center gap-3 mb-3">
-                            <x-iconsax-lin-shield-tick class="w-6 h-6 text-[#C8CD06]"/>
+                            <x-iconsax-lin-shield-tick class="w-6 h-6 text-[#BDEA42]"/>
                             <h3 class="text-xl font-semibold">Eligibility</h3>
                         </div>
-                        <p class="text-lg text-[#072923]/80">You must be a university student to subscribe.</p>
+                        <p class="text-lg text-[#FAFFE0]/80">You must be a university student to subscribe.</p>
                     </div>
 
-                    <div class="bg-[#FAFFE0] rounded-2xl p-6 border border-[#ECF4B8]">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-2xl p-6 border border-[#0D3B32]">
                         <div class="flex items-center gap-3 mb-3">
-                            <x-iconsax-lin-lock class="w-6 h-6 text-[#C8CD06]"/>
+                            <x-iconsax-lin-lock class="w-6 h-6 text-[#BDEA42]"/>
                             <h3 class="text-xl font-semibold">Account Security</h3>
                         </div>
-                        <p class="text-lg text-[#072923]/80">Your account and subscription are for personal use only. Sharing credentials or recording/distributing content is prohibited and will result in immediate termination without refund.</p>
+                        <p class="text-lg text-[#FAFFE0]/80">Your account and subscription are for personal use only. Sharing credentials or recording/distributing content is prohibited and will result in immediate termination without refund.</p>
                     </div>
 
-                    <div class="bg-[#FAFFE0] rounded-2xl p-6 border border-[#ECF4B8]">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-2xl p-6 border border-[#0D3B32]">
                         <div class="flex items-center gap-3 mb-3">
-                            <x-iconsax-lin-coin class="w-6 h-6 text-[#C8CD06]"/>
+                            <x-iconsax-lin-coin class="w-6 h-6 text-[#BDEA42]"/>
                             <h3 class="text-xl font-semibold">The Point System</h3>
                         </div>
-                        <p class="text-lg text-[#072923]/80">Points are a virtual currency to access content. They are valid while your subscription is active, non-transferable, and not redeemable for cash.</p>
+                        <p class="text-lg text-[#FAFFE0]/80">Points are a virtual currency to access content. They are valid while your subscription is active, non-transferable, and not redeemable for cash.</p>
                     </div>
 
-                    <div class="bg-[#FAFFE0] rounded-2xl p-6 border border-[#ECF4B8]">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-2xl p-6 border border-[#0D3B32]">
                         <div class="flex items-center gap-3 mb-3">
-                            <x-iconsax-lin-calendar-2 class="w-6 h-6 text-[#C8CD06]"/>
+                            <x-iconsax-lin-calendar-2 class="w-6 h-6 text-[#BDEA42]"/>
                             <h3 class="text-xl font-semibold">Course Requests</h3>
                         </div>
-                        <p class="text-lg text-[#072923]/80">We aim to fulfill course requests within 7 business days, subject to expert availability. If a request can’t be met in time, you’ll be notified via email.</p>
+                        <p class="text-lg text-[#FAFFE0]/80">We aim to fulfill course requests within 7 business days, subject to expert availability. If a request can’t be met in time, you’ll be notified via email.</p>
                     </div>
 
-                    <div class="bg-[#FAFFE0] rounded-2xl p-6 border border-[#ECF4B8] md:col-span-2">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-2xl p-6 border border-[#0D3B32] md:col-span-2">
                         <div class="flex items-center gap-3 mb-3">
-                            <x-iconsax-lin-warning-2 class="w-6 h-6 text-[#C8CD06]"/>
+                            <x-iconsax-lin-warning-2 class="w-6 h-6 text-[#BDEA42]"/>
                             <h3 class="text-xl font-semibold">Limitation of Liability</h3>
                         </div>
-                        <p class="text-lg text-[#072923]/80">While we strive for academic excellence, elzatuna is a supplemental resource.</p>
+                        <p class="text-lg text-[#FAFFE0]/80">While we strive for academic excellence, elzatuna is a supplemental resource.</p>
                     </div>
                 </div>
             </div>
