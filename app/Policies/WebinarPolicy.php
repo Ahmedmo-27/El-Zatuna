@@ -30,18 +30,28 @@ class WebinarPolicy
      */
     public function view(User $user, Webinar $webinar)
     {
-        $access = false;
-        if ($webinar->checkUserHasBought($user)) {
-            $isPrivate = $webinar->private;
-            if (!empty($user) and ($user->id == $webinar->creator_id or $user->organ_id == $webinar->creator_id or $user->isAdmin())) {
-                $isPrivate = false;
-            }
-            $access = true;
-            if ($isPrivate) {
-                $access = false;
-            }
+        // Allow admin and course creators/teachers full access
+        if (!empty($user) and ($user->isAdmin() or $user->id == $webinar->creator_id or $user->organ_id == $webinar->creator_id or $user->id == $webinar->teacher_id)) {
+            return true;
         }
-        return $access;
+
+        // Check if user has purchased the course
+        $hasBought = $webinar->checkUserHasBought($user);
+        
+        if (!$hasBought) {
+            return false;
+        }
+
+        // If user has bought, check if it's private
+        $isPrivate = $webinar->private;
+        
+        // If not private or user is creator/admin, allow access
+        if (!$isPrivate) {
+            return true;
+        }
+
+        // Private courses that user has bought - deny access unless they're creator/teacher
+        return false;
     }
 
     /**

@@ -543,10 +543,6 @@ class DemoDataSeeder extends Seeder
             WebinarChapterItem::makeItem($teacherId, $textLesson->chapter_id, $textLesson->id, WebinarChapterItem::$chapterTextLesson);
         }
 
-        $this->command->info('Demo data seeded: universities, faculties, users, and courses.');
-    }
-}
-
         $discountCourses = array_slice($createdCourses, 0, 3);
         foreach ($discountCourses as $index => $discountCourse) {
             SpecialOffer::firstOrCreate([
@@ -561,3 +557,7 @@ class DemoDataSeeder extends Seeder
                 'to_date' => $now + (86400 * 30),
             ]);
         }
+
+        $this->command->info('Demo data seeded: universities, faculties, users, and courses.');
+    }
+}

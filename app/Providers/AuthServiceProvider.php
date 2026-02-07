@@ -39,6 +39,12 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::before(function ($user, $ability) {
+            // Admin users have all permissions
+            if ($user && $user->isAdmin()) {
+                return true;
+            }
+
+            // In local environment, allow all abilities for development
             if (app()->environment('local')) {
                 return true;
             }
@@ -57,6 +63,10 @@ class AuthServiceProvider extends ServiceProvider
                 foreach ($sections as $section) {
                     $scopes[$section->name] = $section->caption;
                     Gate::define($section->name, function ($user) use ($section) {
+                        // Admin bypass
+                        if ($user->isAdmin()) {
+                            return true;
+                        }
                         return $user->hasPermission($section->name);
                     });
                 }
