@@ -29,6 +29,10 @@
             <div class="pages-header__overlay-img">
                 <img src="{{ $page->header_icon }}" alt="{{ $page->title }}" class="img-cover">
             </div>
+        @else
+            <div class="pages-header__overlay-img">
+                <img src="/assets/design_1/img/no-result/course_list.svg" alt="{{ $page->title }}" class="img-cover">
+            </div>
         @endif
     </div>
 </div>

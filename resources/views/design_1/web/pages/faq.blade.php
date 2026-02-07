@@ -1,7 +1,7 @@
 @extends('design_1.web.layouts.app')
 
 @section('content')
-    <main class="bg-[#FAFFE0] text-[#072923] min-h-screen">
+    <main class="bg-[#FAFFE0] text-[#072923] min-h-screen" style="word-spacing: 0.16em;">
         <section class="max-w-[1600px] mx-auto px-8 md:px-16 lg:px-24 pt-28 pb-16">
             <div class="text-center">
                 <div class="inline-flex items-center gap-3 bg-white/70 border border-[#ECF4B8] px-5 py-2 rounded-full shadow-sm">
@@ -10,6 +10,9 @@
                 </div>
                 <h1 class="text-5xl md:text-6xl font-bold mt-6">Frequently Asked Questions</h1>
                 <p class="mt-4 text-xl md:text-2xl text-[#072923]/70">Points, access, and requests</p>
+                <div class="mt-10 flex justify-center">
+                    <img src="/assets/design_1/img/no-result/support_tickets.svg" alt="FAQ" class="w-72 md:w-96 lg:w-[520px] opacity-90" />
+                </div>
             </div>
         </section>
 

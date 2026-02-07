@@ -35,9 +35,6 @@
     </div>
 
     <div class="col-12 col-lg-3 mt-32 mt-lg-0">
-        {{-- Events Calendar  (No different with Student Dashboard) --}}
-        @include('design_1.panel.dashboard.student.includes.events_calendar')
-
         @if($authUser->isTeacher())
             {{-- Upcoming Live Sessions --}}
             @include('design_1.panel.dashboard.instructor.includes.upcoming_live_sessions')
