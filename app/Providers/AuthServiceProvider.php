@@ -24,8 +24,8 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         // 'App\Model' => 'App\Policies\ModelPolicy',
         CourseForum::class => CourseForumPolicy::class,
-        CourseForumAnswer::class => CourseForumAnswerPolicy::class ,
-        Webinar::class => WebinarPolicy::class
+        CourseForumAnswer::class => CourseForumAnswerPolicy::class,
+        // Webinar::class => WebinarPolicy::class  // Disabled - using controller-level checks instead
     ];
 
     /**
