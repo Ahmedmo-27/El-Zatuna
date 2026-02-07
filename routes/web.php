@@ -126,7 +126,6 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::group(['middleware' => 'web.auth'], function () {
             Route::post('/{id}/report', 'WebinarController@reportWebinar');
             Route::post('/{slug}/learningStatus', 'WebinarController@learningStatus');
-            Route::post('/{slug}/autoMarkComplete', 'WebinarController@autoMarkComplete');
         });
         Route::get('/{slug}/share-modal', 'WebinarController@getShareModal');
         Route::get('/{slug}/report-modal', 'WebinarController@getReportModal');
@@ -153,6 +152,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/learning/{slug}/itemSequenceContentInfo', 'LearningPageController@getItemSequenceContentInfo');
             Route::get('/learning/{slug}/noticeboards', 'LearningPageController@noticeboards');
             Route::post('/learning/{slug}/track-time', 'LearningPageController@trackSpentTime');
+            Route::post('/learning/{slug}/autoMarkComplete', 'WebinarController@autoMarkComplete');
             Route::get('/learning/{slug}', 'LearningPageController@index');
 
 

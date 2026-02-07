@@ -226,7 +226,7 @@
             return;
         }
 
-        const path = `/course/${courseSlug}/autoMarkComplete`;
+        const path = `/course/learning/${courseSlug}/autoMarkComplete`;
         const data = {
             item: itemType,
             item_id: itemId
