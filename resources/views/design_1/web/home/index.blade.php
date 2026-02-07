@@ -221,7 +221,9 @@
                     </ul>
                     <a href="/panel" class="mt-6 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">Become instructor</a>
                 </div>
-                <div class="h-[260px] rounded-[28px] bg-[#072923]"></div>
+                <div class="h-[260px] md:h-[320px] lg:h-[360px] rounded-[28px] bg-[#072923] flex items-center justify-center">
+                    <img src="/assets/design_1/img/no-result/profile_instructors.svg" alt="Instructors" class="w-full max-w-[520px] md:max-w-[620px] lg:max-w-[700px] h-auto" />
+                </div>
             </div>
         </section>
 

@@ -10,6 +10,9 @@
                 </div>
                 <h1 class="text-5xl md:text-6xl font-bold mt-6">Terms &amp; Conditions</h1>
                 <p class="mt-4 text-xl md:text-2xl text-[#072923]/70">Welcome to elzatuna</p>
+                <div class="mt-10 flex justify-center">
+                    <img src="/assets/design_1/img/no-result/financial_summary.svg" alt="Terms" class="w-72 md:w-96 lg:w-[520px] opacity-90" />
+                </div>
             </div>
         </section>
 
