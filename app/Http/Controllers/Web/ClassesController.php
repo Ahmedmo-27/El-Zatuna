@@ -25,6 +25,30 @@ class ClassesController extends Controller
         $webinarsQuery = Webinar::where('webinars.status', 'active')
             ->where('private', false);
 
+        // Filter courses based on user's university and faculty
+        if (auth()->check()) {
+            $user = auth()->user();
+            $userUniversityId = $user->university_id;
+            $userFacultyId = $user->faculty_id;
+
+            $webinarsQuery->where(function ($query) use ($userUniversityId, $userFacultyId) {
+                // Show courses with matching university and faculty
+                $query->where(function ($q) use ($userUniversityId, $userFacultyId) {
+                    $q->where('university_id', $userUniversityId)
+                      ->where('faculty_id', $userFacultyId);
+                })
+                // OR show public courses (null university_id AND null faculty_id)
+                ->orWhere(function ($q) {
+                    $q->whereNull('university_id')
+                      ->whereNull('faculty_id');
+                });
+            });
+        } else {
+            // For guests, only show public courses
+            $webinarsQuery->whereNull('university_id')
+                          ->whereNull('faculty_id');
+        }
+
         $type = $request->get('type');
         if (!empty($type) and is_array($type) and in_array('bundle', $type)) {
             $webinarsQuery = Bundle::where('bundles.status', 'active');
