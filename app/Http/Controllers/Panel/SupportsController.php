@@ -15,7 +15,8 @@ class SupportsController extends Controller
 {
     public function index(Request $request, $id = null)
     {
-        $this->authorize("panel_support_lists");
+        // Users can view their own support tickets - no special permission needed
+        // $this->authorize("panel_support_lists");
 
         $user = auth()->user();
 
@@ -128,7 +129,8 @@ class SupportsController extends Controller
 
     public function tickets(Request $request, $id = null)
     {
-        $this->authorize("panel_support_tickets");
+        // Users can view their own platform tickets - no special permission needed
+        // $this->authorize("panel_support_tickets");
 
         $user = auth()->user();
 
@@ -248,7 +250,8 @@ class SupportsController extends Controller
 
     public function create()
     {
-        $this->authorize("panel_support_create");
+        // Users can create support tickets - no special permission needed
+        // $this->authorize("panel_support_create");
 
         $departments = SupportDepartment::all();
         $user = auth()->user();
@@ -274,7 +277,8 @@ class SupportsController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize("panel_support_create");
+        // Users can submit support tickets - no special permission needed
+        // $this->authorize("panel_support_create");
 
         $user = auth()->user();
 

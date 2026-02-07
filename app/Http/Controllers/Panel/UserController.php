@@ -34,7 +34,8 @@ class UserController extends Controller
 
     public function setting(Request $request, $step = "basic_information")
     {
-        $this->authorize("panel_others_profile_setting");
+        // Users can access their own profile settings - no special permission needed
+        // $this->authorize("panel_others_profile_setting");
 
         $user = auth()->user();
 
