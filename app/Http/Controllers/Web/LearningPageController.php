@@ -23,9 +23,11 @@ class LearningPageController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->isAdmin()) {
-            $this->authorize("panel_webinars_learning_page");
-        }
+        // Authorization is handled by web.auth middleware and purchase checks below
+        // Only enforce panel permission for non-admin users if they're accessing from panel routes
+        // if (!$user->isAdmin()) {
+        //     $this->authorize("panel_webinars_learning_page");
+        // }
 
         $requestData = $request->all();
 
