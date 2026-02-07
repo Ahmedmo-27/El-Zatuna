@@ -2730,6 +2730,7 @@ return [
 'quiz_certificate' => 'Quiz Certificate',
 'quiz_certificates' => 'Quiz Certificates',
 'section_learning_status_changed_successful' => 'Chapter learning status updated successfully.',
+'section_auto_completed_successful' => 'Chapter completed automatically!',
 'review_this_course' => 'Review This Course',
 'review_this_bundle' => 'Review This Bundle',
 'you_need_to_enroll_of_the_course_to_review_this_course' => 'You must enroll in the course to submit a review.',

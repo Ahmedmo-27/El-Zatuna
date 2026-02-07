@@ -2450,6 +2450,7 @@ return [
 'restrictions_hint_description_2' => 'يمكنك تحديد نطاق IP وحظر جميع العناوين داخل هذا النطاق بنقرة واحدة',
 'restrictions_hint_title_3' => 'حظر عناوين IP الخاصة بالدول',
 'restrictions_hint_description_3' => 'لدينا قاعدة بيانات لعناوين IP الخاصة بالدول، لذا يمكنك بسهولة حظر نطاقات IP من دول معينة',
+'section_auto_completed_successful' => 'تم إكمال الفصل تلقائياً!',
 
 
 ];

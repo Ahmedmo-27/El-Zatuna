@@ -118,6 +118,31 @@
         if ($players.length) {
             for (const plyr of $players) {
                 const player = new Plyr(plyr);
+                
+                // Add video completion tracking
+                const $playerElement = $(plyr);
+                const videoId = $playerElement.attr('id');
+                
+                if (videoId && videoId.includes('fileVideo')) {
+                    const fileId = videoId.replace('fileVideo', '');
+                    
+                    // Track video progress
+                    player.on('timeupdate', function(event) {
+                        const currentTime = player.currentTime;
+                        const duration = player.duration;
+                        
+                        if (duration > 0) {
+                            const percentWatched = (currentTime / duration) * 100;
+                            
+                            // Auto-complete when video reaches 90%
+                            if (percentWatched >= 90) {
+                                autoMarkItemComplete('file_id', fileId);
+                                // Remove event listener to avoid multiple calls
+                                player.off('timeupdate');
+                            }
+                        }
+                    });
+                }
             }
         }
     }
@@ -135,7 +160,12 @@
                 $mainContent.html(result.html);
 
                 tippyTooltip();
-                handleVideoPlayer()
+                handleVideoPlayer();
+                
+                // Initialize document scroll tracking for text lessons
+                if (itemType === 'text_lesson') {
+                    setTimeout(handleDocumentScrollTracking, 500);
+                }
             }
         }).fail(err => {
             showToast('error', oopsLang, somethingWentWrongLang);
@@ -182,6 +212,92 @@
         });
     })
 
+
+    /**
+     * Auto Mark Item as Complete
+     * */
+    const autoCompletedItems = new Set();
+
+    function autoMarkItemComplete(itemType, itemId) {
+        const key = `${itemType}_${itemId}`;
+        
+        // Check if already auto-completed in this session
+        if (autoCompletedItems.has(key)) {
+            return;
+        }
+
+        const path = `/course/${courseSlug}/autoMarkComplete`;
+        const data = {
+            item: itemType,
+            item_id: itemId
+        };
+
+        $.post(path, data, function (result) {
+            if (result.code === 200 && !result.already_completed) {
+                // Mark as completed in session
+                autoCompletedItems.add(key);
+                
+                // Update progress bar
+                const $percentBar = $('.js-course-learning-progress-bar-percent');
+                const $percentNum = $('.js-course-learning-progress-percent');
+                
+                if (result.learning_progress_percent && $percentBar.length) {
+                    $percentBar.css('width', result.learning_progress_percent + '%');
+                    $percentNum.text(`${result.learning_progress_percent}%`);
+                }
+                
+                // Update checkbox if exists
+                const $checkbox = $(`.js-passed-item-toggle[data-item-name="${itemType}"][value="${itemId}"]`);
+                if ($checkbox.length && !$checkbox.is(':checked')) {
+                    $checkbox.prop('checked', true);
+                }
+                
+                // Show toast notification
+                if (result.title && result.msg) {
+                    showToast("success", result.title, result.msg);
+                }
+                
+                // Check for course completion
+                if (result.learning_progress_percent && result.learning_progress_percent >= 100) {
+                    handleCourseCompletedModal();
+                }
+            }
+        }).fail(err => {
+            // Silently fail - this is auto-completion, don't disturb user
+            console.log('Auto-complete failed:', err);
+        });
+    }
+
+    /**
+     * Track Document (Text Lesson) Scrolling
+     * */
+    function handleDocumentScrollTracking() {
+        const $scrollContainer = $('.learning-page__main-content .simplebar-content-wrapper');
+        const $textLessonContent = $('.js-text-lesson-content');
+        
+        if ($textLessonContent.length && $scrollContainer.length) {
+            const textLessonId = $textLessonContent.attr('data-text-lesson-id');
+            
+            if (textLessonId) {
+                let scrollCheckEnabled = true;
+                
+                $scrollContainer.on('scroll.textLesson', function() {
+                    if (!scrollCheckEnabled) return;
+                    
+                    const scrollTop = $scrollContainer.scrollTop();
+                    const scrollHeight = $scrollContainer[0].scrollHeight;
+                    const clientHeight = $scrollContainer.height();
+                    
+                    // Check if scrolled to bottom (with 100px tolerance)
+                    if (scrollTop + clientHeight >= scrollHeight - 100) {
+                        scrollCheckEnabled = false; // Disable further checks
+                        $scrollContainer.off('scroll.textLesson'); // Remove event listener
+                        autoMarkItemComplete('text_lesson_id', textLessonId);
+                    }
+                });
+            }
+        }
+    }
 
     /**
      * I Passed Item Toggle

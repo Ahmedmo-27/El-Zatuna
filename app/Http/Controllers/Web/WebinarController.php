@@ -791,6 +791,56 @@ class WebinarController extends Controller
         abort(403);
     }
 
+    public function autoMarkComplete(Request $request, $slug)
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            $course = Webinar::where('slug', $slug)->first();
+
+            if (!empty($course) and $course->checkUserHasBought($user)) {
+                $data = $request->all();
+
+                $item = $data['item'];
+                $item_id = $data['item_id'];
+
+                // Check if already marked as complete
+                $exists = CourseLearning::where('user_id', $user->id)
+                    ->where($item, $item_id)
+                    ->first();
+
+                if (empty($exists)) {
+                    // Mark as complete
+                    CourseLearning::create([
+                        'user_id' => $user->id,
+                        $item => $item_id,
+                        'created_at' => time()
+                    ]);
+
+                    // Check for certificate
+                    $course->makeCertificateForUser($user);
+
+                    $percent = $course->getProgress(true);
+
+                    return response()->json([
+                        'code' => 200,
+                        'learning_progress_percent' => $percent,
+                        'already_completed' => false,
+                        'title' => trans('public.request_success'),
+                        'msg' => trans('update.section_auto_completed_successful'),
+                    ]);
+                }
+
+                return response()->json([
+                    'code' => 200,
+                    'already_completed' => true,
+                ]);
+            }
+        }
+
+        abort(403);
+    }
+
     public function learningStatusCompletedModal($slug)
     {
         if (auth()->check()) {
