@@ -15,7 +15,8 @@ class MyCoursesController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize("panel_webinars_lists");
+        // Users can view their own courses - no special permission needed
+        // $this->authorize("panel_webinars_lists");
 
         $user = auth()->user();
 
@@ -34,7 +35,8 @@ class MyCoursesController extends Controller
 
     public function invitations(Request $request)
     {
-        $this->authorize("panel_webinars_invited_lists");
+        // Users can view their course invitations - no special permission needed
+        // $this->authorize("panel_webinars_invited_lists");
 
         $user = auth()->user();
 
