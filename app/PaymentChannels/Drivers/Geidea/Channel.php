@@ -301,21 +301,38 @@ class Channel extends BasePaymentChannel implements IChannel
         $data = $request->all();
         $order = null;
 
-        Log::info('Geidea payment callback received', ['data' => $data]);
+        Log::info('Geidea payment callback received', [
+            'data' => $data,
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+        ]);
 
         // Geidea sends orderId and other transaction details
         if (!empty($data['orderId'])) {
             try {
+                Log::info('Geidea fetching order details', ['orderId' => $data['orderId']]);
+                
                 // Fetch order details from Geidea API
                 $orderDetails = $this->fetchOrderDetails($data['orderId']);
 
                 if ($orderDetails && isset($orderDetails['order'])) {
                     $geideaOrder = $orderDetails['order'];
                     
+                    Log::info('Geidea order details fetched', [
+                        'status' => $geideaOrder['status'] ?? 'unknown',
+                        'merchantReferenceId' => $geideaOrder['merchantReferenceId'] ?? 'unknown',
+                    ]);
+                    
                     // Find our order using merchant reference ID or order ID from payment_data
                     $order = $this->findOrderByGeideaData($geideaOrder);
 
                     if ($order) {
+                        Log::info('Geidea order found', [
+                            'order_id' => $order->id,
+                            'current_status' => $order->status,
+                            'geidea_status' => $geideaOrder['status'] ?? 'unknown',
+                        ]);
+                        
                         Auth::loginUsingId($order->user_id);
 
                         // Determine order status based on Geidea response
@@ -325,6 +342,16 @@ class Channel extends BasePaymentChannel implements IChannel
                         if (isset($geideaOrder['status']) && 
                             in_array($geideaOrder['status'], ['Success', 'Captured', 'Paid'])) {
                             $orderStatus = Order::$paying;
+                            
+                            Log::info('Geidea payment successful', [
+                                'order_id' => $order->id,
+                                'setting_status_to' => $orderStatus,
+                            ]);
+                        } else {
+                            Log::warning('Geidea payment not successful', [
+                                'order_id' => $order->id,
+                                'geidea_status' => $geideaOrder['status'] ?? 'unknown',
+                            ]);
                         }
 
                         // Update order with payment details
@@ -336,15 +363,39 @@ class Channel extends BasePaymentChannel implements IChannel
                                 'gateway' => 'Geidea',
                             ]),
                         ]);
+                        
+                        Log::info('Geidea order updated', [
+                            'order_id' => $order->id,
+                            'new_status' => $order->status,
+                        ]);
+                    } else {
+                        Log::error('Geidea order not found in database', [
+                            'merchantReferenceId' => $geideaOrder['merchantReferenceId'] ?? 'unknown',
+                            'sessionId' => $geideaOrder['sessionId'] ?? 'unknown',
+                        ]);
                     }
+                } else {
+                    Log::error('Geidea order details not found in response', [
+                        'orderId' => $data['orderId'],
+                        'response' => $orderDetails,
+                    ]);
                 }
             } catch (\Exception $e) {
                 Log::error('Geidea verification exception', [
                     'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                     'data' => $data,
                 ]);
             }
+        } else {
+            Log::warning('Geidea callback missing orderId', ['data' => $data]);
         }
+
+        Log::info('Geidea verify returning order', [
+            'order_id' => $order ? $order->id : null,
+            'order_status' => $order ? $order->status : null,
+        ]);
 
         return $order;
     }
