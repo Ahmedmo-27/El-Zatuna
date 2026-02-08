@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
+// TEMPORARY: Include Geidea diagnostic route (REMOVE AFTER TESTING)
+if (file_exists(__DIR__ . '/web-geidea-test.php')) {
+    require __DIR__ . '/web-geidea-test.php';
+}
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes

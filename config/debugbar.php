@@ -14,12 +14,13 @@ return [
      |
      */
 
-    'enabled' => env('DEBUGBAR_ENABLED', env('APP_DEBUG', false)),
+    'enabled' => env('DEBUGBAR_ENABLED', false),
     'hide_empty_tabs' => env('DEBUGBAR_HIDE_EMPTY_TABS', true), // Hide tabs until they have content
     'except' => [
         'telescope*',
         'horizon*',
         '_boost/browser-logs',
+        'api/*', // Disable for API routes to prevent timeout
     ],
 
     /*
@@ -39,7 +40,7 @@ return [
      | Leaving it to null will allow localhost only.
      */
     'storage' => [
-        'enabled'    => env('DEBUGBAR_STORAGE_ENABLED', true),
+        'enabled'    => env('DEBUGBAR_STORAGE_ENABLED', false),
         'open'       => env('DEBUGBAR_OPEN_STORAGE'), // bool/callback.
         'driver'     => env('DEBUGBAR_STORAGE_DRIVER', 'file'), // redis, file, pdo, socket, custom
         'path'       => env('DEBUGBAR_STORAGE_PATH', storage_path('debugbar')), // For file driver
@@ -179,24 +180,24 @@ return [
         'time'            => env('DEBUGBAR_COLLECTORS_TIME', true),             // Time Datalogger
         'memory'          => env('DEBUGBAR_COLLECTORS_MEMORY', true),           // Memory usage
         'exceptions'      => env('DEBUGBAR_COLLECTORS_EXCEPTIONS', true),       // Exception displayer
-        'log'             => env('DEBUGBAR_COLLECTORS_LOG', true),              // Logs from Monolog (merged in messages if enabled)
+        'log'             => env('DEBUGBAR_COLLECTORS_LOG', false),             // Logs from Monolog (merged in messages if enabled)
         'db'              => env('DEBUGBAR_COLLECTORS_DB', true),               // Show database (PDO) queries and bindings
-        'views'           => env('DEBUGBAR_COLLECTORS_VIEWS', true),            // Views with their data
+        'views'           => env('DEBUGBAR_COLLECTORS_VIEWS', false),           // Views with their data - DISABLED to prevent timeout
         'route'           => env('DEBUGBAR_COLLECTORS_ROUTE', false),           // Current route information
         'auth'            => env('DEBUGBAR_COLLECTORS_AUTH', false),            // Display Laravel authentication status
-        'gate'            => env('DEBUGBAR_COLLECTORS_GATE', true),             // Display Laravel Gate checks
+        'gate'            => env('DEBUGBAR_COLLECTORS_GATE', false),            // Display Laravel Gate checks
         'session'         => env('DEBUGBAR_COLLECTORS_SESSION', false),         // Display session data
-        'symfony_request' => env('DEBUGBAR_COLLECTORS_SYMFONY_REQUEST', true),  // Only one can be enabled..
-        'mail'            => env('DEBUGBAR_COLLECTORS_MAIL', true),             // Catch mail messages
-        'laravel'         => env('DEBUGBAR_COLLECTORS_LARAVEL', true),          // Laravel version and environment
+        'symfony_request' => env('DEBUGBAR_COLLECTORS_SYMFONY_REQUEST', false), // Only one can be enabled.. - DISABLED to prevent timeout
+        'mail'            => env('DEBUGBAR_COLLECTORS_MAIL', false),            // Catch mail messages
+        'laravel'         => env('DEBUGBAR_COLLECTORS_LARAVEL', false),         // Laravel version and environment
         'events'          => env('DEBUGBAR_COLLECTORS_EVENTS', false),          // All events fired
         'default_request' => env('DEBUGBAR_COLLECTORS_DEFAULT_REQUEST', false), // Regular or special Symfony request logger
         'logs'            => env('DEBUGBAR_COLLECTORS_LOGS', false),            // Add the latest log messages
-        'files'           => env('DEBUGBAR_COLLECTORS_FILES', false),           // Show the included files
+        'files'           => env('DEBUGBAR_COLLECTORS_FILES', false),           // Show the included files - DISABLED to prevent timeout
         'config'          => env('DEBUGBAR_COLLECTORS_CONFIG', false),          // Display config settings
         'cache'           => env('DEBUGBAR_COLLECTORS_CACHE', false),           // Display cache events
-        'models'          => env('DEBUGBAR_COLLECTORS_MODELS', true),           // Display models
-        'livewire'        => env('DEBUGBAR_COLLECTORS_LIVEWIRE', true),         // Display Livewire (when available)
+        'models'          => env('DEBUGBAR_COLLECTORS_MODELS', false),          // Display models - DISABLED to prevent timeout
+        'livewire'        => env('DEBUGBAR_COLLECTORS_LIVEWIRE', false),        // Display Livewire (when available)
         'jobs'            => env('DEBUGBAR_COLLECTORS_JOBS', false),            // Display dispatched jobs
         'pennant'         => env('DEBUGBAR_COLLECTORS_PENNANT', false),         // Display Pennant feature flags
     ],
@@ -215,7 +216,7 @@ return [
             'memory_usage' => env('DEBUGBAR_OPTIONS_TIME_MEMORY_USAGE', false), // Calculated by subtracting memory start and end, it may be inaccurate
         ],
         'messages' => [
-            'trace' => env('DEBUGBAR_OPTIONS_MESSAGES_TRACE', true),                  // Trace the origin of the debug message
+            'trace' => env('DEBUGBAR_OPTIONS_MESSAGES_TRACE', false),                 // DISABLED - Trace the origin of the debug message
             'capture_dumps' => env('DEBUGBAR_OPTIONS_MESSAGES_CAPTURE_DUMPS', false), // Capture laravel `dump();` as message
         ],
         'memory' => [
@@ -235,20 +236,20 @@ return [
             'exclude_paths'     => [       // Paths to exclude entirely from the collector
                 //'vendor/laravel/framework/src/Illuminate/Session', // Exclude sessions queries
             ],
-            'backtrace'         => env('DEBUGBAR_OPTIONS_DB_BACKTRACE', true),   // Use a backtrace to find the origin of the query in your files.
+            'backtrace'         => env('DEBUGBAR_OPTIONS_DB_BACKTRACE', false),  // DISABLED - Use a backtrace to find the origin of the query in your files.
             'backtrace_exclude_paths' => [],   // Paths to exclude from backtrace. (in addition to defaults)
             'timeline'          => env('DEBUGBAR_OPTIONS_DB_TIMELINE', false),  // Add the queries to the timeline
-            'duration_background'  => env('DEBUGBAR_OPTIONS_DB_DURATION_BACKGROUND', true),   // Show shaded background on each query relative to how long it took to execute.
+            'duration_background'  => env('DEBUGBAR_OPTIONS_DB_DURATION_BACKGROUND', false),  // Show shaded background on each query relative to how long it took to execute.
             'explain' => [                 // Show EXPLAIN output on queries
                 'enabled' => env('DEBUGBAR_OPTIONS_DB_EXPLAIN_ENABLED', false),
             ],
             'hints'             => env('DEBUGBAR_OPTIONS_DB_HINTS', false),          // Show hints for common mistakes
-            'show_copy'         => env('DEBUGBAR_OPTIONS_DB_SHOW_COPY', true),       // Show copy button next to the query,
+            'show_copy'         => env('DEBUGBAR_OPTIONS_DB_SHOW_COPY', false),      // Show copy button next to the query,
             'only_slow_queries' => env('DEBUGBAR_OPTIONS_DB_ONLY_SLOW_QUERIES', true), // Only track queries that last longer than `slow_threshold`
-            'slow_threshold'    => env('DEBUGBAR_OPTIONS_DB_SLOW_THRESHOLD', false), // Max query execution time (ms). Exceeding queries will be highlighted
+            'slow_threshold'    => env('DEBUGBAR_OPTIONS_DB_SLOW_THRESHOLD', 1000),  // Max query execution time (ms). Exceeding queries will be highlighted
             'memory_usage'      => env('DEBUGBAR_OPTIONS_DB_MEMORY_USAGE', false),   // Show queries memory usage
-            'soft_limit'       => (int) env('DEBUGBAR_OPTIONS_DB_SOFT_LIMIT', 100),  // After the soft limit, no parameters/backtrace are captured
-            'hard_limit'       => (int) env('DEBUGBAR_OPTIONS_DB_HARD_LIMIT', 500),  // After the hard limit, queries are ignored
+            'soft_limit'       => (int) env('DEBUGBAR_OPTIONS_DB_SOFT_LIMIT', 50),   // After the soft limit, no parameters/backtrace are captured
+            'hard_limit'       => (int) env('DEBUGBAR_OPTIONS_DB_HARD_LIMIT', 100),  // After the hard limit, queries are ignored
         ],
         'mail' => [
             'timeline' => env('DEBUGBAR_OPTIONS_MAIL_TIMELINE', true),  // Add mails to the timeline
@@ -347,5 +348,5 @@ return [
      | By default, the Debugbar limits the number of frames returned by the 'debug_backtrace()' function.
      | If you need larger stacktraces, you can increase this number. Setting it to 0 will result in no limit.
      */
-    'debug_backtrace_limit' => (int) env('DEBUGBAR_DEBUG_BACKTRACE_LIMIT', 50),
+    'debug_backtrace_limit' => (int) env('DEBUGBAR_DEBUG_BACKTRACE_LIMIT', 10),
 ];

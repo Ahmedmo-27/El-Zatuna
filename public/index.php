@@ -7,6 +7,19 @@ define('LARAVEL_START', microtime(true));
 
 /*
 |--------------------------------------------------------------------------
+| Set PHP Execution Time Limit
+|--------------------------------------------------------------------------
+|
+| Increase the maximum execution time to prevent timeout errors,
+| especially when using debugging tools or running long operations.
+|
+*/
+
+@ini_set('max_execution_time', 300);
+@set_time_limit(300);
+
+/*
+|--------------------------------------------------------------------------
 | Check If The Application Is Under Maintenance
 |--------------------------------------------------------------------------
 |

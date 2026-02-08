@@ -84,7 +84,10 @@ class Channel extends BasePaymentChannel implements IChannel
         }
 
         $this->payment_operation = config('geidea.payment_operation', 'Pay');
-        $this->card_on_file = config('geidea.card_on_file', false);
+        
+        // Ensure card_on_file is a strict boolean (Geidea API requires boolean, not string)
+        $cardOnFileConfig = config('geidea.card_on_file', false);
+        $this->card_on_file = (bool) filter_var($cardOnFileConfig, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
     /**
@@ -170,7 +173,7 @@ class Channel extends BasePaymentChannel implements IChannel
             'returnUrl' => $this->makeReturnUrl(),
             'language' => $this->language,
             'paymentOperation' => $this->payment_operation,
-            'cardOnFile' => $this->card_on_file,
+            'cardOnFile' => (bool) $this->card_on_file, // Ensure strict boolean type
             'customer' => [
                 'email' => $user->email,
                 'phoneNumber' => $user->mobile ?? '',
@@ -185,6 +188,8 @@ class Channel extends BasePaymentChannel implements IChannel
                 'order_id' => $order->id,
                 'amount' => $sessionData['amount'],
                 'currency' => $sessionData['currency'],
+                'cardOnFile' => $sessionData['cardOnFile'],
+                'cardOnFile_type' => gettype($sessionData['cardOnFile']),
                 'api_url' => $this->getApiUrl(),
             ]);
 
