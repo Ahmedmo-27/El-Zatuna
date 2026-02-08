@@ -102,7 +102,14 @@ class PaymentController extends Controller
             return Redirect::away($redirect_url);
 
         } catch (\Exception $exception) {
-            //dd($exception->getMessage());
+            // Log the exception for debugging
+            \Log::error('Payment request exception', [
+                'gateway' => $paymentChannel->class_name ?? 'unknown',
+                'order_id' => $order->id ?? 'unknown',
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
 
             $toastData = [
                 'title' => trans('cart.fail_purchase'),
