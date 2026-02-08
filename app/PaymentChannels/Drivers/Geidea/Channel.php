@@ -180,6 +180,14 @@ class Channel extends BasePaymentChannel implements IChannel
         ];
 
         try {
+            // Log request for debugging
+            Log::info('Geidea session creation request', [
+                'order_id' => $order->id,
+                'amount' => $sessionData['amount'],
+                'currency' => $sessionData['currency'],
+                'api_url' => $this->getApiUrl(),
+            ]);
+
             // Make API request to create session
             $response = Http::withOptions(['verify' => false])
                 ->withHeaders([
@@ -197,10 +205,13 @@ class Channel extends BasePaymentChannel implements IChannel
                 return $responseData;
             }
 
-            // Log error
+            // Log error with more details
             Log::error('Geidea session creation failed', [
                 'response' => $responseData,
                 'order_id' => $order->id,
+                'status_code' => $response->status(),
+                'error_code' => $responseData['detailedResponseCode'] ?? 'unknown',
+                'error_message' => $responseData['detailedResponseMessage'] ?? 'unknown',
             ]);
 
             return null;
@@ -220,13 +231,14 @@ class Channel extends BasePaymentChannel implements IChannel
      * 
      * @param Order $order
      * @return string|null URL to redirect customer to Geidea checkout page
+     * @throws \Exception
      */
     public function paymentRequest(Order $order)
     {
         $sessionResponse = $this->createSession($order);
 
         if (!$sessionResponse || !isset($sessionResponse['session']['id'])) {
-            return null;
+            throw new \Exception('Unable to process payment. Please contact support or try a different payment method.');
         }
 
         $sessionId = $sessionResponse['session']['id'];
