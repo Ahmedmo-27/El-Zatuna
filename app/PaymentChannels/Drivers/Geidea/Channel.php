@@ -219,7 +219,7 @@ class Channel extends BasePaymentChannel implements IChannel
      * Handle payment request
      * 
      * @param Order $order
-     * @return array|null
+     * @return string|null URL to redirect customer to Geidea checkout page
      */
     public function paymentRequest(Order $order)
     {
@@ -240,12 +240,8 @@ class Channel extends BasePaymentChannel implements IChannel
             ]),
         ]);
 
-        // Return session data for frontend processing
-        return [
-            'session_id' => $sessionId,
-            'hpp_url' => $this->getHppUrl(),
-            'checkout_url' => $this->getHppUrl() . '/hpp/checkout/?' . $sessionId,
-        ];
+        // Return checkout URL for redirect
+        return $this->getHppUrl() . '/hpp/checkout/?' . $sessionId;
     }
 
     /**
