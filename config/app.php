@@ -204,6 +204,7 @@ return [
         //KingFlamez\Rave\RaveServiceProvider::class,
 
         App\Providers\MinioStorageServiceProvider::class,
+        App\Providers\R2StorageServiceProvider::class,
         Ssheduardo\Redsys\RedsysServiceProvider::class,
         Jubaer\Zoom\ZoomServiceProvider::class,
         \Torann\GeoIP\GeoIPServiceProvider::class,

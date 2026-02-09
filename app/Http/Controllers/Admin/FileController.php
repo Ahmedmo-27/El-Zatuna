@@ -8,6 +8,7 @@ use App\Models\File;
 use App\Models\Translation\FileTranslation;
 use App\Models\Webinar;
 use App\Models\WebinarChapterItem;
+use App\Services\R2StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -127,10 +128,14 @@ class FileController extends Controller
             } elseif ($data['storage'] == 'upload') {
                 $uploadFile = $this->fileInfo($data['file_path']);
                 $volume = convertToMB($uploadFile['size'] ?? 0);
-            } elseif (in_array($data['storage'], ['s3', 'secure_host'])) {
+            } elseif (in_array($data['storage'], ['s3', 'secure_host', 'r2'])) {
                 if ($data['storage'] == 's3') {
                     $data['volume'] = $request->file('s3_file')->getSize();
                     $result = $this->uploadFileToS3($data['s3_file'], $user->id);
+                } elseif ($data['storage'] == 'r2') {
+                    $data['volume'] = $request->file('s3_file')->getSize();
+                    $lessonId = $data['chapter_id'] ?? null;
+                    $result = $this->uploadFileToR2($data['s3_file'], $webinar->id, $lessonId);
                 } else {
                     if ($data['secure_host_upload_type'] == "direct") {
                         $data['volume'] = $request->file('s3_file')->getSize();
@@ -351,7 +356,7 @@ class FileController extends Controller
             } elseif ($data['storage'] == 'upload') {
                 $uploadFile = $this->fileInfo($data['file_path']);
                 $volume = convertToMB($uploadFile['size'] ?? 0);
-            } elseif (in_array($data['storage'], ['s3', 'secure_host'])) {
+            } elseif (in_array($data['storage'], ['s3', 'secure_host', 'r2'])) {
                 $result = [];
 
                 if ($data['storage'] == 's3') {
@@ -360,6 +365,14 @@ class FileController extends Controller
                     if (!empty($fileS3)) {
                         $data['volume'] = $fileS3->getSize();
                         $result = $this->uploadFileToS3($data['s3_file'], $file->creator_id);
+                    }
+                } elseif ($data['storage'] == 'r2') {
+                    $fileS3 = $request->file('s3_file');
+
+                    if (!empty($fileS3)) {
+                        $data['volume'] = $fileS3->getSize();
+                        $lessonId = $data['chapter_id'] ?? null;
+                        $result = $this->uploadFileToR2($data['s3_file'], $webinar->id, $lessonId);
                     }
                 } else {
                     if ($data['secure_host_upload_type'] == "direct") {
@@ -563,6 +576,19 @@ class FileController extends Controller
         }
 
         return $result;
+    }
+
+    private function uploadFileToR2($file, $webinarId, $lessonId = null)
+    {
+        $r2Service = new R2StorageService();
+        
+        $fileType = 'video'; // Default to video, can be determined from file extension
+        $result = $r2Service->uploadFile($file, $webinarId, $lessonId, $fileType);
+        
+        return [
+            'path' => $result['url'] ?? $result['path'],
+            'status' => $result['status']
+        ];
     }
 
     public function fileInfo($path)

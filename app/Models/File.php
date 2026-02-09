@@ -26,7 +26,7 @@ class File extends Model implements TranslatableContract
     ];
 
     static $fileSources = [
-        'upload', 'youtube', 'vimeo', 'external_link', 'google_drive', 'iframe', 's3', 'secure_host'
+        'upload', 'youtube', 'vimeo', 'external_link', 'google_drive', 'iframe', 's3', 'secure_host', 'r2'
     ];
 
     static $urlInputSources = ['youtube', 'vimeo', 'external_link', 'google_drive', 'iframe'];
