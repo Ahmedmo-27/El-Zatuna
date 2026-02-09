@@ -162,41 +162,4 @@
 
 @push('scripts_bottom')
     <script src="{{ getDesign1ScriptPath("forms") }}"></script>
-
-    <script>
-        $(document).ready(function() {
-            // Handle university change to load faculties
-            $('#university_id').on('change', function() {
-                const universityId = $(this).val();
-                const facultySelect = $('#faculty_id');
-                
-                facultySelect.html('<option value="" disabled selected>{{ trans('public.loading') }}...</option>');
-                
-                if (universityId) {
-                    $.ajax({
-                        url: '/universities/' + universityId + '/faculties',
-                        method: 'GET',
-                        success: function(response) {
-                            facultySelect.html('<option value="" disabled selected>{{ trans('public.select') }}</option>');
-                            
-                            // Check if response has faculties array
-                            const faculties = response.faculties || response;
-                            
-                            if (faculties && faculties.length > 0) {
-                                faculties.forEach(function(faculty) {
-                                    facultySelect.append('<option value="' + faculty.id + '">' + faculty.name + '</option>');
-                                });
-                            } else {
-                                facultySelect.append('<option value="" disabled>{{ trans('public.no_result') }}</option>');
-                            }
-                        },
-                        error: function(xhr) {
-                            console.error('Error loading faculties:', xhr);
-                            facultySelect.html('<option value="" disabled selected>{{ trans('public.error') }}</option>');
-                        }
-                    });
-                }
-            });
-        });
-    </script>
 @endpush
