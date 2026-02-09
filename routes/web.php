@@ -9,6 +9,12 @@ if (file_exists(__DIR__ . '/web-geidea-test.php')) {
 if (file_exists(__DIR__ . '/geidea-debug.php')) {
     require __DIR__ . '/geidea-debug.php';
 }
+if (file_exists(__DIR__ . '/geidea-diagnostic.php')) {
+    require __DIR__ . '/geidea-diagnostic.php';
+}
+if (file_exists(__DIR__ . '/geidea-return.php')) {
+    require __DIR__ . '/geidea-return.php';
+}
 
 /*
 |--------------------------------------------------------------------------
