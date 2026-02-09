@@ -356,8 +356,15 @@ class RegisterController extends Controller
             ]);
         }
         
-        // Web request: This should not be reached as VerifyEmailController handles email verification for web
-        return back()->with('success', 'Email verified successfully');
+        // Web request: Store verification token and user info in session
+        session([
+            'registration_step_3_token' => $verificationToken,
+            'registration_verified' => true,
+            'registration_user_id' => $user->id,
+        ]);
+
+        // Redirect to step 3
+        return redirect('/register/step/3')->with('success', trans('auth.email_verified_successfully'));
     }
 
     private function stepThree(Request $request)
