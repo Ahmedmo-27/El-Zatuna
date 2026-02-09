@@ -49,20 +49,17 @@ Route::get('/geidea/return', function(\Illuminate\Http\Request $request) {
     // Try multiple approaches to find the order
     $order = null;
     
-    // Approach 1: Find by session ID in JSON
+    // Approach 1: Find by session ID in JSON (any status - callback may have already processed it)
     if ($sessionId) {
-        $order = Order::where('status', 'pending')
+        $order = Order::where('payment_data', 'like', '%"session_id":"' . $sessionId . '"%')
             ->where('payment_method', 'payment_channel')
-            ->where('payment_data', 'like', '%"session_id":"' . $sessionId . '"%')
             ->orderBy('created_at', 'desc')
             ->first();
     }
     
-    // Approach 2: If not found, find the most recent pending order for this user
-    // (assuming user is still logged in)
+    // Approach 2: If not found, find the most recent order for this user (any status)
     if (!$order && auth()->check()) {
         $order = Order::where('user_id', auth()->id())
-            ->where('status', 'pending')
             ->where('payment_method', 'payment_channel')
             ->orderBy('created_at', 'desc')
             ->first();
@@ -80,6 +77,18 @@ Route::get('/geidea/return', function(\Illuminate\Http\Request $request) {
             'msg' => 'Order not found',
             'status' => 'error'
         ]]);
+    }
+    
+    // Check if order was already processed by callback
+    if (in_array($order->status, [Order::$paying, Order::$paid])) {
+        Log::info('Geidea order already processed by callback', [
+            'order_id' => $order->id,
+            'status' => $order->status,
+        ]);
+        
+        // Order already completed - just redirect to success page
+        session()->put('payment.order_id', $order->id);
+        return redirect("/payments/status?t={$order->id}");
     }
     
     Log::info('Geidea order found, verifying payment', [
