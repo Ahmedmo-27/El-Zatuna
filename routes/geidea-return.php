@@ -17,14 +17,24 @@ use App\PaymentChannels\ChannelManager;
 Route::get('/geidea/return', function(\Illuminate\Http\Request $request) {
     Log::info('Geidea Return URL accessed', [
         'all_params' => $request->all(),
+        'query_params' => $request->query(),
         'url' => $request->fullUrl(),
         'ip' => $request->ip(),
+        'user_id' => auth()->id(),
+        'is_authenticated' => auth()->check(),
     ]);
     
     $orderId = $request->query('orderId');
     $sessionId = $request->query('sessionId');
     $responseCode = $request->query('responseCode');
     $responseMessage = $request->query('responseMessage');
+    
+    Log::info('Geidea Return URL parsed params', [
+        'orderId' => $orderId,
+        'sessionId' => $sessionId,
+        'responseCode' => $responseCode,
+        'responseMessage' => $responseMessage,
+    ]);
     
     if (empty($orderId)) {
         Log::warning('Geidea return URL missing orderId');
@@ -36,15 +46,34 @@ Route::get('/geidea/return', function(\Illuminate\Http\Request $request) {
     }
     
     // Find the order by Geidea session ID in payment_data
-    $order = Order::whereRaw("JSON_EXTRACT(payment_data, '$.session_id') = ?", [$sessionId])
-        ->where('status', 'pending')
-        ->where('payment_method', 'payment_channel')
-        ->first();
+    // Try multiple approaches to find the order
+    $order = null;
+    
+    // Approach 1: Find by session ID in JSON
+    if ($sessionId) {
+        $order = Order::where('status', 'pending')
+            ->where('payment_method', 'payment_channel')
+            ->where('payment_data', 'like', '%"session_id":"' . $sessionId . '"%')
+            ->orderBy('created_at', 'desc')
+            ->first();
+    }
+    
+    // Approach 2: If not found, find the most recent pending order for this user
+    // (assuming user is still logged in)
+    if (!$order && auth()->check()) {
+        $order = Order::where('user_id', auth()->id())
+            ->where('status', 'pending')
+            ->where('payment_method', 'payment_channel')
+            ->orderBy('created_at', 'desc')
+            ->first();
+    }
     
     if (!$order) {
         Log::warning('Geidea order not found', [
             'orderId' => $orderId,
             'sessionId' => $sessionId,
+            'auth_check' => auth()->check(),
+            'user_id' => auth()->id(),
         ]);
         return redirect('/')->with(['toast' => [
             'title' => 'Payment Error',
