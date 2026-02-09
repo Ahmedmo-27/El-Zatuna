@@ -38,7 +38,7 @@
                         <div class="d-flex align-items-center bg-gray-100 p-24 rounded-16 flex-1">
                             <x-iconsax-bul-tick-circle class="icons text-primary" width="32px" height="32px"/>
                             <div class="ml-8">
-                                <span class="d-block font-16 font-weight-bold">{{  $quiz->pass_mark }}/{{  $quizQuestions->sum('grade') }}</span>
+                                <span class="d-block font-16 font-weight-bold">{{  $quiz->pass_mark }}%</span>
                                 <span class="d-block font-12 text-gray-500">{{ trans('public.pass_mark') }}</span>
                             </div>
                         </div>
