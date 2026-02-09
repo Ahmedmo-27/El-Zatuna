@@ -177,6 +177,26 @@ return [
     'seconds' => 'seconds',
     'go_to_dashboard' => 'Go to Dashboard',
     
+    // Code-based Email Verification
+    'enter_verification_code' => 'Enter Verification Code',
+    'we_sent_6_digit_code_to' => 'We sent a 6-digit verification code to',
+    'verify_email' => 'Verify Email',
+    'code_expires_in_60_minutes' => 'Code expires in 60 minutes',
+    'enter_6_digit_code_from_email' => 'Enter the 6-digit code from your email to continue.',
+    'didnt_receive_code' => 'Didn\'t receive the code?',
+    'resend_verification_code' => 'Resend Verification Code',
+    'code_sent_successfully' => 'Code Sent Successfully',
+    'failed_to_send_code' => 'Failed to send code. Please try again.',
+    'invalid_verification_code' => 'Invalid or expired verification code. Please try again.',
+    'please_enter_all_6_digits' => 'Please enter all 6 digits.',
+    'verifying' => 'Verifying',
+    'verification_code' => 'Verification Code',
+    'code_expires_in' => 'Code expires in',
+    'one_hour' => '1 hour',
+    'security_notice' => 'Security Notice',
+    'having_trouble' => 'Having trouble?',
+    'contact_support' => 'Contact Support',
+    
     // Error messages
     'verification_link_invalid_or_expired' => 'The verification link is invalid or has expired. Please request a new one.',
     'verification_link_invalid_step' => 'This verification link is not valid for this step.',

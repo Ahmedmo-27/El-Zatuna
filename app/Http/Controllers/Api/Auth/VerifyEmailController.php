@@ -10,7 +10,8 @@ use Illuminate\Http\Request;
 class VerifyEmailController extends Controller
 {
     /**
-     * Verify email via link clicked in email
+     * Verify email via link clicked in email (DEPRECATED - keeping for backward compatibility)
+     * New registrations should use code-based verification in RegisterController stepTwo
      *
      * @param Request $request
      * @param string $token
@@ -18,13 +19,16 @@ class VerifyEmailController extends Controller
      */
     public function verify(Request $request, $token)
     {
+        // This method is kept for backward compatibility with old verification links
+        // New registrations use code-based verification
+        
         // Verify the token
         $tokenData = RegistrationVerificationToken::verifyToken($token);
         
         if (!$tokenData) {
             // Check if API request
             if ($request->wantsJson() || $request->header('Accept') === 'application/json') {
-                return apiResponse2(0, 'invalid_token', 'Verification link is invalid or expired');
+                return apiResponse2(0, 'invalid_token', 'Verification link is invalid or expired. Please use the code sent to your email instead.');
             }
             // Web request - show error page
             return redirect('/register/step/1')->withErrors([
@@ -99,7 +103,7 @@ class VerifyEmailController extends Controller
     }
 
     /**
-     * Resend verification email
+     * Resend verification code via email
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -125,22 +129,21 @@ class VerifyEmailController extends Controller
             return apiResponse2(0, 'already_verified', 'Email is already verified');
         }
 
-        // Generate new verification token
+        // Generate new verification code
         $tokenData = [
             'user_id' => $user->id,
-            'username' => $user->username,
             'email' => $user->email,
             'step' => 2,
         ];
         
         $expiresAt = now()->addMinutes(60);
-        $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60);
+        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
 
-        // Send verification email
-        $user->notify(new \App\Notifications\VerifyRegistrationEmail($verificationToken, $expiresAt));
+        // Send verification email with code
+        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
 
-        return apiResponse2(1, 'verification_resent', 'Verification email has been resent', [
-            'message' => 'Please check your email to verify your account.',
+        return apiResponse2(1, 'verification_resent', 'Verification code has been resent', [
+            'message' => 'Please check your email for a new 6-digit verification code.',
             'expires_at' => $expiresAt->toIso8601String(),
         ]);
     }

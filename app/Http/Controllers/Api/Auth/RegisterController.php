@@ -156,7 +156,7 @@ class RegisterController extends Controller
         $form = $this->getFormFieldsByType($request->get('account_type'));
         $this->storeFormFields($data, $user);
 
-        // Generate token for step 2 (email verification)
+        // Generate verification code for step 2 (email verification)
         $tokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
@@ -164,13 +164,13 @@ class RegisterController extends Controller
         ];
         
         $expiresAt = now()->addMinutes(60);
-        $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
+        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60); // 60 minutes
 
-        // Send verification email
-        $user->notify(new \App\Notifications\VerifyRegistrationEmail($verificationToken, $expiresAt));
+        // Send verification email with code
+        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
 
         return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
-            'message' => 'Please check your email to verify your account.',
+            'message' => 'Please check your email for a 6-digit verification code.',
             'expires_at' => $expiresAt->toIso8601String(),
         ]);
     }
@@ -179,33 +179,30 @@ class RegisterController extends Controller
     {
         $data = $request->all();
         
-        // Step 2: Verify email with token
+        // Step 2: Verify email with verification code
         $rules = [
-            'verification_token' => 'required|string',
+            'email' => 'required|email|exists:users,email',
+            'verification_code' => 'required|string|size:6',
         ];
         
         validateParam($data, $rules);
 
-        // Verify the token
-        $tokenData = RegistrationVerificationToken::verifyToken($data['verification_token']);
+        // Verify the code
+        $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
         
         if (!$tokenData) {
-            return apiResponse2(0, 'invalid_token', 'Verification token is invalid or expired');
-        }
-
-        if ($tokenData['step'] !== 2) {
-            return apiResponse2(0, 'invalid_step', 'This token is not valid for step 2');
+            return apiResponse2(0, 'invalid_code', 'Verification code is invalid or expired. Please request a new code.');
         }
 
         // Find user
-        $user = User::find($tokenData['user_id']);
+        $user = User::where('email', $data['email'])->first();
         
         if (!$user) {
             return apiResponse2(0, 'user_not_found', 'User not found');
         }
 
-        // Mark token as used
-        RegistrationVerificationToken::markAsUsed($data['verification_token']);
+        // Mark code as used
+        RegistrationVerificationToken::markCodeAsUsed($data['verification_code'], $data['email']);
 
         // Mark email as verified
         if (empty($user->email_verified_at)) {
