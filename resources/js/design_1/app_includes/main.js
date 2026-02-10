@@ -804,8 +804,9 @@
                     //window.location.reload();
                     const dontReloadPage = (typeof result.dont_reload !== "undefined" && result.dont_reload);
 
-                    const title = result.title ?? requestSuccessLang;
-                    const msg = result.msg ?? saveSuccessLang;
+                    const isCartStore = (typeof action === 'string' && action.indexOf('/cart/store') !== -1);
+                    const title = isCartStore ? 'Cart' : (result.title ?? requestSuccessLang);
+                    const msg = isCartStore ? 'Course added successfully!' : (result.msg ?? saveSuccessLang);
 
                     showToast('success', title, msg);
 
