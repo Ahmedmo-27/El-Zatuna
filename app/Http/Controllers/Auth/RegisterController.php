@@ -339,8 +339,14 @@ class RegisterController extends Controller
         $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
         
         if (!$tokenData) {
-            if ($request->wantsJson()) {
-                return apiResponse2(0, 'invalid_code', 'Verification code is invalid or expired. Please request a new code.');
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => trans('auth.invalid_verification_code'),
+                    'errors' => [
+                        'verification_code' => [trans('auth.invalid_verification_code')]
+                    ]
+                ], 422);
             }
             return back()->withErrors(['verification_code' => trans('auth.invalid_verification_code')])->withInput();
         }
@@ -349,8 +355,14 @@ class RegisterController extends Controller
         $user = User::where('email', $data['email'])->first();
         
         if (!$user) {
-            if ($request->wantsJson()) {
-                return apiResponse2(0, 'user_not_found', 'User not found');
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found',
+                    'errors' => [
+                        'verification_code' => ['User not found']
+                    ]
+                ], 422);
             }
             return back()->withErrors(['verification_code' => 'User not found'])->withInput();
         }
@@ -388,6 +400,15 @@ class RegisterController extends Controller
             'registration_verified' => true,
             'registration_user_id' => $user->id,
         ]);
+
+        // For AJAX requests, return JSON with success
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => trans('auth.email_verified_successfully'),
+                'redirect' => '/register/step/3'
+            ]);
+        }
 
         // Redirect to step 3
         return redirect('/register/step/3')->with('success', trans('auth.email_verified_successfully'));

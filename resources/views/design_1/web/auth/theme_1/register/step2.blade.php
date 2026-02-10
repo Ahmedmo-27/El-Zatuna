@@ -181,8 +181,16 @@
                         verification_code: code
                     },
                     success: function(response) {
-                        // Redirect to step 3
-                        window.location.href = '/register/step/3';
+                        // Check if response has redirect URL
+                        if (response.redirect) {
+                            window.location.href = response.redirect;
+                        } else if (response.success) {
+                            // Fallback redirect to step 3
+                            window.location.href = '/register/step/3';
+                        } else {
+                            // Unexpected response format
+                            window.location.href = '/register/step/3';
+                        }
                     },
                     error: function(xhr) {
                         const message = xhr.responseJSON?.message || xhr.responseJSON?.errors?.verification_code?.[0] || '{{ trans('auth.invalid_verification_code') }}';
