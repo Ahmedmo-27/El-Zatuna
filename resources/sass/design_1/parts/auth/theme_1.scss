@@ -121,3 +121,69 @@
     overflow-y: auto;
     overflow-x: hidden;
 }
+
+// Password requirements styling
+.password-requirements {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 13px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+
+    .requirements-header {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        font-size: 14px;
+        color: #495057;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e9ecef;
+
+        svg {
+            flex-shrink: 0;
+        }
+    }
+
+    .requirements-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .requirement-item {
+        display: flex;
+        align-items: center;
+        padding: 6px 8px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        background-color: transparent;
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .requirement-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            color: #adb5bd;
+            flex-shrink: 0;
+        }
+
+        .requirement-text {
+            flex: 1;
+            line-height: 1.4;
+            color: #6c757d;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+    }
+}

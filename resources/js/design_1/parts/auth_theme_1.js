@@ -172,15 +172,24 @@
             return;
         }
 
-        $.get(`/universities/${universityId}/faculties`, function (result) {
-            if (result && result.code === 200) {
-                const faculties = result.faculties || [];
+        // Use preloaded data if available (much faster - no network delay!)
+        if (window.facultiesByUniversity && window.facultiesByUniversity[universityId]) {
+            const faculties = window.facultiesByUniversity[universityId];
+            faculties.forEach(function (faculty) {
+                $facultySelect.append(`<option value="${faculty.id}">${faculty.name}</option>`);
+            });
+        } else {
+            // Fallback to AJAX if preloaded data is not available
+            $.get(`/universities/${universityId}/faculties`, function (result) {
+                if (result && result.code === 200) {
+                    const faculties = result.faculties || [];
 
-                faculties.forEach(function (faculty) {
-                    $facultySelect.append(`<option value="${faculty.id}">${faculty.name}</option>`);
-                })
-            }
-        })
+                    faculties.forEach(function (faculty) {
+                        $facultySelect.append(`<option value="${faculty.id}">${faculty.name}</option>`);
+                    })
+                }
+            })
+        }
     })
 
 })(jQuery)

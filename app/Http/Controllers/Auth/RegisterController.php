@@ -100,8 +100,20 @@ class RegisterController extends Controller
             $pageRobot = getPageRobot('register');
 
             $referralSettings = getReferralSettings();
-            $universities = University::query()->orderBy('name')->get();
+            // Preload universities with their faculties to avoid AJAX calls
+            $universities = University::query()->with('faculties:id,name,university_id')->orderBy('name')->get();
             $referralCode = Cookie::get('referral_code');
+
+            // Build faculties map grouped by university_id for JavaScript
+            $facultiesByUniversity = [];
+            foreach ($universities as $university) {
+                $facultiesByUniversity[$university->id] = $university->faculties->map(function($faculty) {
+                    return [
+                        'id' => $faculty->id,
+                        'name' => $faculty->name,
+                    ];
+                })->sortBy('name')->values()->toArray();
+            }
 
             $data = [
                 'pageTitle' => $pageTitle,
@@ -111,6 +123,7 @@ class RegisterController extends Controller
                 'verified' => $verified,
                 'universities' => $universities,
                 'faculties' => collect(),
+                'facultiesByUniversity' => $facultiesByUniversity,
                 'referralSettings' => $referralSettings,
                 'referralCode' => $referralCode,
             ];
@@ -183,8 +196,20 @@ class RegisterController extends Controller
                 
                 // For web: redirect to step 3 with token
                 $referralSettings = getReferralSettings();
-                $universities = University::query()->orderBy('name')->get();
+                // Preload universities with their faculties to avoid AJAX calls
+                $universities = University::query()->with('faculties:id,name,university_id')->orderBy('name')->get();
                 $referralCode = Cookie::get('referral_code');
+
+                // Build faculties map grouped by university_id for JavaScript
+                $facultiesByUniversity = [];
+                foreach ($universities as $university) {
+                    $facultiesByUniversity[$university->id] = $university->faculties->map(function($faculty) {
+                        return [
+                            'id' => $faculty->id,
+                            'name' => $faculty->name,
+                        ];
+                    })->sortBy('name')->values()->toArray();
+                }
 
                 $seoSettings = getSeoMetas('register');
                 $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
@@ -200,6 +225,7 @@ class RegisterController extends Controller
                     'verified' => false,
                     'universities' => $universities,
                     'faculties' => collect(),
+                    'facultiesByUniversity' => $facultiesByUniversity,
                     'referralSettings' => $referralSettings,
                     'referralCode' => $referralCode,
                 ]);

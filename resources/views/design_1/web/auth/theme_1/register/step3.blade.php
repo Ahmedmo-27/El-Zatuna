@@ -60,6 +60,42 @@
                     {{ $message }}
                 </div>
                 @enderror
+
+                <!-- Password Requirements -->
+                <div class="password-requirements mt-16">
+                    <div class="requirements-header mb-12">
+                        <svg class="mr-8" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span>Password Requirements</span>
+                    </div>
+                    <div class="requirements-list">
+                        <div class="requirement-item" data-requirement="length">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">At least 8 characters</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="uppercase">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One uppercase letter (A-Z)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="lowercase">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One lowercase letter (a-z)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="number">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One number (0-9)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="special">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One special character (!@#$%...)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="username">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">Not same as username</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -162,4 +198,74 @@
 
 @push('scripts_bottom')
     <script src="{{ getDesign1ScriptPath("forms") }}"></script>
+    <script>
+        // Preloaded faculties data to avoid AJAX calls
+        window.facultiesByUniversity = @json($facultiesByUniversity ?? []);
+    </script>
+    <script>
+        // Real-time password validation
+        (function() {
+            const passwordInput = document.getElementById('password');
+            const usernameInput = document.getElementById('username');
+            const requirements = document.querySelectorAll('.requirement-item');
+
+            if (!passwordInput) return;
+
+            function validatePassword() {
+                const password = passwordInput.value;
+                const username = usernameInput ? usernameInput.value : '';
+
+                // Check each requirement
+                const checks = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+                    username: !username || password.toLowerCase() !== username.toLowerCase()
+                };
+
+                // Update UI for each requirement
+                requirements.forEach(function(item) {
+                    const requirement = item.getAttribute('data-requirement');
+                    const icon = item.querySelector('.requirement-icon');
+                    const text = item.querySelector('.requirement-text');
+                    
+                    if (checks[requirement]) {
+                        // Requirement met
+                        icon.innerHTML = '✓';
+                        icon.style.color = '#28a745';
+                        icon.style.fontWeight = 'bold';
+                        text.style.color = '#28a745';
+                        item.style.opacity = '1';
+                    } else if (password.length > 0) {
+                        // Requirement not met but user is typing
+                        icon.innerHTML = '○';
+                        icon.style.color = '#dc3545';
+                        icon.style.fontWeight = 'normal';
+                        text.style.color = '#6c757d';
+                        item.style.opacity = '1';
+                    } else {
+                        // No input yet
+                        icon.innerHTML = '○';
+                        icon.style.color = '#6c757d';
+                        icon.style.fontWeight = 'normal';
+                        text.style.color = '#6c757d';
+                        item.style.opacity = '0.7';
+                    }
+                });
+            }
+
+            // Validate on input
+            passwordInput.addEventListener('input', validatePassword);
+            
+            // Also validate when username changes (for username check)
+            if (usernameInput) {
+                usernameInput.addEventListener('input', validatePassword);
+            }
+
+            // Initial validation (in case of back button or autofill)
+            validatePassword();
+        })();
+    </script>
 @endpush
