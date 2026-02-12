@@ -333,29 +333,29 @@ class SessionManager
     {
         $deviceData = $this->extractDeviceData($request);
 
-        $device = \App\Models\UserRegisteredDevice::firstOrCreate(
+        // Check if device already exists to preserve certain fields
+        $existingDevice = \App\Models\UserRegisteredDevice::where('device_fingerprint', $deviceFingerprint)->first();
+
+        // Use updateOrCreate to handle existing devices properly
+        // Since device_fingerprint has a unique constraint, we search by it alone
+        $device = \App\Models\UserRegisteredDevice::updateOrCreate(
             [
-                'user_id' => $user->id,
                 'device_fingerprint' => $deviceFingerprint,
             ],
             [
+                'user_id' => $user->id,
                 'device_name' => $deviceData['device_name'],
                 'browser' => $deviceData['browser'],
                 'os' => $deviceData['os'],
                 'platform' => $deviceData['platform'],
                 'ip_address' => $request ? $request->ip() : null,
                 'user_agent' => $request ? $request->userAgent() : null,
-                'first_registered_at' => time(),
+                'first_registered_at' => $existingDevice ? $existingDevice->first_registered_at : time(),
                 'last_used_at' => time(),
-                'is_trusted' => true,
-                'login_count' => 1,
+                'is_trusted' => $existingDevice ? $existingDevice->is_trusted : true,
+                'login_count' => $existingDevice ? ($existingDevice->login_count + 1) : 1,
             ]
         );
-
-        // If device already exists, update last used
-        if (!$device->wasRecentlyCreated) {
-            $device->updateLastUsed();
-        }
 
         return $device;
     }
