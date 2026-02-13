@@ -1,5 +1,5 @@
 <footer class="bg-[#FAFFE0] border-t border-[#ECF4B8]">
-    <div class="max-w-7xl mx-auto px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-sm text-[#072923]">
+    <div class="max-w-7xl mx-auto px-8 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start text-sm text-[#072923]">
         <div>
             <h4 class="font-semibold mb-3 flex items-center gap-2"><x-iconsax-lin-map-1 class="w-5 h-5"/> SITEMAP</h4>
             <ul class="space-y-2 text-[#072923]/70">
@@ -33,11 +33,10 @@
                 <input type="text" placeholder="First name" class="bg-transparent border-b border-[#A3B18A] outline-none w-full text-[#072923] placeholder-[#072923]/50 transition-all duration-200 focus:border-[#C8CD06]" />
                 <input type="email" placeholder="john.doe@elzatuna.subject" class="bg-transparent border-b border-[#A3B18A] outline-none w-full text-[#072923] placeholder-[#072923]/50 transition-all duration-200 focus:border-[#C8CD06]" />
             </div>
-            <button class="mt-3 bg-[#C8CD06] text-[#072923] font-semibold px-4 py-2 rounded-full text-xs hover:bg-[#BDEA42] transition-colors duration-200 hover:scale-105 transform">✨ Sign Up</button>
+            <button class="mt-4 bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm hover:bg-[#BDEA42] transition-colors duration-200">Sign Up</button>
         </div>
     </div>
-    <div class="max-w-7xl mx-auto px-8 pb-8 text-xs text-[#072923]/60 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-8 pb-8 text-xs text-[#072923]/60 flex items-center">
         <span>©2025 elzatuna. ALL RIGHTS RESERVED</span>
-        <span class="opacity-20 text-4xl font-semibold">elzatuna</span>
     </div>
 </footer>

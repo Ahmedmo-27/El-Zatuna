@@ -42,7 +42,19 @@
 
                 <div class="hero-right-col pr-0 md:pr-8 lg:pr-16 xl:pr-24 mt-10 lg:mt-0">
                     <div id="hero-3d-container" class="relative h-[300px] sm:h-[360px] md:h-[540px] w-full max-w-[620px] lg:-ml-12 mx-auto lg:mx-0 overflow-visible border-2 sm:border-4 border-[#C8CD06] rounded-[32px] sm:rounded-[48px] bg-[#072923]/5 shadow-2xl">
-                        <!-- 3D Model will be rendered here -->
+                        <model-viewer
+                            src="/3dmodels/laptop.glb"
+                            alt="Laptop 3D model"
+                            camera-controls
+                            auto-rotate
+                            rotation-per-second="20deg"
+                            camera-orbit="45deg 75deg 7.8m"
+                            min-camera-orbit="auto auto 5.8m"
+                            max-camera-orbit="auto auto 6m"
+                            exposure="1"
+                            shadow-intensity="1"
+                            class="w-full h-full"
+                        ></model-viewer>
                     </div>
                 </div>
             </div>
@@ -82,7 +94,7 @@
 
         <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 pl-16 md:pl-28 lg:pl-36 py-24">
             <div class="grid lg:grid-cols-[1fr_1.1fr] gap-14 items-center">
-                <div class="pl-2 md:pl-4">
+            <div class="pl-2 md:pl-4">
                     <h2 class="text-3xl md:text-4xl lg:text-5xl font-semibold">Using <span class="text-[#C8CD06]">Advanced</span><br>Learning Features</h2>
                     <p class="mt-5 text-base md:text-lg text-[#072923]/70 max-w-lg leading-relaxed">Access modern tools, interactive content, and expert resources to master new skills and stay competitive.</p>
                     <ul class="mt-8 space-y-5 text-base md:text-lg">
@@ -139,12 +151,12 @@
         </section>
 
         <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-24">
-            <h2 class="text-3xl md:text-4xl lg:text-5xl font-semibold">Explore <span class="text-[#C8CD06]">Upcoming</span><br>Courses</h2>
-            <p class="mt-4 text-base md:text-lg text-[#072923]/70">Stay ahead with fresh courses launching soon, designed to expand your skills and knowledge further.</p>
-            <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-semibold mb-16">Explore <span class="text-[#C8CD06]">Upcoming</span><br>Courses</h2>
+            <p class="text-base md:text-lg text-[#072923]/70 leading-relaxed mb-14">Stay ahead with fresh courses launching soon, designed to expand your skills and knowledge further.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-9">
                 @foreach(($upcomingCourses ?? collect()) as $upcomingCourse)
                     <a href="/upcoming_courses/{{ $upcomingCourse->slug }}" class="block rounded-[24px] bg-[#072923] overflow-hidden">
-                        <div class="h-[220px] w-full">
+                        <div class="h-[200px] w-full">
                             <img loading="lazy" src="{{ $upcomingCourse->getImageCover() ?? $upcomingCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0' }}" alt="{{ $upcomingCourse->title }}" class="w-full h-full object-cover">
                         </div>
                         <div class="p-6 text-[#FAFFE0]">
@@ -154,15 +166,15 @@
                     </a>
                 @endforeach
             </div>
-            <a href="/upcoming_courses" class="mt-6 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
+            <a href="/upcoming_courses" class="mt-20 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
         </section>
 
-        <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-16">
-            <div class="bg-[#072923] rounded-[32px] p-8 md:p-10 lg:p-12">
-                <div class="flex flex-col md:flex-row items-start md:items-center justify-between text-[#FAFFE0] gap-4">
+        <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-28">
+            <div class="bg-[#072923] rounded-[32px] p-10 md:p-14 lg:p-16">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between text-[#FAFFE0] gap-10 md:gap-12">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-semibold"><span class="text-[#C8CD06]">Discounted</span> Courses</h2>
-                        <p class="text-sm text-[#FAFFE0]/70">Save more now with top courses at discounts</p>
+                        <p class="mt-5 text-sm text-[#FAFFE0]/70">Save more now with top courses at discounts</p>
                     </div>
                     <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-semibold px-5 py-2 rounded-full text-sm">View More</a>
                 </div>
@@ -172,20 +184,20 @@
                     $discountedCards = $discountedCourses->isNotEmpty() ? $discountedCourses : collect([1, 2, 3]);
                 @endphp
 
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
                     @foreach(($discountedCards ?? collect()) as $course)
                         <a href="{{ is_object($course) ? $course->getUrl() : '/classes' }}" class="block rounded-[24px] bg-[#FAFFE0] overflow-hidden">
                             <div class="h-[220px] w-full">
                                 <img loading="lazy" src="{{ is_object($course) ? ($course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923') : 'https://placehold.co/600x400/FAFFE0/072923' }}" alt="{{ is_object($course) ? $course->title : 'Discounted course' }}" class="w-full h-full object-cover">
                             </div>
-                            <div class="p-4 text-[#072923]">
+                            <div class="p-7 text-[#072923]">
                                 <div class="font-semibold text-base">{{ is_object($course) ? $course->title : 'Discounted course' }}</div>
-                                <div class="text-xs text-[#072923]/70">{{ is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor' }}</div>
+                                <div class="mt-3 text-xs text-[#072923]/70">{{ is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor' }}</div>
                             </div>
                         </a>
                     @endforeach
                 </div>
-                <p class="mt-4 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
+                <p class="mt-14 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
             </div>
         </section>
 
@@ -307,10 +319,10 @@
         @endauth
 
         <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-20">
-            <h2 class="text-2xl md:text-3xl font-semibold mb-6">Expert Instructors</h2>
-            <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 class="text-2xl md:text-3xl font-semibold mb-10">Expert Instructors</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                 @foreach(($instructors ?? collect()) as $instructor)
-                    <a href="/users/{{ $instructor->username ?? $instructor->id }}/profile" class="flex flex-col items-center justify-center gap-4 rounded-[20px] bg-[#072923] p-6 aspect-square w-full max-w-[220px] mx-auto">
+                    <a href="/users/{{ $instructor->username ?? $instructor->id }}/profile" class="flex flex-col items-center justify-center gap-4 rounded-[20px] bg-[#072923] p-6 aspect-square w-full">
                         <img loading="lazy" src="{{ $instructor->avatar ?? $instructor->getAvatar(112) ?? 'https://placehold.co/140x140/FAFFE0/072923' }}" alt="{{ $instructor->full_name }}" class="h-28 w-28 rounded-full object-cover bg-[#FAFFE0]" />
                         <div class="text-[#FAFFE0] text-center">
                             <div class="font-semibold text-lg">{{ $instructor->full_name }}</div>
@@ -345,6 +357,7 @@
 @endpush
 
 @push('scripts_bottom')
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Typing Animation logic
@@ -469,83 +482,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Instructor cards stagger (REMOVED)
     }
 
-    // Three.js 3D Model
-    const container = document.getElementById('hero-3d-container');
-    if (container && typeof THREE !== 'undefined') {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setClearColor(0x000000, 0);
-        container.appendChild(renderer.domElement);
-
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        
-        const directionalLight = new THREE.DirectionalLight(0xC8CD06, 1);
-        directionalLight.position.set(5, 5, 5);
-        scene.add(directionalLight);
-        
-        const directionalLight2 = new THREE.DirectionalLight(0x072923, 0.5);
-        directionalLight2.position.set(-5, -5, -5);
-        scene.add(directionalLight2);
-
-        camera.position.z = 5;
-        camera.position.y = 0.3;
-
-        let model = null;
-        let floatTime = 0;
-
-        // Load the GLB model
-        const loader = new THREE.GLTFLoader();
-        loader.load('/3dmodels/graduation_hat.glb', function(gltf) {
-            model = gltf.scene;
-            model.scale.set(2, 2, 2);
-            model.position.set(0, -0.5, 0);
-            // Tilt the model to look at viewer
-            model.rotation.x = 0.3;
-            model.rotation.z = -0.1;
-            scene.add(model);
-            
-            // Initial animation with GSAP
-            if (typeof gsap !== 'undefined') {
-                gsap.from(model.rotation, { duration: 2, y: Math.PI * 2, ease: 'power2.out' });
-                gsap.from(model.scale, { duration: 1.5, x: 0, y: 0, z: 0, ease: 'elastic.out(1, 0.5)' });
-            }
-        }, undefined, function(error) {
-            console.log('Error loading 3D model:', error);
-            // Fallback: show a placeholder
-            container.innerHTML = '<div class="w-full h-full flex items-center justify-center"><div class="h-48 w-48 bg-[#072923] rounded-full flex items-center justify-center text-6xl">🎓</div></div>';
-        });
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if (model) {
-                // Rotate
-                model.rotation.y += 0.005;
-                
-                // Float up and down
-                floatTime += 0.02;
-                model.position.y = -0.8 + Math.sin(floatTime) * 0.15;
-            }
-            
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // Handle resize
-        window.addEventListener('resize', () => {
-            if (container) {
-                camera.aspect = container.clientWidth / container.clientHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(container.clientWidth, container.clientHeight);
-            }
-        });
-    }
 });
 </script>
 @endpush
