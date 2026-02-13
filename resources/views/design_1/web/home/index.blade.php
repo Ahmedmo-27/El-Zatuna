@@ -169,12 +169,12 @@
             <a href="/upcoming_courses" class="mt-20 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
         </section>
 
-        <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-16">
-            <div class="bg-[#072923] rounded-[32px] p-8 md:p-10 lg:p-12">
-                <div class="flex flex-col md:flex-row items-start md:items-center justify-between text-[#FAFFE0] gap-4">
+        <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-28">
+            <div class="bg-[#072923] rounded-[32px] p-10 md:p-14 lg:p-16">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between text-[#FAFFE0] gap-10 md:gap-12">
                     <div>
                         <h2 class="text-2xl md:text-3xl font-semibold"><span class="text-[#C8CD06]">Discounted</span> Courses</h2>
-                        <p class="text-sm text-[#FAFFE0]/70">Save more now with top courses at discounts</p>
+                        <p class="mt-5 text-sm text-[#FAFFE0]/70">Save more now with top courses at discounts</p>
                     </div>
                     <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-semibold px-5 py-2 rounded-full text-sm">View More</a>
                 </div>
@@ -184,20 +184,20 @@
                     $discountedCards = $discountedCourses->isNotEmpty() ? $discountedCourses : collect([1, 2, 3]);
                 @endphp
 
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
                     @foreach(($discountedCards ?? collect()) as $course)
                         <a href="{{ is_object($course) ? $course->getUrl() : '/classes' }}" class="block rounded-[24px] bg-[#FAFFE0] overflow-hidden">
                             <div class="h-[220px] w-full">
                                 <img loading="lazy" src="{{ is_object($course) ? ($course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923') : 'https://placehold.co/600x400/FAFFE0/072923' }}" alt="{{ is_object($course) ? $course->title : 'Discounted course' }}" class="w-full h-full object-cover">
                             </div>
-                            <div class="p-4 text-[#072923]">
+                            <div class="p-7 text-[#072923]">
                                 <div class="font-semibold text-base">{{ is_object($course) ? $course->title : 'Discounted course' }}</div>
-                                <div class="text-xs text-[#072923]/70">{{ is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor' }}</div>
+                                <div class="mt-3 text-xs text-[#072923]/70">{{ is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor' }}</div>
                             </div>
                         </a>
                     @endforeach
                 </div>
-                <p class="mt-4 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
+                <p class="mt-14 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
             </div>
         </section>
 
