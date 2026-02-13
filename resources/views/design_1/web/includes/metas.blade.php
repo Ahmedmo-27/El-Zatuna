@@ -13,7 +13,11 @@
     <meta name='twitter:description' content='{{ (!empty($ogDescription)) ? $ogDescription : $pageDescription }}'>
 @endif
 
-<link rel='shortcut icon' type='image/x-icon' href="{{ url(!empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '') }}">
+@php
+    $favIconPath = !empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '/favicon.ico';
+@endphp
+
+<link rel='shortcut icon' type='image/x-icon' href="{{ url($favIconPath) }}">
 <link rel="manifest" href="/mix-manifest.json?v=4">
 <meta name="theme-color" content="#FFF">
 <!-- Windows Phone -->
@@ -22,11 +26,11 @@
 <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
 <!-- iOS Safari -->
 <meta name="apple-mobile-web-app-title" content="{{ !empty($generalSettings['site_name']) ? $generalSettings['site_name'] : '' }}">
-<link rel="apple-touch-icon" href="{{ url(!empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '') }}">
+<link rel="apple-touch-icon" href="{{ url($favIconPath) }}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <!-- Android -->
-<link rel='icon' href='{{ url(!empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '') }}'>
+<link rel='icon' href='{{ url($favIconPath) }}'>
 <meta name="application-name" content="{{ !empty($generalSettings['site_name']) ? $generalSettings['site_name'] : '' }}">
 <meta name="mobile-web-app-capable" content="yes">
 <!-- Other -->
