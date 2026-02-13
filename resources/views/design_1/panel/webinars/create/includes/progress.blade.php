@@ -46,7 +46,7 @@
 
 @endphp
 
-<div class="position-relative d-flex align-items-center p-20 rounded-16 bg-white">
+<div class="position-relative d-flex flex-wrap align-items-center p-25 rounded-16 bg-white" style="gap: 80px; row-gap: 32px;">
     <div class="webinar-progress-mask"></div>
 
     @foreach($progressSteps as $key => $progressStep)
@@ -54,7 +54,7 @@
             $isActiveStep = ($currentStep == $key);
         @endphp
 
-        <div class="js-get-next-step {{ $isActiveStep ? 'd-flex' : 'd-none d-lg-flex' }} align-items-center cursor-pointer {{ !($loop->last) ? 'mr-40' : '' }}" data-step="{{ $key }}" @if(!$isActiveStep) data-tippy-content="{{ trans('public.' . $progressStep['name']) }}" @endif>
+        <div class="js-get-next-step {{ $isActiveStep ? 'd-flex' : 'd-none d-lg-flex' }} align-items-center cursor-pointer" data-step="{{ $key }}" @if(!$isActiveStep) data-tippy-content="{{ trans('public.' . $progressStep['name']) }}" @endif>
             <div class="d-flex-center size-48 rounded-circle {{ $isActiveStep ? 'bg-primary' : 'bg-gray-100' }}">
                 @svg("iconsax-lin-{$progressStep['icon']}", ['height' => 24, 'width' => 24, 'class' => $isActiveStep ? 'text-white' : 'text-gray-400'])
             </div>
