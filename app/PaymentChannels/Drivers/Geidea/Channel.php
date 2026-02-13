@@ -173,14 +173,18 @@ class Channel extends BasePaymentChannel implements IChannel
             'returnUrl' => $this->makeReturnUrl(),
             'language' => $this->language,
             'paymentOperation' => $this->payment_operation,
-            'cardOnFile' => (bool) $this->card_on_file, // Ensure strict boolean type
             'customer' => [
                 'email' => $user->email,
-                'phoneNumber' => $user->mobile ?? '',
+                'phoneNumber' => $user->mobile ?? '+20000000000', // Provide default if missing
                 'firstName' => $user->first_name ?? $user->full_name,
                 'lastName' => $user->last_name ?? '',
             ],
         ];
+        
+        // Only include cardOnFile if it's explicitly true (omit when false to avoid validation errors)
+        if ($this->card_on_file === true) {
+            $sessionData['cardOnFile'] = true;
+        }
 
         try {
             // Log request for debugging

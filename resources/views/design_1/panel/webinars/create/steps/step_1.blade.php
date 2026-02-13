@@ -67,7 +67,7 @@
 
     <div class="form-group">
         <label class="form-group-label bg-white">{{ trans('update.university') }} ({{ trans('public.optional') }})</label>
-        <select name="university_id" class="select2 @error('university_id')  is-invalid @enderror">
+        <select name="university_id" id="university_id" class="select2 @error('university_id')  is-invalid @enderror">
             <option value="">{{ trans('public.optional') }}</option>
             @foreach($universities ?? [] as $university)
                 <option value="{{ $university->id }}" {{ (!empty($webinar) && $webinar->university_id == $university->id) ? 'selected' : (old('university_id') == $university->id ? 'selected' : '') }}>{{ $university->name }}</option>
@@ -82,10 +82,10 @@
 
     <div class="form-group">
         <label class="form-group-label bg-white">{{ trans('update.faculty') }} ({{ trans('public.optional') }})</label>
-        <select name="faculty_id" class="select2 @error('faculty_id')  is-invalid @enderror">
+        <select name="faculty_id" id="faculty_id" class="select2 @error('faculty_id')  is-invalid @enderror">
             <option value="">{{ trans('public.optional') }}</option>
             @foreach($faculties ?? [] as $faculty)
-                <option value="{{ $faculty->id }}" {{ (!empty($webinar) && $webinar->faculty_id == $faculty->id) ? 'selected' : (old('faculty_id') == $faculty->id ? 'selected' : '') }}>{{ $faculty->name }}</option>
+                <option value="{{ $faculty->id }}" data-university-id="{{ $faculty->university_id }}" {{ (!empty($webinar) && $webinar->faculty_id == $faculty->id) ? 'selected' : (old('faculty_id') == $faculty->id ? 'selected' : '') }}>{{ $faculty->name }}</option>
             @endforeach
         </select>
         @error('faculty_id')
@@ -119,7 +119,7 @@
     </div>
 
     <div class="form-group mb-0 mt-24">
-        <h3 class="font-14 font-weight-bold position-relative d-inline-flex is-required">{{ trans('update.thumbnail_&_cover') }}</h3>
+        <h3 class="font-14 font-weight-bold position-relative d-inline-flex">{{ trans('update.thumbnail_&_cover') }}</h3>
     </div>
 
     <div class="row">
@@ -274,4 +274,64 @@
 
 @push('scripts_bottom')
     <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+    
+    <script>
+        (function($) {
+            "use strict";
+
+            // Store all faculty options
+            var allFacultyOptions = $('#faculty_id option').clone();
+            
+            // Function to filter faculties by university
+            function filterFacultiesByUniversity(universityId) {
+                var $facultySelect = $('#faculty_id');
+                var currentValue = $facultySelect.val();
+                
+                // Clear current options except the first (Optional)
+                $facultySelect.find('option:not(:first)').remove();
+                
+                if (!universityId) {
+                    // If no university selected, show all faculties
+                    allFacultyOptions.each(function() {
+                        if ($(this).val()) { // Skip the "Optional" option
+                            $facultySelect.append($(this).clone());
+                        }
+                    });
+                } else {
+                    // Filter faculties by university
+                    allFacultyOptions.each(function() {
+                        if ($(this).data('university-id') == universityId) {
+                            $facultySelect.append($(this).clone());
+                        }
+                    });
+                }
+                
+                // Re-initialize select2 to reflect changes
+                if ($facultySelect.hasClass('select2-hidden-accessible')) {
+                    $facultySelect.select2('destroy');
+                }
+                $facultySelect.select2();
+                
+                // Restore previous value if it's still valid
+                if (currentValue && $facultySelect.find('option[value="' + currentValue + '"]').length) {
+                    $facultySelect.val(currentValue).trigger('change');
+                }
+            }
+            
+            // Handle university change
+            $('#university_id').on('change', function() {
+                var universityId = $(this).val();
+                filterFacultiesByUniversity(universityId);
+            });
+            
+            // Initial filter on page load
+            $(document).ready(function() {
+                var initialUniversityId = $('#university_id').val();
+                if (initialUniversityId) {
+                    filterFacultiesByUniversity(initialUniversityId);
+                }
+            });
+            
+        })(jQuery);
+    </script>
 @endpush

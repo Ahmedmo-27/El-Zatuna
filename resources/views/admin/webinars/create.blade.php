@@ -146,7 +146,7 @@
 
                                             <div class="form-group mt-15">
                                                 <label class="input-label">{{ trans('update.university') }} ({{ trans('public.optional') }})</label>
-                                                <select name="university_id" class="form-control @error('university_id')  is-invalid @enderror">
+                                                <select name="university_id" id="university_id" class="form-control @error('university_id')  is-invalid @enderror">
                                                     <option value="">{{ trans('public.optional') }}</option>
                                                     @foreach($universities ?? [] as $university)
                                                         <option value="{{ $university->id }}" {{ (!empty($webinar) && $webinar->university_id == $university->id) ? 'selected' : (old('university_id') == $university->id ? 'selected' : '') }}>{{ $university->name }}</option>
@@ -161,10 +161,10 @@
 
                                             <div class="form-group mt-15">
                                                 <label class="input-label">{{ trans('update.faculty') }} ({{ trans('public.optional') }})</label>
-                                                <select name="faculty_id" class="form-control @error('faculty_id')  is-invalid @enderror">
+                                                <select name="faculty_id" id="faculty_id" class="form-control @error('faculty_id')  is-invalid @enderror">
                                                     <option value="">{{ trans('public.optional') }}</option>
                                                     @foreach($faculties ?? [] as $faculty)
-                                                        <option value="{{ $faculty->id }}" {{ (!empty($webinar) && $webinar->faculty_id == $faculty->id) ? 'selected' : (old('faculty_id') == $faculty->id ? 'selected' : '') }}>{{ $faculty->name }}</option>
+                                                        <option value="{{ $faculty->id }}" data-university-id="{{ $faculty->university_id }}" {{ (!empty($webinar) && $webinar->faculty_id == $faculty->id) ? 'selected' : (old('faculty_id') == $faculty->id ? 'selected' : '') }}>{{ $faculty->name }}</option>
                                                     @endforeach
                                                 </select>
                                                 @error('faculty_id')
@@ -1107,4 +1107,58 @@
 
     <script src="/assets/admin/js/parts/quiz.min.js"></script>
     <script src="/assets/admin/js/parts/webinar.min.js"></script>
+    
+    <script>
+        (function($) {
+            "use strict";
+
+            // Store all faculty options
+            var allFacultyOptions = $('#faculty_id option').clone();
+            
+            // Function to filter faculties by university
+            function filterFacultiesByUniversity(universityId) {
+                var $facultySelect = $('#faculty_id');
+                var currentValue = $facultySelect.val();
+                
+                // Clear current options except the first (Optional)
+                $facultySelect.find('option:not(:first)').remove();
+                
+                if (!universityId) {
+                    // If no university selected, show all faculties
+                    allFacultyOptions.each(function() {
+                        if ($(this).val()) { // Skip the "Optional" option
+                            $facultySelect.append($(this).clone());
+                        }
+                    });
+                } else {
+                    // Filter faculties by university
+                    allFacultyOptions.each(function() {
+                        if ($(this).data('university-id') == universityId) {
+                            $facultySelect.append($(this).clone());
+                        }
+                    });
+                }
+                
+                // Restore previous value if it's still valid
+                if (currentValue && $facultySelect.find('option[value="' + currentValue + '"]').length) {
+                    $facultySelect.val(currentValue);
+                }
+            }
+            
+            // Handle university change
+            $('#university_id').on('change', function() {
+                var universityId = $(this).val();
+                filterFacultiesByUniversity(universityId);
+            });
+            
+            // Initial filter on page load
+            $(document).ready(function() {
+                var initialUniversityId = $('#university_id').val();
+                if (initialUniversityId) {
+                    filterFacultiesByUniversity(initialUniversityId);
+                }
+            });
+            
+        })(jQuery);
+    </script>
 @endpush

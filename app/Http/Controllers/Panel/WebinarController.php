@@ -116,8 +116,8 @@ class WebinarController extends Controller
         $rules = [
             'type' => 'required|in:webinar,course,text_lesson',
             'title' => 'required|max:255',
-            'thumbnail' => 'required',
-            'image_cover' => 'required',
+            'thumbnail' => 'nullable',
+            'image_cover' => 'nullable',
             'summary' => 'required',
             'description' => 'required',
             'university_id' => 'nullable|exists:universities,id',
