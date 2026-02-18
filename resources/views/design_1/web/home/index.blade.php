@@ -17,11 +17,11 @@
                     </p>
                     
                     <div class="mt-8 md:mt-10 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-4 sm:gap-6">
-                        <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-bold px-8 sm:px-10 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-[#BDEA42] hover:scale-110 transition-all duration-300 shadow-2xl relative z-10 block opacity-100 !visible flex items-center justify-center gap-3"><x-iconsax-lin-book class="w-6 h-6 sm:w-7 sm:h-7"/> Enroll on courses</a>
-                        <a href="/contact" class="border-2 border-[#072923] text-[#072923] font-bold px-8 sm:px-10 py-3.5 sm:py-4 rounded-full text-base sm:text-lg hover:bg-[#072923] hover:text-[#FAFFE0] transition-all duration-300 relative z-10 block opacity-100 !visible flex items-center justify-center gap-3"><x-iconsax-lin-sms class="w-6 h-6 sm:w-7 sm:h-7"/> Request Course</a>
+                        <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#BDEA42] hover:scale-110 transition-all duration-300 shadow-2xl relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-book class="w-5 h-5 sm:w-6 sm:h-6"/> Enroll on courses</a>
+                        <a href="/contact" class="border-2 border-[#072923] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#072923] hover:text-[#FAFFE0] transition-all duration-300 relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-sms class="w-5 h-5 sm:w-6 sm:h-6"/> Request Course</a>
                     </div>
 
-                    <div class="mt-8 md:mt-12 inline-flex items-center gap-3 bg-[#FAFFE0] border border-[#ECF4B8] rounded-full px-3 sm:px-4 py-2">
+                    <div class="mt-16 md:mt-14 inline-flex items-center gap-3 bg-[#FAFFE0] border border-[#ECF4B8] rounded-full px-3 sm:px-4 py-2">
                         <div class="flex -space-x-2">
                             <div class="h-7 w-7 rounded-full bg-[#A3B18A]"></div>
                             <div class="h-7 w-7 rounded-full bg-[#072923]"></div>
@@ -43,14 +43,14 @@
                 <div class="hero-right-col pr-0 md:pr-8 lg:pr-16 xl:pr-24 mt-10 lg:mt-0">
                     <div id="hero-3d-container" class="relative h-[300px] sm:h-[360px] md:h-[540px] w-full max-w-[620px] lg:-ml-12 mx-auto lg:mx-0 overflow-visible border-2 sm:border-4 border-[#C8CD06] rounded-[32px] sm:rounded-[48px] bg-[#072923]/5 shadow-2xl">
                         <model-viewer
-                            src="/3dmodels/laptop.glb"
+                            src="/3dmodels/robotzatuna.glb"
                             alt="Laptop 3D model"
                             camera-controls
                             auto-rotate
                             rotation-per-second="20deg"
-                            camera-orbit="45deg 75deg 7.8m"
-                            min-camera-orbit="auto auto 5.8m"
-                            max-camera-orbit="auto auto 6m"
+                            camera-orbit="65deg 75deg 2.8m"
+                            min-camera-orbit="auto auto 2.8m"
+                            max-camera-orbit="auto auto 2.2m"
                             exposure="1"
                             shadow-intensity="1"
                             class="w-full h-full"
