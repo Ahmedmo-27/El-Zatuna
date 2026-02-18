@@ -1,78 +1,132 @@
 @if(!empty($webinar->chapters) and count($webinar->chapters))
     <ul class="draggable-content-lists draggable-webinar-chapters" data-path="/panel/webinar_chapters/orders" data-drag-class="draggable-webinar-chapters">
-
         @foreach($webinar->chapters as $chapter)
             <li data-id="{{ $chapter->id }}" data-chapter-order="{{ $chapter->order }}" class="accordion bg-white rounded-15 p-16 border-gray-200 mt-16">
                 <div class="accordion__title d-flex align-items-center justify-content-between" role="tab" id="webinar_chapter_{{ $chapter->id }}">
-
                     <div class="d-flex align-items-center cursor-pointer" href="#collapsePricePlan{{ $chapter->id }}" data-parent="#webinar_chaptersAccordion" role="button" data-toggle="collapse">
                         <div class="d-flex-center size-48 bg-primary-20 rounded-12">
                             <x-iconsax-bul-category-2 class="icons text-primary" width="24px" height="24px"/>
                         </div>
-
                         <div class="ml-8">
                             <h5 class="font-14 font-weight-bold">{{ $chapter->title }}</h5>
                             <p class="mt-4 font-12 text-gray-500">{{ !empty($chapter->chapterItems) ? count($chapter->chapterItems) : 0 }} {{ trans('public.topic') }} | {{ convertMinutesToHourAndMinute($chapter->getDuration()) }} {{ trans('public.hr') }}</p>
                         </div>
                     </div>
 
-
                     <div class="d-flex align-items-center">
-
                         @if($chapter->status != \App\Models\WebinarChapter::$chapterActive)
                             <span class="px-8 py-4 bg-danger-30 text-danger font-12 mr-12">{{ trans('public.disabled') }}</span>
                         @endif
 
+                        {{-- Add Content Dropdown --}}
                         <div class="actions-dropdown position-relative d-flex justify-content-end align-items-center mr-12">
-                            <button type="button" class="d-flex-center btn-transparent">
+                            <button type="button" 
+                                    class="d-flex-center btn-transparent js-add-content-dropdown-toggle" 
+                                    aria-label="{{ trans('public.add_content') }}"
+                                    aria-expanded="false"
+                                    aria-haspopup="true"
+                                    data-toggle="dropdown">
                                 <x-iconsax-lin-add class="icons text-primary" width="20px" height="20px"/>
+                                <span class="sr-only">{{ trans('public.add_content') }}</span>
                             </button>
 
-                            <div class="actions-dropdown__dropdown-menu dropdown-menu-width-220">
-                                <ul class="my-8">
-
+                            <div class="actions-dropdown__dropdown-menu dropdown-menu-width-220" role="menu">
+                                <ul class="my-8" role="none">
                                     @if($webinar->isWebinar())
-                                        <li class="actions-dropdown__dropdown-menu-item">
-                                            <button type="button" class="js-add-course-content-btn" data-webinar-id="{{ $webinar->id }}" data-type="session" data-chapter="{{ $chapter->id }}">
-                                                {{ trans('public.add_session') }}
+                                        <li class="actions-dropdown__dropdown-menu-item" role="none">
+                                            <button type="button" 
+                                                    class="js-add-course-content-btn w-100 text-left" 
+                                                    data-webinar-id="{{ $webinar->id }}" 
+                                                    data-type="session" 
+                                                    data-chapter="{{ $chapter->id }}"
+                                                    role="menuitem"
+                                                    aria-label="{{ trans('public.add_session') }}">
+                                                <div class="d-flex align-items-center">
+                                                    <x-iconsax-lin-video class="icons text-primary mr-8" width="18px" height="18px" aria-hidden="true"/>
+                                                    <span>{{ trans('public.add_session') }}</span>
+                                                </div>
                                             </button>
                                         </li>
                                     @endif
 
-                                    <li class="actions-dropdown__dropdown-menu-item">
-                                        <button type="button" class="js-add-course-content-btn" data-webinar-id="{{ $webinar->id }}" data-type="file" data-chapter="{{ $chapter->id }}">
-                                            {{ trans('public.add_file') }}
+                                    <li class="actions-dropdown__dropdown-menu-item" role="none">
+                                        <button type="button" 
+                                                class="js-add-course-content-btn w-100 text-left" 
+                                                data-webinar-id="{{ $webinar->id }}" 
+                                                data-type="file" 
+                                                data-chapter="{{ $chapter->id }}"
+                                                role="menuitem"
+                                                aria-label="{{ trans('public.add_file') }}">
+                                            <div class="d-flex align-items-center">
+                                                <x-iconsax-lin-document class="icons text-primary mr-8" width="18px" height="18px" aria-hidden="true"/>
+                                                <span>{{ trans('public.add_file') }}</span>
+                                            </div>
                                         </button>
                                     </li>
 
                                     @if(getFeaturesSettings('new_interactive_file'))
-                                        <li class="actions-dropdown__dropdown-menu-item">
-                                            <button type="button" class="js-add-course-content-btn" data-webinar-id="{{ $webinar->id }}" data-type="new_interactive_file" data-chapter="{{ $chapter->id }}">
-                                                {{ trans('update.new_interactive_file') }}
+                                        <li class="actions-dropdown__dropdown-menu-item" role="none">
+                                            <button type="button" 
+                                                    class="js-add-course-content-btn w-100 text-left" 
+                                                    data-webinar-id="{{ $webinar->id }}" 
+                                                    data-type="new_interactive_file" 
+                                                    data-chapter="{{ $chapter->id }}"
+                                                    role="menuitem"
+                                                    aria-label="{{ trans('update.new_interactive_file') }}">
+                                                <div class="d-flex align-items-center">
+                                                    <x-iconsax-lin-code class="icons text-primary mr-8" width="18px" height="18px" aria-hidden="true"/>
+                                                    <span>{{ trans('update.new_interactive_file') }}</span>
+                                                </div>
                                             </button>
                                         </li>
                                     @endif
 
-                                    <li class="actions-dropdown__dropdown-menu-item">
-                                        <button type="button" class="js-add-course-content-btn" data-webinar-id="{{ $webinar->id }}" data-type="text_lesson" data-chapter="{{ $chapter->id }}">
-                                            {{ trans('public.add_text_lesson') }}
+                                    <li class="actions-dropdown__dropdown-menu-item" role="none">
+                                        <button type="button" 
+                                                class="js-add-course-content-btn w-100 text-left" 
+                                                data-webinar-id="{{ $webinar->id }}" 
+                                                data-type="text_lesson" 
+                                                data-chapter="{{ $chapter->id }}"
+                                                role="menuitem"
+                                                aria-label="{{ trans('public.add_text_lesson') }}">
+                                            <div class="d-flex align-items-center">
+                                                <x-iconsax-lin-note-2 class="icons text-primary mr-8" width="18px" height="18px" aria-hidden="true"/>
+                                                <span>{{ trans('public.add_text_lesson') }}</span>
+                                            </div>
                                         </button>
                                     </li>
 
-                                    <li class="actions-dropdown__dropdown-menu-item">
-                                        <button type="button" class="js-add-course-content-btn" data-webinar-id="{{ $webinar->id }}" data-type="quiz" data-chapter="{{ $chapter->id }}">
-                                            {{ trans('public.add_quiz') }}
+                                    <li class="actions-dropdown__dropdown-menu-item" role="none">
+                                        <button type="button" 
+                                                class="js-add-course-content-btn w-100 text-left" 
+                                                data-webinar-id="{{ $webinar->id }}" 
+                                                data-type="quiz" 
+                                                data-chapter="{{ $chapter->id }}"
+                                                role="menuitem"
+                                                aria-label="{{ trans('public.add_quiz') }}">
+                                            <div class="d-flex align-items-center">
+                                                <x-iconsax-lin-document-text class="icons text-primary mr-8" width="18px" height="18px" aria-hidden="true"/>
+                                                <span>{{ trans('public.add_quiz') }}</span>
+                                            </div>
                                         </button>
                                     </li>
 
                                     @if(getFeaturesSettings('webinar_assignment_status'))
-                                        <li class="actions-dropdown__dropdown-menu-item">
-                                            <button type="button" class="js-add-course-content-btn" data-webinar-id="{{ $webinar->id }}" data-type="assignment" data-chapter="{{ $chapter->id }}">
-                                                {{ trans('update.add_new_assignments') }}
+                                        <li class="actions-dropdown__dropdown-menu-item" role="none">
+                                            <button type="button" 
+                                                    class="js-add-course-content-btn w-100 text-left" 
+                                                    data-webinar-id="{{ $webinar->id }}" 
+                                                    data-type="assignment" 
+                                                    data-chapter="{{ $chapter->id }}"
+                                                    role="menuitem"
+                                                    aria-label="{{ trans('update.add_new_assignments') }}">
+                                                <div class="d-flex align-items-center">
+                                                    <x-iconsax-lin-task-square class="icons text-primary mr-8" width="18px" height="18px" aria-hidden="true"/>
+                                                    <span>{{ trans('update.add_new_assignments') }}</span>
+                                                </div>
                                             </button>
                                         </li>
                                     @endif
-
                                 </ul>
                             </div>
                         </div>
@@ -93,12 +147,9 @@
                             <x-iconsax-lin-arrow-up-1 class="icons text-gray-500" width="20px" height="20px"/>
                         </span>
                     </div>
-
                 </div>
 
                 <div id="collapsePricePlan{{ $chapter->id }}" class="accordion__collapse show" role="tabpanel">
-
-
                     <div class="accordion-content-wrapper mt-20" id="chapterContentAccordion{{ $chapter->id }}" role="tablist" aria-multiselectable="true">
                         @if(!empty($chapter->chapterItems) and count($chapter->chapterItems))
                             <ul class="draggable-content-lists draggable-lists-chapter-{{ $chapter->id }}" data-path="/panel/webinar_chapters/items/orders" data-drag-class="draggable-lists-chapter-{{ $chapter->id }}">
@@ -114,7 +165,6 @@
                                     @elseif($chapterItem->type == \App\Models\WebinarChapterItem::$chapterQuiz and !empty($chapterItem->quiz))
                                         @include('design_1.panel.webinars.create.includes.accordions.quiz' ,['quizInfo' => $chapterItem->quiz , 'chapter' => $chapter, 'chapterItem' => $chapterItem, 'webinar' => $webinar])
                                     @endif
-
                                 @endforeach
                             </ul>
                         @else
@@ -127,11 +177,9 @@
                             </div>
                         @endif
                     </div>
-
                 </div>
             </li>
         @endforeach
-
     </ul>
 @else
     <div class="d-flex-center flex-column px-32 py-120 text-center">

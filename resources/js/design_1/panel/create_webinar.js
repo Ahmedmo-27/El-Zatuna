@@ -264,8 +264,33 @@
     })
 
 
+    // Handle dropdown toggle for add content button
+    $('body').on('click', '.js-add-content-dropdown-toggle', function (e) {
+        e.stopPropagation();
+        const $this = $(this);
+        const $dropdown = $this.closest('.actions-dropdown').find('.actions-dropdown__dropdown-menu');
+        const isExpanded = $this.attr('aria-expanded') === 'true';
+        
+        $this.attr('aria-expanded', !isExpanded);
+        $dropdown.toggleClass('show');
+    });
+    
+    // Close dropdown when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.actions-dropdown').length) {
+            $('.js-add-content-dropdown-toggle').attr('aria-expanded', 'false');
+            $('.actions-dropdown__dropdown-menu').removeClass('show');
+        }
+    });
+
     $('body').on('click', '.js-add-course-content-btn, .add-new-interactive-file-btn', function (e) {
         e.preventDefault();
+        e.stopPropagation();
+        
+        // Close the dropdown menu
+        $(this).closest('.actions-dropdown').find('.js-add-content-dropdown-toggle').attr('aria-expanded', 'false');
+        $(this).closest('.actions-dropdown__dropdown-menu').removeClass('show');
+        
         const $this = $(this);
         const type = $this.attr('data-type');
         const chapterId = $this.attr('data-chapter');
@@ -319,6 +344,11 @@
             let html = $body.html();
 
             html = html.replace(/record/g, key);
+            
+            // Fix data-parent attributes to use the correct chapter ID
+            // Replace any data-parent that has 'record' or empty chapter ID
+            html = html.replace(/data-parent="#chapterContentAccordionrecord"/g, 'data-parent="#chapterContentAccordion' + chapterId + '"');
+            html = html.replace(/data-parent="#chapterContentAccordion"/g, 'data-parent="#chapterContentAccordion' + chapterId + '"');
 
             if (type === "text_lesson") {
                 html = html.replaceAll('attachments-select2', 'attachments-select2-' + key);
@@ -327,8 +357,169 @@
             }
 
             const $contentTagId = $(contentTagId);
-            $contentTagId.prepend(html);
+            
+            // Remove empty state if exists
+            $contentTagId.find('.d-flex-center.flex-column').remove();
+            
+            // Ensure we have a ul for draggable content
+            let $contentList = $contentTagId.find('ul.draggable-content-lists');
+            if (!$contentList.length) {
+                $contentList = $('<ul class="draggable-content-lists draggable-lists-chapter-' + chapterId + '" data-path="/panel/webinar_chapters/items/orders" data-drag-class="draggable-lists-chapter-' + chapterId + '"></ul>');
+                $contentTagId.append($contentList);
+            }
+            
+            // Wrap html in li if it's not already
+            if (!html.trim().startsWith('<li')) {
+                html = '<li>' + html + '</li>';
+            }
+            
+            $contentList.prepend(html);
+            
+            // Add fade-in animation
+            const $newItem = $contentList.find('li').first();
+            $newItem.addClass('fade-in');
+            
+            // Fix all data-parent attributes in the newly added content
+            $newItem.find('[data-parent]').each(function() {
+                const $this = $(this);
+                let parentValue = $this.attr('data-parent');
+                // Replace 'record' or empty with actual chapter ID
+                if (parentValue && (parentValue.includes('record') || !parentValue.includes(chapterId))) {
+                    parentValue = '#chapterContentAccordion' + chapterId;
+                    $this.attr('data-parent', parentValue);
+                }
+            });
+            
+            // Prevent Bootstrap from auto-initializing collapse on new content
+            // Remove data-toggle="collapse" temporarily, fix data-parent, then re-add
+            $newItem.find('[data-toggle="collapse"]').each(function() {
+                const $this = $(this);
+                const target = $this.attr('href');
+                const parentValue = '#chapterContentAccordion' + chapterId;
+                
+                // Ensure data-parent is correct
+                $this.attr('data-parent', parentValue);
+                
+                // Verify parent exists before allowing collapse
+                if ($(parentValue).length === 0) {
+                    console.warn('Parent accordion not found:', parentValue);
+                    $this.removeAttr('data-toggle');
+                }
+            });
+            
+            // Re-initialize accordion collapse handler for new content
+            if (typeof window.handleAccordionCollapse === 'function') {
+                setTimeout(function() {
+                    window.handleAccordionCollapse();
+                }, 100);
+            }
 
+            // Initialize drag and drop for newly added file upload zones
+            if (type === "file" || type === "new_interactive_file") {
+                // Wait a bit for DOM to be ready
+                setTimeout(function() {
+                    const $newForm = $contentList.find('.js-content-form').first();
+                    const $dragDropZone = $newForm.find('.js-file-drag-drop-zone');
+                    
+                    if ($dragDropZone.length) {
+                        // Check if FileDragDrop class exists
+                        if (typeof window.FileDragDrop !== 'undefined') {
+                            $dragDropZone.each(function() {
+                                if (!$(this).data('drag-drop-initialized')) {
+                                    try {
+                                        new window.FileDragDrop($(this));
+                                        $(this).data('drag-drop-initialized', true);
+                                    } catch(e) {
+                                        console.warn('Failed to initialize drag and drop:', e);
+                                    }
+                                }
+                            });
+                        } else {
+                            // Fallback: initialize manually if FileDragDrop not available
+                            $dragDropZone.each(function() {
+                                const $zone = $(this);
+                                const fileInputId = $zone.data('file-input-id');
+                                const $fileInput = $('#' + fileInputId);
+                                
+                                if ($fileInput.length) {
+                                    // Basic click handler
+                                    $zone.on('click', function(e) {
+                                        if (e.target === $zone[0] || $(e.target).closest('.js-drag-drop-content').length) {
+                                            e.preventDefault();
+                                            $fileInput.trigger('click');
+                                        }
+                                    });
+                                    
+                                    // Basic drag and drop
+                                    $zone.on('dragover', function(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        $zone.addClass('drag-over');
+                                        $zone.find('.js-drag-drop-overlay').removeClass('d-none');
+                                    });
+                                    
+                                    $zone.on('dragleave', function(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (!$zone[0].contains(e.relatedTarget)) {
+                                            $zone.removeClass('drag-over');
+                                            $zone.find('.js-drag-drop-overlay').addClass('d-none');
+                                        }
+                                    });
+                                    
+                                    $zone.on('drop', function(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        $zone.removeClass('drag-over');
+                                        $zone.find('.js-drag-drop-overlay').addClass('d-none');
+                                        
+                                        const files = e.originalEvent.dataTransfer?.files;
+                                        if (files && files.length > 0) {
+                                            const dataTransfer = new DataTransfer();
+                                            dataTransfer.items.add(files[0]);
+                                            $fileInput[0].files = dataTransfer.files;
+                                            $fileInput.trigger('change');
+                                        }
+                                    });
+                                    
+                                    $(this).data('drag-drop-initialized', true);
+                                }
+                            });
+                        }
+                    }
+                    
+                    // Initialize file storage type handler for the new form
+                    const $storageSelect = $newForm.find('.js-file-storage');
+                    if ($storageSelect.length) {
+                        // Get the selected storage value (default to 'r2' if not set)
+                        let storageValue = $storageSelect.val();
+                        if (!storageValue || storageValue === '') {
+                            storageValue = 'r2';
+                            $storageSelect.val('r2');
+                        }
+                        
+                        const $fileTypeSelect = $newForm.find('.js-ajax-file_type');
+                        const fileType = $fileTypeSelect.length ? $fileTypeSelect.val() : null;
+                        
+                        // Find the form container (could be .file-form or .js-content-form)
+                        const $formContainer = $newForm.closest('.file-form, .js-content-form');
+                        
+                        // Ensure upload input is visible for new files (it should be by default from Blade)
+                        const $uploadInput = $newForm.find('.js-file-upload-input');
+                        if ($uploadInput.hasClass('d-none') && ['upload', 's3', 'r2'].includes(storageValue)) {
+                            $uploadInput.removeClass('d-none');
+                        }
+                        
+                        // Manually call handleShowFileInputsBySource to ensure correct visibility
+                        if (typeof handleShowFileInputsBySource === 'function' && $formContainer.length) {
+                            handleShowFileInputsBySource($formContainer, storageValue, fileType);
+                        }
+                        
+                        // Trigger change event to ensure all handlers run and visibility is set correctly
+                        $storageSelect.trigger('change');
+                    }
+                }, 100);
+            }
 
             if (type === "text_lesson") {
                 $('.attachments-select2-' + key).select2({
@@ -351,6 +542,16 @@
             }
 
             resetDatePickers();
+            
+            // Scroll to the newly added content
+            const $newlyAdded = $contentList.find('li').first();
+            if ($newlyAdded.length) {
+                setTimeout(() => {
+                    $('html, body').animate({
+                        scrollTop: $newlyAdded.offset().top - 100
+                    }, 500);
+                }, 100);
+            }
         }
 
     });
@@ -416,6 +617,10 @@
     // ======
 
     function handleShowFileInputsBySource($form, source, fileType) {
+        // Default to 'r2' if source is not provided or invalid
+        if (!source || source === '') {
+            source = 'r2';
+        }
 
         const $fileTypeVolumeInputs = $form.find('.js-file-type-volume');
         const $volumeInputs = $form.find('.js-file-volume-field');
@@ -429,8 +634,8 @@
 
         const $secureHostUploadTypeField = $form.find('.js-secure-host-upload-type-field');
 
-        $fileUrlInputCard.removeClass('d-none');
-        $fileUploadInputCard.addClass('d-none');
+        // Don't hide by default - the switch statement will handle visibility
+        // This ensures new files stay visible until source is determined
 
         $volumeInputs.addClass('d-none');
         $typeInputs.removeClass('d-none'); // parent is hidden or visible
@@ -455,6 +660,7 @@
 
             case 'external_link':
             case 's3':
+            case 'r2':
                 $fileTypeVolumeInputs.removeClass('d-none');
 
                 if (fileType && fileType === 'video') {
@@ -466,7 +672,7 @@
 
                 if (source === 'external_link') {
                     $volumeInputs.removeClass('d-none');
-                } else if (source === 's3') {
+                } else if (source === 's3' || source === 'r2') {
                     $fileUrlInputCard.addClass('d-none');
                     $fileUploadInputCard.removeClass('d-none');
                 }
@@ -569,10 +775,13 @@
         e.preventDefault();
 
         const value = $(this).val();
-        const formGroup = $(this).closest('.file-form');
+        // Find the form container (could be .file-form or .js-content-form)
+        const formGroup = $(this).closest('.file-form, .js-content-form');
         const fileType = formGroup.find('.js-ajax-file_type').val();
 
-        handleShowFileInputsBySource(formGroup, value, fileType);
+        if (formGroup.length && typeof handleShowFileInputsBySource === 'function') {
+            handleShowFileInputsBySource(formGroup, value, fileType);
+        }
     });
 
     $('body').on('change', '.js-ajax-file_type', function (e) {

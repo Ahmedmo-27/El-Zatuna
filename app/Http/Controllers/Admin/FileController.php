@@ -103,6 +103,21 @@ class FileController extends Controller
 
         $webinar = Webinar::find($data['webinar_id']);
 
+        if (empty($webinar)) {
+            return response([
+                'code' => 404,
+                'msg' => trans('update.course_not_found'),
+            ], 404);
+        }
+
+        // Validate that chapter belongs to this webinar
+        if (!empty($data['chapter_id']) && !$webinar->chapters()->where('id', $data['chapter_id'])->exists()) {
+            return response([
+                'code' => 422,
+                'msg' => trans('update.invalid_chapter_for_course'),
+            ], 422);
+        }
+
         if (!empty($webinar)) {
             $user = $webinar->creator;
 
@@ -134,8 +149,12 @@ class FileController extends Controller
                     $result = $this->uploadFileToS3($data['s3_file'], $user->id);
                 } elseif ($data['storage'] == 'r2') {
                     $data['volume'] = $request->file('s3_file')->getSize();
-                    $lessonId = $data['chapter_id'] ?? null;
-                    $result = $this->uploadFileToR2($data['s3_file'], $webinar->id, $lessonId);
+                    $sectionId = $data['chapter_id'] ?? null;
+                    // Validate that chapter belongs to this webinar if provided
+                    if ($sectionId && !$webinar->chapters()->where('id', $sectionId)->exists()) {
+                        return back()->withErrors(['chapter_id' => trans('update.invalid_chapter_for_course')]);
+                    }
+                    $result = $this->uploadFileToR2($data['s3_file'], $webinar->id, $sectionId);
                 } else {
                     if ($data['secure_host_upload_type'] == "direct") {
                         $data['volume'] = $request->file('s3_file')->getSize();
@@ -335,6 +354,28 @@ class FileController extends Controller
         $webinar = Webinar::find($data['webinar_id']);
         $file = File::where('id', $id)->first();
 
+        if (empty($webinar)) {
+            return response([
+                'code' => 404,
+                'msg' => trans('update.course_not_found'),
+            ], 404);
+        }
+
+        if (empty($file)) {
+            return response([
+                'code' => 404,
+                'msg' => trans('update.file_not_found'),
+            ], 404);
+        }
+
+        // Validate that chapter belongs to this webinar
+        if (!empty($data['chapter_id']) && !$webinar->chapters()->where('id', $data['chapter_id'])->exists()) {
+            return response([
+                'code' => 422,
+                'msg' => trans('update.invalid_chapter_for_course'),
+            ], 422);
+        }
+
         if (!empty($webinar) and !empty($file)) {
 
             if ($data['storage'] == 'upload_archive') {
@@ -371,8 +412,12 @@ class FileController extends Controller
 
                     if (!empty($fileS3)) {
                         $data['volume'] = $fileS3->getSize();
-                        $lessonId = $data['chapter_id'] ?? null;
-                        $result = $this->uploadFileToR2($data['s3_file'], $webinar->id, $lessonId);
+                        $sectionId = $data['chapter_id'] ?? null;
+                        // Validate that chapter belongs to this webinar if provided
+                        if ($sectionId && !$webinar->chapters()->where('id', $sectionId)->exists()) {
+                            return back()->withErrors(['chapter_id' => trans('update.invalid_chapter_for_course')]);
+                        }
+                        $result = $this->uploadFileToR2($data['s3_file'], $webinar->id, $sectionId);
                     }
                 } else {
                     if ($data['secure_host_upload_type'] == "direct") {
@@ -578,12 +623,28 @@ class FileController extends Controller
         return $result;
     }
 
-    private function uploadFileToR2($file, $webinarId, $lessonId = null)
+    /**
+     * Upload file to R2 cloud storage
+     * 
+     * Path structure: Courses/{course_id}/{section_id}/{timestamp}_{filename}
+     * 
+     * @param \Illuminate\Http\UploadedFile $file
+     * @param int $courseId The course/webinar ID
+     * @param int|null $sectionId The section/chapter ID (chapter_id from database)
+     * @return array ['status' => bool, 'path' => string|null]
+     */
+    private function uploadFileToR2($file, $courseId, $sectionId = null)
     {
         $r2Service = new R2StorageService();
         
-        $fileType = 'video'; // Default to video, can be determined from file extension
-        $result = $r2Service->uploadFile($file, $webinarId, $lessonId, $fileType);
+        // Determine file type from extension
+        $fileType = 'video'; // Default to video
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
+            $fileType = 'document';
+        }
+        
+        $result = $r2Service->uploadFile($file, $courseId, $sectionId, $fileType);
         
         // Store path only, not URL (for private bucket compatibility)
         // Path will be used to stream through Laravel proxy

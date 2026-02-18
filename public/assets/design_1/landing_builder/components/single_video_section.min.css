@@ -59,8 +59,7 @@
 }
 .single-video-section__revolver-icon {
   fill: rgba(0, 0, 0, 0.6);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   animation: rotate-animation 14s infinite linear;
 }
 .single-video-section__play-button {

@@ -35,8 +35,7 @@
   transform: translate(-50%, -50%);
   background-color: rgba(255, 255, 255, 0.3);
   border: 12px solid var(--white);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   transition: all 0.4s ease;
 }
 .dark-mode .video-and-image-slider-full-width-section__slider-item-video-btn {

@@ -5,11 +5,13 @@
 
     RewriteEngine On
 
-    # Increase PHP execution time to prevent timeout errors
+    # Increase PHP execution time and upload limits
     <IfModule mod_php.c>
         php_value max_execution_time 300
         php_value max_input_time 300
         php_value memory_limit 512M
+        php_value upload_max_filesize 2048M
+        php_value post_max_size 2048M
     </IfModule>
 
     # Handle Authorization Header

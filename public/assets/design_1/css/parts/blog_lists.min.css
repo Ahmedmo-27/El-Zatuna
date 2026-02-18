@@ -11,8 +11,7 @@
   inset: 0;
   z-index: 1;
   background: linear-gradient(1deg, rgba(18, 31, 62, 0.9) 0%, rgba(18, 31, 62, 0) 100%);
-  -webkit-backdrop-filter: blur(8px);
-          backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 .dark-mode .blog-lists-hero__mask {
   background: linear-gradient(1deg, rgba(170, 184, 197, 0.9) 0%, rgba(170, 184, 197, 0) 100%);
@@ -83,8 +82,7 @@
 }
 .blog-featured-category__content-posts-count {
   background: rgba(18, 31, 62, 0.4);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 .blog-featured-post {
@@ -110,8 +108,7 @@
 .blog-featured-post__content-stats {
   border-radius: 18px;
   background: rgba(18, 31, 62, 0.2);
-  -webkit-backdrop-filter: blur(8px);
-          backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 .blog-featured-post__content-stats-separator {
   margin-right: 12px;

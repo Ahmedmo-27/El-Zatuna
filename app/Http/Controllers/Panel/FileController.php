@@ -18,6 +18,13 @@ class FileController extends Controller
 {
     public function store(Request $request)
     {
+        // Increase PHP upload limits for large files
+        @ini_set('upload_max_filesize', '2048M');
+        @ini_set('post_max_size', '2048M');
+        @ini_set('max_execution_time', '300');
+        @ini_set('max_input_time', '300');
+        @ini_set('memory_limit', '512M');
+        
         $user = auth()->user();
 
         $data = $request->get('ajax')['new'];
@@ -59,7 +66,7 @@ class FileController extends Controller
             $rules['interactive_file_name'] = Rule::requiredIf($data['interactive_type'] == 'custom');
         }
 
-        if (in_array($data['storage'], ['upload', 's3'])) {
+        if (in_array($data['storage'], ['upload', 's3', 'r2'])) {
             $rules['file_url'] = 'nullable';
             $rules['file_upload'] = $this->handleUploadAndS3FileValidationByType($data['file_type'] ?? null);
         }
@@ -103,7 +110,22 @@ class FileController extends Controller
 
         $webinar = Webinar::find($data['webinar_id']);
 
-        if (!empty($webinar) and $webinar->canAccess($user)) {
+        if (empty($webinar)) {
+            return response([
+                'code' => 404,
+                'msg' => trans('update.course_not_found'),
+            ], 404);
+        }
+
+        // Validate that chapter belongs to this webinar
+        if (!empty($data['chapter_id']) && !$webinar->chapters()->where('id', $data['chapter_id'])->exists()) {
+            return response([
+                'code' => 422,
+                'msg' => trans('update.invalid_chapter_for_course'),
+            ], 422);
+        }
+
+        if ($webinar->canAccess($user)) {
             $volume = 0;
             $fileInfos = null;
 
@@ -134,8 +156,15 @@ class FileController extends Controller
                     $result = $this->uploadFileToS3($fileUpload);
                 } elseif ($data['storage'] == 'r2') {
                     $data['volume'] = convertToMB($fileUpload->getSize());
-                    $lessonId = $data['chapter_id'] ?? null;
-                    $result = $this->uploadFileToR2($fileUpload, $webinar->id, $lessonId);
+                    $sectionId = $data['chapter_id'] ?? null;
+                    // Validate that chapter belongs to this webinar if provided
+                    if ($sectionId && !$webinar->chapters()->where('id', $sectionId)->exists()) {
+                        return response()->json([
+                            'code' => 422,
+                            'msg' => trans('update.invalid_chapter_for_course')
+                        ], 422);
+                    }
+                    $result = $this->uploadFileToR2($fileUpload, $webinar->id, $sectionId);
                 } else {
                     if ($data['secure_host_upload_type'] == "direct") {
                         $data['volume'] = convertToMB($fileUpload->getSize());
@@ -147,11 +176,48 @@ class FileController extends Controller
                 }
 
                 if (!$result['status']) {
-                    return $result['path'];
+                    // Log the error if available
+                    if (isset($result['error'])) {
+                        \Log::error('R2 Upload Failed in FileController', [
+                            'error' => $result['error'],
+                            'course_id' => $webinar->id,
+                            'section_id' => $sectionId ?? null,
+                        ]);
+                    }
+                    
+                    // Return proper error response
+                    return response()->json([
+                        'code' => 500,
+                        'msg' => $result['error'] ?? trans('update.file_upload_failed'),
+                        'errors' => [
+                            'file_upload' => [$result['error'] ?? trans('update.file_upload_failed')]
+                        ]
+                    ], 500);
                 }
 
                 $data['file_url'] = $result['path'];
-                $fileInfos['extension'] = $data['file_type'];
+                
+                // Determine file type from extension if not provided
+                if (empty($data['file_type']) && !empty($fileUpload)) {
+                    $extension = strtolower($fileUpload->getClientOriginalExtension());
+                    // Map common extensions to file types
+                    $extensionMap = [
+                        'mp4' => 'mp4',
+                        'avi' => 'avi',
+                        'mkv' => 'mkv',
+                        'mov' => 'mov',
+                        'wmv' => 'wmv',
+                        'flv' => 'flv',
+                        'webm' => 'webm',
+                        'pdf' => 'pdf',
+                        'doc' => 'doc',
+                        'docx' => 'docx',
+                        'txt' => 'txt',
+                    ];
+                    $data['file_type'] = $extensionMap[$extension] ?? $extension;
+                }
+                
+                $fileInfos['extension'] = $data['file_type'] ?? 'mp4'; // Default to mp4 if still empty
                 $fileInfos['size'] = $data['volume'];
 
                 if ($data['storage'] == 'secure_host' and $data['secure_host_upload_type'] == "manual") {
@@ -253,18 +319,47 @@ class FileController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Increase PHP upload limits for large files
+        @ini_set('upload_max_filesize', '2048M');
+        @ini_set('post_max_size', '2048M');
+        @ini_set('max_execution_time', '300');
+        @ini_set('max_input_time', '300');
+        @ini_set('memory_limit', '512M');
+        
         $user = auth()->user();
         $data = $request->get('ajax')[$id];
 
         $webinar = Webinar::query()->find($data['webinar_id']);
 
-        if (!empty($webinar) and $webinar->canAccess($user)) {
+        if (empty($webinar)) {
+            return response([
+                'code' => 404,
+                'msg' => trans('update.course_not_found'),
+            ], 404);
+        }
+
+        // Validate that chapter belongs to this webinar
+        if (!empty($data['chapter_id']) && !$webinar->chapters()->where('id', $data['chapter_id'])->exists()) {
+            return response([
+                'code' => 422,
+                'msg' => trans('update.invalid_chapter_for_course'),
+            ], 422);
+        }
+
+        if ($webinar->canAccess($user)) {
             $file = File::query()->where('id', $id)
                 ->where(function ($query) use ($user, $webinar) {
                     $query->where('creator_id', $user->id);
                     $query->orWhere('webinar_id', $webinar->id);
                 })
                 ->first();
+
+            if (empty($file)) {
+                return response([
+                    'code' => 404,
+                    'msg' => trans('update.file_not_found'),
+                ], 404);
+            }
 
             if (!empty($file)) {
 
@@ -308,7 +403,7 @@ class FileController extends Controller
                     $rules['interactive_file_name'] = Rule::requiredIf($data['interactive_type'] == 'custom');
                 }
 
-                if (in_array($data['storage'], ['upload', 's3'])) {
+                if (in_array($data['storage'], ['upload', 's3', 'r2'])) {
                     $rules['file_url'] = 'nullable';
                     $rules['file_upload'] = $this->handleUploadAndS3FileValidationByType($data['file_type'] ?? null, $fileTypeIsChanged);
                 }
@@ -389,8 +484,15 @@ class FileController extends Controller
                     } elseif ($data['storage'] == 'r2') {
                         if (!empty($fileUpload)) {
                             $data['volume'] = convertToMB($fileUpload->getSize());
-                            $lessonId = $data['chapter_id'] ?? null;
-                            $result = $this->uploadFileToR2($fileUpload, $webinar->id, $lessonId);
+                            $sectionId = $data['chapter_id'] ?? null;
+                            // Validate that chapter belongs to this webinar if provided
+                            if ($sectionId && !$webinar->chapters()->where('id', $sectionId)->exists()) {
+                                return response()->json([
+                                    'code' => 422,
+                                    'msg' => trans('update.invalid_chapter_for_course')
+                                ], 422);
+                            }
+                            $result = $this->uploadFileToR2($fileUpload, $webinar->id, $sectionId);
                         }
                     } else {
                         if ($data['secure_host_upload_type'] == "direct") {
@@ -405,11 +507,49 @@ class FileController extends Controller
                     }
 
                     if (!$result['status']) {
-                        return $result['path'];
+                        // Log the error if available
+                        if (isset($result['error'])) {
+                            \Log::error('R2 Upload Failed in FileController (Update)', [
+                                'error' => $result['error'],
+                                'course_id' => $webinar->id,
+                                'section_id' => $sectionId ?? null,
+                                'file_id' => $id,
+                            ]);
+                        }
+                        
+                        // Return proper error response
+                        return response()->json([
+                            'code' => 500,
+                            'msg' => $result['error'] ?? trans('update.file_upload_failed'),
+                            'errors' => [
+                                'file_upload' => [$result['error'] ?? trans('update.file_upload_failed')]
+                            ]
+                        ], 500);
                     }
 
                     $data['file_url'] = $result['path'];
-                    $fileInfos['extension'] = $data['file_type'];
+                    
+                    // Determine file type from extension if not provided
+                    if (empty($data['file_type']) && !empty($fileUpload)) {
+                        $extension = strtolower($fileUpload->getClientOriginalExtension());
+                        // Map common extensions to file types
+                        $extensionMap = [
+                            'mp4' => 'mp4',
+                            'avi' => 'avi',
+                            'mkv' => 'mkv',
+                            'mov' => 'mov',
+                            'wmv' => 'wmv',
+                            'flv' => 'flv',
+                            'webm' => 'webm',
+                            'pdf' => 'pdf',
+                            'doc' => 'doc',
+                            'docx' => 'docx',
+                            'txt' => 'txt',
+                        ];
+                        $data['file_type'] = $extensionMap[$extension] ?? $extension;
+                    }
+                    
+                    $fileInfos['extension'] = $data['file_type'] ?? 'mp4'; // Default to mp4 if still empty
                     $fileInfos['size'] = $data['volume'];
 
                     $volume = $data['volume'];
@@ -421,6 +561,36 @@ class FileController extends Controller
 
                 $changeChapter = ($data['chapter_id'] != $file->chapter_id);
                 $oldChapterId = $file->chapter_id;
+                
+                // If storage type changed and old file exists, delete it
+                $oldStorage = $file->storage;
+                $oldFilePath = $file->file;
+                if ($oldStorage != $data['storage'] && !empty($oldFilePath)) {
+                    // Delete old file from old storage
+                    if ($oldStorage == 'upload' && file_exists(public_path($oldFilePath))) {
+                        @unlink(public_path($oldFilePath));
+                        \Log::info('FileController: Deleted old local file', [
+                            'file_id' => $id,
+                            'old_path' => $oldFilePath,
+                        ]);
+                    } elseif ($oldStorage == 'r2') {
+                        // Delete old R2 file
+                        try {
+                            $r2Service = new R2StorageService();
+                            $r2Service->deleteFile($oldFilePath);
+                            \Log::info('FileController: Deleted old R2 file', [
+                                'file_id' => $id,
+                                'old_path' => $oldFilePath,
+                            ]);
+                        } catch (Exception $e) {
+                            \Log::warning('FileController: Failed to delete old R2 file', [
+                                'file_id' => $id,
+                                'old_path' => $oldFilePath,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                }
 
                 $file->update([
                     'chapter_id' => $data['chapter_id'],
@@ -558,18 +728,49 @@ class FileController extends Controller
         return $result;
     }
 
-    private function uploadFileToR2($file, $webinarId, $lessonId = null)
+    /**
+     * Upload file to R2 cloud storage
+     * 
+     * Path structure: Courses/{course_id}/{section_id}/{timestamp}_{filename}
+     * 
+     * @param \Illuminate\Http\UploadedFile $file
+     * @param int $courseId The course/webinar ID
+     * @param int|null $sectionId The section/chapter ID (chapter_id from database)
+     * @return array ['status' => bool, 'path' => string|null]
+     */
+    private function uploadFileToR2($file, $courseId, $sectionId = null)
     {
         $r2Service = new R2StorageService();
         
-        $fileType = 'video'; // Default to video, can be determined from file extension
-        $result = $r2Service->uploadFile($file, $webinarId, $lessonId, $fileType);
+        // Determine file type from extension
+        $fileType = 'video'; // Default to video
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (in_array($extension, ['pdf', 'doc', 'docx', 'txt'])) {
+            $fileType = 'document';
+        }
+        
+        \Log::info('FileController: Starting R2 upload', [
+            'course_id' => $courseId,
+            'section_id' => $sectionId,
+            'file_name' => $file->getClientOriginalName(),
+            'file_size' => $file->getSize(),
+            'file_type' => $fileType,
+        ]);
+        
+        $result = $r2Service->uploadFile($file, $courseId, $sectionId, $fileType);
+        
+        \Log::info('FileController: R2 upload result', [
+            'status' => $result['status'],
+            'path' => $result['path'] ?? null,
+            'error' => $result['error'] ?? null,
+        ]);
         
         // Store path only, not URL (for private bucket compatibility)
         // Path will be used to stream through Laravel proxy
         return [
             'path' => $result['path'], // Always use path, never URL
-            'status' => $result['status']
+            'status' => $result['status'],
+            'error' => $result['error'] ?? null, // Include error for better debugging
         ];
     }
 

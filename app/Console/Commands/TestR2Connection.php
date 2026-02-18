@@ -101,16 +101,107 @@ class TestR2Connection extends Command
         $disk = Storage::disk('r2');
         
         try {
-            $uploaded = $disk->put($testFileName, $testContent);
+            // Try to get more detailed error information
+            $this->line("  Attempting to upload: {$testFileName}");
             
-            if ($uploaded) {
-                $this->line("  ✓ Successfully uploaded test file: {$testFileName}");
-            } else {
-                $this->error('  ✗ Failed to upload test file');
-                $this->error('  Upload returned false without exception');
-                $this->error('  Check your R2 bucket permissions and API token settings');
+            // Enable exception throwing
+            config(['filesystems.disks.r2.throw' => true]);
+            $disk = Storage::disk('r2');
+            
+            // Try direct S3 client call to get better error messages
+            try {
+                $s3Client = new \Aws\S3\S3Client([
+                    'credentials' => [
+                        'key' => config('filesystems.disks.r2.key'),
+                        'secret' => config('filesystems.disks.r2.secret'),
+                    ],
+                    'region' => config('filesystems.disks.r2.region', 'auto'),
+                    'version' => 'latest',
+                    'bucket_endpoint' => false,
+                    'use_path_style_endpoint' => true,
+                    'endpoint' => config('filesystems.disks.r2.endpoint'),
+                    'http' => [
+                        'verify' => 'C:\Users\Ahmed\AppData\Local\Programs\PHP\cacert.pem',
+                    ],
+                ]);
+                
+                $result = $s3Client->putObject([
+                    'Bucket' => config('filesystems.disks.r2.bucket'),
+                    'Key' => $testFileName,
+                    'Body' => $testContent,
+                    'ACL' => 'public-read',
+                ]);
+                
+                $this->line("  ✓ Successfully uploaded test file via direct S3 call: {$testFileName}");
+                $this->line("  ETag: " . ($result['ETag'] ?? 'N/A'));
+            } catch (\Aws\Exception\AwsException $e) {
+                $this->error('  ✗ AWS Exception during direct S3 upload');
+                $this->error('  Error Code: ' . ($e->getAwsErrorCode() ?: 'N/A'));
+                $this->error('  Error Message: ' . ($e->getAwsErrorMessage() ?: $e->getMessage()));
+                $this->error('  HTTP Status: ' . ($e->getStatusCode() ?: 'N/A'));
+                $this->error('  Request ID: ' . ($e->getAwsRequestId() ?: 'N/A'));
+                $this->error('  Exception Class: ' . get_class($e));
+                $this->error('  Full Message: ' . $e->getMessage());
+                if ($e->getPrevious()) {
+                    $this->error('  Previous Exception: ' . get_class($e->getPrevious()) . ' - ' . $e->getPrevious()->getMessage());
+                }
+                $this->newLine();
+                $this->warn('  This indicates:');
+                $this->warn('  - API token lacks write permissions (most likely)');
+                $this->warn('  - Bucket name is incorrect');
+                $this->warn('  - Endpoint URL is wrong');
+                $this->warn('  - Network/firewall blocking connection');
+                return Command::FAILURE;
+            } catch (Exception $e) {
+                $this->error('  ✗ Exception during direct S3 upload');
+                $this->error('  Exception Class: ' . get_class($e));
+                $this->error('  Message: ' . $e->getMessage());
+                if ($e->getPrevious()) {
+                    $this->error('  Previous: ' . get_class($e->getPrevious()) . ' - ' . $e->getPrevious()->getMessage());
+                }
                 return Command::FAILURE;
             }
+            
+            // Also try Laravel Storage method
+            try {
+                $uploaded = $disk->put($testFileName, $testContent);
+                
+                if ($uploaded) {
+                    $this->line("  ✓ Laravel Storage put() successful");
+                } else {
+                    $this->error('  ✗ Laravel Storage put() returned false');
+                    $this->error('  Check your R2 bucket permissions and API token settings');
+                    $this->newLine();
+                    $this->warn('  This usually means:');
+                    $this->warn('  - The API token does not have write permissions');
+                    $this->warn('  - The bucket does not exist or name is wrong');
+                    $this->warn('  - The endpoint URL is incorrect');
+                    return Command::FAILURE;
+                }
+            } catch (\Aws\Exception\AwsException $e) {
+                $this->error('  ✗ AWS Exception during Laravel Storage upload');
+                $this->error('  Error Code: ' . $e->getAwsErrorCode());
+                $this->error('  Error Message: ' . $e->getAwsErrorMessage());
+                $this->error('  HTTP Status: ' . $e->getStatusCode());
+                return Command::FAILURE;
+            } catch (Exception $e) {
+                $this->error('  ✗ Exception during upload');
+                $this->error('  Exception: ' . get_class($e));
+                $this->error('  Message: ' . $e->getMessage());
+                return Command::FAILURE;
+            }
+        } catch (\Aws\Exception\AwsException $e) {
+            $this->error('  ✗ AWS Exception during upload');
+            $this->error('  Error Code: ' . $e->getAwsErrorCode());
+            $this->error('  Error Message: ' . $e->getAwsErrorMessage());
+            $this->error('  HTTP Status: ' . $e->getStatusCode());
+            $this->newLine();
+            $this->warn('  Possible causes:');
+            $this->warn('  - API token lacks write permissions');
+            $this->warn('  - Bucket name is incorrect');
+            $this->warn('  - Endpoint URL is wrong');
+            $this->warn('  - Network/firewall blocking connection');
+            return Command::FAILURE;
         } catch (Exception $e) {
             $this->error('  ✗ Upload failed');
             $this->error('  Exception: ' . get_class($e));
