@@ -101,5 +101,7 @@ class Kernel extends HttpKernel
         'api.rate-limit-headers' => \App\Http\Middleware\Api\AddRateLimitHeaders::class,
         'api.versioning' => \App\Http\Middleware\Api\ApiVersioning::class,
         'api.version' => \App\Http\Middleware\ApiVersion::class,
+        'video.referrer' => \App\Http\Middleware\ValidateVideoReferrer::class,
+        'block.downloaders' => \App\Http\Middleware\BlockDownloadManagers::class,
     ];
 }

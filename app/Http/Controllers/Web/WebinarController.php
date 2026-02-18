@@ -28,7 +28,9 @@ use App\Models\WebinarReview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Aws\S3\S3Client;
 
 class WebinarController extends Controller
 {
@@ -551,6 +553,23 @@ class WebinarController extends Controller
                         $path = url("/course/$webinar->slug/file/$file->id/play");
                     } elseif ($file->storage == 'upload_archive') {
                         $path = url("/course/$webinar->slug/file/$file->id/showHtml");
+                    } elseif ($file->storage == 'r2' && $file->isVideo()) {
+                        // R2 videos use Cloudflare Worker with signed tokens
+                        $r2Path = $this->extractR2Path($file->file);
+                        if (!empty($r2Path)) {
+                            $token = $this->makeStreamToken($r2Path, $file->id);
+                            $workerBase = config('services.stream.worker_base');
+                            if (!empty($workerBase)) {
+                                $path = rtrim($workerBase, '/') . '/v?t=' . urlencode($token);
+                            } else {
+                                // Fallback to Laravel streaming if Worker not configured
+                                \Log::warning('STREAM_WORKER_BASE not configured, falling back to Laravel streaming');
+                                $path = url("/course/$webinar->slug/file/$file->id/play");
+                            }
+                        } else {
+                            // Fallback if path extraction fails
+                            $path = url("/course/$webinar->slug/file/$file->id/play");
+                        }
                     }
 
                     return response()->json([
@@ -568,43 +587,366 @@ class WebinarController extends Controller
 
     public function playFile($slug, $file_id)
     {
-        // this methode linked from video modal for play local video
-        // and linked from file.blade for show google_drive,dropbox,iframe
-
+        // Securely stream video files with proper headers for all sources
         $webinar = Webinar::where('slug', $slug)
             ->where('status', 'active')
             ->first();
 
-        if (!empty($webinar) and $this->checkCanAccessToPrivateCourse($webinar)) {
+        if (!empty($webinar) && $this->checkCanAccessToPrivateCourse($webinar)) {
             $file = File::where('webinar_id', $webinar->id)
                 ->where('id', $file_id)
                 ->first();
 
             if (!empty($file)) {
                 $canAccess = true;
-
                 if ($file->accessibility == 'paid') {
-                    $canAccess = ($webinar->checkUserHasBought() or $file->checkUserHasBought());
+                    $canAccess = ($webinar->checkUserHasBought() || $file->checkUserHasBought());
                 }
-
                 if ($canAccess) {
                     $notVideoSource = ['iframe', 'google_drive', 'dropbox'];
-
                     if (in_array($file->storage, $notVideoSource)) {
                         $data = [
                             'pageTitle' => $file->title,
                             'iframe' => $file->file
                         ];
-
                         return view('design_1.web.courses.free_contents.interactive_file', $data);
                     } else if ($file->isVideo()) {
-                        return response()->file(public_path($file->file));
+                        // Route R2 videos to streamR2Video method (fallback if Worker not available)
+                        if ($file->storage == 'r2') {
+                            // Check if Worker is configured, otherwise fallback to Laravel streaming
+                            $workerBase = config('services.stream.worker_base');
+                            if (empty($workerBase)) {
+                                // Fallback to Laravel streaming if Worker not configured
+                                return $this->streamR2Video($file, $webinar);
+                            } else {
+                                // Worker should handle this, but if request reaches here, redirect to Worker
+                                $r2Path = $this->extractR2Path($file->file);
+                                if (!empty($r2Path)) {
+                                    $token = $this->makeStreamToken($r2Path, $file->id);
+                                    $workerUrl = rtrim($workerBase, '/') . '/v?t=' . urlencode($token);
+                                    return redirect($workerUrl);
+                                }
+                            }
+                        }
+                        
+                        // Local upload videos
+                        $filePath = public_path($file->file);
+                        if (!file_exists($filePath)) {
+                            abort(404);
+                        }
+                        $mime = mime_content_type($filePath);
+                        $size = filesize($filePath);
+                        $start = 0;
+                        $length = $size;
+                        $headers = [
+                            'Content-Type' => $mime,
+                            'Content-Disposition' => 'inline; filename="video.mp4"',
+                            'Cache-Control' => 'no-store, no-cache, must-revalidate, private, max-age=0',
+                            'Pragma' => 'no-cache',
+                            'Expires' => '0',
+                            'X-Content-Type-Options' => 'nosniff',
+                            'X-Frame-Options' => 'SAMEORIGIN',
+                            'X-Robots-Tag' => 'noindex, nofollow, noarchive, nosnippet',
+                            'Content-Transfer-Encoding' => 'binary',
+                            'Accept-Ranges' => 'bytes',
+                        ];
+                        if (isset($_SERVER['HTTP_RANGE'])) {
+                            $range = $_SERVER['HTTP_RANGE'];
+                            if (preg_match('/bytes=(\d+)-(\d*)/', $range, $matches)) {
+                                $start = intval($matches[1]);
+                                $end = ($matches[2] !== '') ? intval($matches[2]) : ($size - 1);
+                                $length = $end - $start + 1;
+                                $headers['Content-Range'] = "bytes $start-$end/$size";
+                                $headers['Content-Length'] = $length;
+                                http_response_code(206);
+                                $stream = function () use ($filePath, $start, $length) {
+                                    $fp = fopen($filePath, 'rb');
+                                    fseek($fp, $start);
+                                    $buffer = 8192;
+                                    $bytesSent = 0;
+                                    while (!feof($fp) && $bytesSent < $length) {
+                                        $read = min($buffer, $length - $bytesSent);
+                                        echo fread($fp, $read);
+                                        $bytesSent += $read;
+                                    }
+                                    fclose($fp);
+                                };
+                                return response()->stream($stream, 206, $headers);
+                            }
+                        }
+                        $headers['Content-Length'] = $size;
+                        $stream = function () use ($filePath) {
+                            readfile($filePath);
+                        };
+                        return response()->stream($stream, 200, $headers);
                     }
                 }
             }
         }
-
         abort(403);
+    }
+
+    /**
+     * Stream R2 video files with all security protections
+     * 
+     * @param File $file
+     * @param Webinar $webinar
+     * @return \Illuminate\Http\Response
+     */
+    private function streamR2Video(File $file, Webinar $webinar)
+    {
+        try {
+            // Extract R2 path from file field (handles both URLs and paths)
+            $r2Path = $this->extractR2Path($file->file);
+            
+            if (empty($r2Path)) {
+                \Log::error('R2 video: Could not extract path', [
+                    'file_id' => $file->id,
+                    'file_field' => $file->file
+                ]);
+                abort(404, 'R2 video file path not found');
+            }
+
+            // Check if file exists in R2
+            $r2Disk = Storage::disk('r2');
+            if (!$r2Disk->exists($r2Path)) {
+                \Log::error('R2 video: File not found in R2', [
+                    'file_id' => $file->id,
+                    'r2_path' => $r2Path
+                ]);
+                abort(404, 'R2 video file not found');
+            }
+
+            // Get file size and mime type
+            $size = $r2Disk->size($r2Path);
+            $mime = $r2Disk->mimeType($r2Path) ?: 'video/mp4';
+
+            // Get S3Client from adapter for Range requests
+            // FilesystemAdapter -> getAdapter() -> AwsS3V3Adapter -> getClient()
+            $adapter = $r2Disk->getAdapter();
+            
+            // AwsS3V3Adapter has getClient() method
+            if (!method_exists($adapter, 'getClient')) {
+                \Log::error('R2 adapter does not have getClient method', [
+                    'adapter_class' => get_class($adapter)
+                ]);
+                abort(500, 'R2 adapter configuration error');
+            }
+            
+            $s3Client = $adapter->getClient();
+            $bucket = config('r2.bucket');
+            
+            if (!$s3Client instanceof S3Client) {
+                \Log::error('R2 adapter client is not S3Client', [
+                    'client_class' => get_class($s3Client)
+                ]);
+                abort(500, 'R2 client configuration error');
+            }
+
+            // Enhanced security headers
+            $headers = [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'inline; filename="video.mp4"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, private, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Frame-Options' => 'SAMEORIGIN',
+                'X-Robots-Tag' => 'noindex, nofollow, noarchive, nosnippet',
+                'Content-Transfer-Encoding' => 'binary',
+                'Accept-Ranges' => 'bytes',
+            ];
+
+            // Handle range requests for video seeking
+            $start = 0;
+            $end = $size - 1;
+            $isRangeRequest = false;
+            
+            if (isset($_SERVER['HTTP_RANGE'])) {
+                $range = $_SERVER['HTTP_RANGE'];
+                if (preg_match('/bytes=(\d+)-(\d*)/', $range, $matches)) {
+                    $isRangeRequest = true;
+                    $start = intval($matches[1]);
+                    $end = ($matches[2] !== '') ? intval($matches[2]) : ($size - 1);
+                    
+                    // Validate range
+                    if ($start >= $size) {
+                        // Invalid range - return 416 Range Not Satisfiable
+                        $headers['Content-Range'] = "bytes */$size";
+                        return response('', 416, $headers);
+                    }
+                    
+                    // Clamp end to size-1
+                    if ($end >= $size) {
+                        $end = $size - 1;
+                    }
+                    
+                    // Ensure end >= start
+                    if ($end < $start) {
+                        $end = $start;
+                    }
+                    
+                    $length = $end - $start + 1;
+                    $headers['Content-Range'] = "bytes $start-$end/$size";
+                    $headers['Content-Length'] = $length;
+                }
+            }
+
+            // Stream using AWS SDK Range header (server-side range, no fseek)
+            if ($isRangeRequest) {
+                return response()->stream(function () use ($s3Client, $bucket, $r2Path, $start, $end) {
+                    $this->streamR2FileWithRange($s3Client, $bucket, $r2Path, $start, $end);
+                }, 206, $headers);
+            }
+
+            // Full file stream
+            $headers['Content-Length'] = $size;
+            return response()->stream(function () use ($s3Client, $bucket, $r2Path, $size) {
+                $this->streamR2FileWithRange($s3Client, $bucket, $r2Path, 0, $size - 1);
+            }, 200, $headers);
+
+        } catch (\Exception $e) {
+            \Log::error('R2 video streaming error', [
+                'file_id' => $file->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            abort(500, 'Error streaming R2 video');
+        }
+    }
+
+    /**
+     * Generate signed token for Cloudflare Worker streaming
+     * 
+     * @param string $key R2 object key/path
+     * @param int $fileId File ID
+     * @param int|null $ttlSeconds Token TTL in seconds (default from config)
+     * @return string Base64url-encoded token (payload.signature)
+     */
+    private function makeStreamToken(string $key, int $fileId, ?int $ttlSeconds = null): string
+    {
+        $secret = config('services.stream.token_secret');
+        
+        if (empty($secret)) {
+            \Log::error('STREAM_TOKEN_SECRET not configured');
+            throw new \RuntimeException('Stream token secret not configured');
+        }
+
+        $ttl = $ttlSeconds ?? config('services.stream.token_ttl', 120);
+        
+        $payload = [
+            'key' => $key,
+            'fid' => $fileId,
+            'exp' => time() + $ttl,
+        ];
+
+        // Base64url encode payload
+        $payloadB64 = rtrim(strtr(base64_encode(json_encode($payload)), '+/', '-_'), '=');
+        
+        // HMAC-SHA256 signature
+        $sig = hash_hmac('sha256', $payloadB64, $secret, true);
+        $sigB64 = rtrim(strtr(base64_encode($sig), '+/', '-_'), '=');
+
+        return $payloadB64 . '.' . $sigB64;
+    }
+
+    /**
+     * Extract R2 path from file field (handles URLs and paths)
+     * 
+     * @param string $fileField
+     * @return string|null
+     */
+    private function extractR2Path($fileField)
+    {
+        if (empty($fileField)) {
+            return null;
+        }
+
+        // If it's already a path (not a URL), return as-is
+        if (!filter_var($fileField, FILTER_VALIDATE_URL)) {
+            return ltrim($fileField, '/');
+        }
+
+        // Extract path from URL
+        $parsedUrl = parse_url($fileField);
+        
+        if (!isset($parsedUrl['path'])) {
+            return null;
+        }
+
+        $path = ltrim($parsedUrl['path'], '/');
+        $bucket = config('r2.bucket');
+
+        // Remove bucket name if present (path-style endpoint)
+        if (!empty($bucket) && strpos($path, $bucket . '/') === 0) {
+            $path = substr($path, strlen($bucket) + 1);
+        }
+
+        return $path;
+    }
+
+    /**
+     * Stream R2 file using AWS SDK Range header (server-side range, fast and reliable)
+     * 
+     * @param \Aws\S3\S3Client $s3Client
+     * @param string $bucket
+     * @param string $r2Path
+     * @param int $start
+     * @param int $end
+     * @return void
+     */
+    private function streamR2FileWithRange($s3Client, $bucket, $r2Path, $start, $end)
+    {
+        try {
+            // Use AWS SDK getObject with Range header (server-side range, no fseek needed)
+            $result = $s3Client->getObject([
+                'Bucket' => $bucket,
+                'Key' => $r2Path,
+                'Range' => "bytes=$start-$end",
+            ]);
+
+            // Get the stream from the result (AWS SDK returns Guzzle Stream object)
+            $stream = $result['Body'];
+            
+            // AWS SDK returns GuzzleHttp\Psr7\Stream, not a PHP resource
+            if (!is_object($stream) || !method_exists($stream, 'read')) {
+                \Log::error('R2 stream: Invalid stream from S3Client', [
+                    'path' => $r2Path,
+                    'stream_type' => gettype($stream)
+                ]);
+                return;
+            }
+
+            // Stream in optimal chunks (512KB for good performance, no delays)
+            $chunkSize = 524288; // 512KB - good balance between performance and memory
+            
+            while (!$stream->eof()) {
+                $chunk = $stream->read($chunkSize);
+                
+                // read() returns false on error, empty string on EOF
+                if ($chunk === false) {
+                    \Log::warning('R2 stream: Read error', ['path' => $r2Path]);
+                    break;
+                }
+                
+                if (strlen($chunk) === 0) {
+                    break;
+                }
+
+                echo $chunk;
+                flush();
+            }
+
+            // Stream is automatically closed by AWS SDK when it goes out of scope
+
+        } catch (\Exception $e) {
+            \Log::error('R2 stream range error', [
+                'path' => $r2Path,
+                'start' => $start,
+                'end' => $end,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function getLesson(Request $request, $slug, $lesson_id)

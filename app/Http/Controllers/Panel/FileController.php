@@ -565,8 +565,10 @@ class FileController extends Controller
         $fileType = 'video'; // Default to video, can be determined from file extension
         $result = $r2Service->uploadFile($file, $webinarId, $lessonId, $fileType);
         
+        // Store path only, not URL (for private bucket compatibility)
+        // Path will be used to stream through Laravel proxy
         return [
-            'path' => $result['url'] ?? $result['path'],
+            'path' => $result['path'], // Always use path, never URL
             'status' => $result['status']
         ];
     }

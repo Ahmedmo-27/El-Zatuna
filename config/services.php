@@ -57,4 +57,11 @@ return [
         'otp_message' => "your verification code: ##OTP##",
         'otp_length' => 5,
     ],
+
+    // Cloudflare Worker Stream Service
+    'stream' => [
+        'token_secret' => env('STREAM_TOKEN_SECRET'),
+        'worker_base' => env('STREAM_WORKER_BASE'),
+        'token_ttl' => env('STREAM_TOKEN_TTL', 120), // Default 120 seconds (2 minutes)
+    ],
 ];
