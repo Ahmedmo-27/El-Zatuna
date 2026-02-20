@@ -232,7 +232,7 @@
                         <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Earn Extra Income</li>
                         <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Build Personal Brand</li>
                     </ul>
-                    <a href="/panel" class="mt-10 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">Become instructor</a>
+                    <a href="/become-instructor" class="mt-10 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">Become instructor</a>
                 </div>
                 <div class="h-[260px] md:h-[320px] lg:h-[360px] flex items-center justify-center">
                     <img src="/assets/design_1/img/no-result/profile_instructors.svg" alt="Instructors" class="w-full max-w-[520px] md:max-w-[620px] lg:max-w-[700px] h-auto" />

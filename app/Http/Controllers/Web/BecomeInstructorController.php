@@ -15,6 +15,7 @@ use App\Models\UserBank;
 use App\Models\UserOccupation;
 use App\Models\UserSelectedBank;
 use App\Models\UserSelectedBankSpecification;
+use App\Services\R2StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -73,6 +74,13 @@ class BecomeInstructorController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('BecomeInstructorController::store - Method called', [
+            'user_id' => auth()->id(),
+            'has_certificate_file' => $request->hasFile('certificate'),
+            'has_identity_scan_file' => $request->hasFile('identity_scan'),
+            'all_files' => $request->allFiles(),
+        ]);
+        
         $user = auth()->user();
 
         if ($user->isUser()) {
@@ -81,19 +89,49 @@ class BecomeInstructorController extends Controller
                 ->first();
 
             $data = $request->all();
+            
+            \Log::info('BecomeInstructorController::store - Request data', [
+                'user_id' => $user->id,
+                'role' => $data['role'] ?? 'not_set',
+                'has_certificate' => $request->hasFile('certificate'),
+                'has_identity_scan' => $request->hasFile('identity_scan'),
+            ]);
 
+            // Build validation rules dynamically based on whether files are uploaded
             $rules = [
                 'role' => 'required',
                 'occupations' => 'required',
-                'certificate' => 'nullable|string',
-                'bank_id' => 'required',
-                'identity_scan' => 'required',
+                'bank_id' => 'nullable', // Commented out in form, so making optional
                 'description' => 'nullable|string',
             ];
+            
+            // Handle certificate validation
+            if ($request->hasFile('certificate')) {
+                $rules['certificate'] = 'nullable|file|max:10240'; // 10MB max
+            } else {
+                $rules['certificate'] = 'nullable|string';
+            }
+            
+            // Handle identity_scan validation - it's required
+            if ($request->hasFile('identity_scan')) {
+                $rules['identity_scan'] = 'required|file|max:10240'; // 10MB max
+            } else {
+                // If no file uploaded, check if there's an existing path
+                // If user already has identity_scan, it's optional (they're updating)
+                if (empty($user->identity_scan) && empty($data['identity_scan'])) {
+                    $rules['identity_scan'] = 'required';
+                } else {
+                    $rules['identity_scan'] = 'nullable|string';
+                }
+            }
 
             $validate = Validator::make($data, $rules);
 
             if ($validate->fails()) {
+                \Log::warning('BecomeInstructorController::store - Validation failed', [
+                    'user_id' => $user->id,
+                    'errors' => $validate->errors()->toArray(),
+                ]);
                 $errors = $validate->errors();
 
                 $type = ($data['role'] == "teacher") ? "become_instructor" : "become_organization";
@@ -126,44 +164,180 @@ class BecomeInstructorController extends Controller
                 }
 
                 if (count($errors)) {
+                    \Log::warning('BecomeInstructorController::store - Form field errors', [
+                        'user_id' => $user->id,
+                        'errors' => $errors,
+                    ]);
                     return back()->withErrors($errors)->withInput($request->all());
                 }
+            }
+
+            \Log::info('BecomeInstructorController::store - Validation passed, proceeding to file uploads', [
+                'user_id' => $user->id,
+            ]);
+
+            // Handle file uploads to R2
+            \Log::info('BecomeInstructorController::store - Starting file upload handling', [
+                'user_id' => $user->id,
+                'has_certificate' => $request->hasFile('certificate'),
+                'has_identity_scan' => $request->hasFile('identity_scan'),
+            ]);
+            
+            $r2Service = new R2StorageService();
+            $certificatePath = null;
+            $identityScanPath = null;
+            
+            // Upload certificate if provided
+            if ($request->hasFile('certificate')) {
+                \Log::info('BecomeInstructorController::store - Processing certificate upload', [
+                    'user_id' => $user->id,
+                    'file_name' => $request->file('certificate')->getClientOriginalName(),
+                    'file_size' => $request->file('certificate')->getSize(),
+                ]);
+                // Delete old certificate from R2 if it exists
+                if (!empty($user->certificate) && strpos($user->certificate, 'Instructor-application/') === 0) {
+                    try {
+                        $r2Service->deleteFile($user->certificate);
+                        \Log::info('Deleted old certificate from R2', [
+                            'user_id' => $user->id,
+                            'old_path' => $user->certificate,
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete old certificate from R2', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+                
+                $certificateFile = $request->file('certificate');
+                $userName = !empty($user->full_name) ? $user->full_name : 'user_' . $user->id;
+                $result = $r2Service->uploadInstructorApplicationFile(
+                    $certificateFile,
+                    $user->id,
+                    $userName,
+                    'certificate'
+                );
+                
+                if ($result['status']) {
+                    $certificatePath = $result['path'];
+                    \Log::info('Certificate uploaded to R2', [
+                        'user_id' => $user->id,
+                        'path' => $certificatePath,
+                    ]);
+                } else {
+                    \Log::error('Failed to upload certificate to R2', [
+                        'user_id' => $user->id,
+                        'error' => $result['error'] ?? 'Unknown error',
+                    ]);
+                    return back()->withErrors(['certificate' => 'Failed to upload certificate: ' . ($result['error'] ?? 'Unknown error')])->withInput($request->all());
+                }
+            } elseif (!empty($data['certificate']) && is_string($data['certificate'])) {
+                // Keep existing certificate path if it's a string (already uploaded)
+                $certificatePath = $data['certificate'];
+            } elseif (!empty($user->certificate)) {
+                // Keep existing certificate from user if no new file uploaded
+                $certificatePath = $user->certificate;
+            }
+            
+            // Upload identity scan if provided
+            if ($request->hasFile('identity_scan')) {
+                \Log::info('BecomeInstructorController::store - Processing identity_scan upload', [
+                    'user_id' => $user->id,
+                    'file_name' => $request->file('identity_scan')->getClientOriginalName(),
+                    'file_size' => $request->file('identity_scan')->getSize(),
+                ]);
+                // Delete old identity scan from R2 if it exists
+                if (!empty($user->identity_scan) && strpos($user->identity_scan, 'Instructor-application/') === 0) {
+                    try {
+                        $r2Service->deleteFile($user->identity_scan);
+                        \Log::info('Deleted old identity scan from R2', [
+                            'user_id' => $user->id,
+                            'old_path' => $user->identity_scan,
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete old identity scan from R2', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+                
+                $identityScanFile = $request->file('identity_scan');
+                $userName = !empty($user->full_name) ? $user->full_name : 'user_' . $user->id;
+                $result = $r2Service->uploadInstructorApplicationFile(
+                    $identityScanFile,
+                    $user->id,
+                    $userName,
+                    'identity_scan'
+                );
+                
+                if ($result['status']) {
+                    $identityScanPath = $result['path'];
+                    \Log::info('Identity scan uploaded to R2', [
+                        'user_id' => $user->id,
+                        'path' => $identityScanPath,
+                    ]);
+                } else {
+                    \Log::error('Failed to upload identity scan to R2', [
+                        'user_id' => $user->id,
+                        'error' => $result['error'] ?? 'Unknown error',
+                    ]);
+                    return back()->withErrors(['identity_scan' => 'Failed to upload identity scan: ' . ($result['error'] ?? 'Unknown error')])->withInput($request->all());
+                }
+            } elseif (!empty($data['identity_scan']) && is_string($data['identity_scan'])) {
+                // Keep existing identity scan path if it's a string (already uploaded)
+                $identityScanPath = $data['identity_scan'];
+            } elseif (!empty($user->identity_scan)) {
+                // Keep existing identity scan from user if no new file uploaded
+                $identityScanPath = $user->identity_scan;
             }
 
             $lastRequest = BecomeInstructor::query()->updateOrCreate([
                 'user_id' => $user->id,
             ], [
                 'role' => $data['role'],
-                'certificate' => $data['certificate'],
+                'certificate' => $certificatePath,
                 'description' => $data['description'],
                 'created_at' => time()
             ]);
 
-            $user->update([
-                'identity_scan' => $data['identity_scan'],
-                'certificate' => $data['certificate'],
-            ]);
+            // Update user with file paths
+            $userUpdateData = [];
+            if ($identityScanPath !== null) {
+                $userUpdateData['identity_scan'] = $identityScanPath;
+            }
+            if ($certificatePath !== null) {
+                $userUpdateData['certificate'] = $certificatePath;
+            }
+            
+            if (!empty($userUpdateData)) {
+                $user->update($userUpdateData);
+            }
 
-            UserSelectedBank::query()->where('user_id', $user->id)->delete();
-            $userSelectedBank = UserSelectedBank::query()->create([
-                'user_id' => $user->id,
-                'user_bank_id' => $data['bank_id']
-            ]);
+            // Bank account section - only process if bank_id is provided (currently commented out in form)
+            if (!empty($data['bank_id'])) {
+                UserSelectedBank::query()->where('user_id', $user->id)->delete();
+                $userSelectedBank = UserSelectedBank::query()->create([
+                    'user_id' => $user->id,
+                    'user_bank_id' => $data['bank_id']
+                ]);
 
-            if (!empty($data['bank_specifications'])) {
-                $specificationInsert = [];
+                if (!empty($data['bank_specifications'])) {
+                    $specificationInsert = [];
 
-                foreach ($data['bank_specifications'] as $specificationId => $specificationValue) {
-                    if (!empty($specificationValue)) {
-                        $specificationInsert[] = [
-                            'user_selected_bank_id' => $userSelectedBank->id,
-                            'user_bank_specification_id' => $specificationId,
-                            'value' => $specificationValue
-                        ];
+                    foreach ($data['bank_specifications'] as $specificationId => $specificationValue) {
+                        if (!empty($specificationValue)) {
+                            $specificationInsert[] = [
+                                'user_selected_bank_id' => $userSelectedBank->id,
+                                'user_bank_specification_id' => $specificationId,
+                                'value' => $specificationValue
+                            ];
+                        }
                     }
-                }
 
-                UserSelectedBankSpecification::query()->insert($specificationInsert);
+                    UserSelectedBankSpecification::query()->insert($specificationInsert);
+                }
             }
 
             if (!empty($data['occupations'])) {

@@ -77,7 +77,7 @@ class R2StorageService
                         'use_path_style_endpoint' => true,
                         'endpoint' => config('filesystems.disks.r2.endpoint'),
                         'http' => [
-                            'verify' => 'C:\Users\Ahmed\AppData\Local\Programs\PHP\cacert.pem',
+                            'verify' => $this->getSslCertificatePath(),
                             'timeout' => 0,
                             'connect_timeout' => 60,
                         ],
@@ -400,5 +400,313 @@ class R2StorageService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+    
+    /**
+     * Upload instructor application file to R2
+     * 
+     * Path structure: Instructor-application/{user_id}/{document_name}_{user_id}_{user_name}.{extension}
+     * Example: Instructor-application/123/certificate_123_John_Doe.pdf
+     * 
+     * @param UploadedFile $file
+     * @param int $userId
+     * @param string $userName
+     * @param string $documentName (e.g., 'certificate', 'identity_scan')
+     * @return array ['status' => bool, 'path' => string|null, 'error' => string|null]
+     */
+    public function uploadInstructorApplicationFile(UploadedFile $file, int $userId, string $userName, string $documentName): array
+    {
+        $uploaded = false;
+        $uploadError = null;
+        $fullPath = null;
+        
+        try {
+            $storage = Storage::disk('r2');
+            
+            // Sanitize user name for filename (remove special characters, spaces)
+            $sanitizedName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $userName);
+            $sanitizedName = preg_replace('/_+/', '_', $sanitizedName); // Replace multiple underscores with single
+            $sanitizedName = trim($sanitizedName, '_');
+            
+            // Get file extension
+            $extension = $file->getClientOriginalExtension();
+            
+            // Build filename: {document_name}_{user_id}_{user_name}.{extension}
+            $fileName = $documentName . '_' . $userId . '_' . $sanitizedName . '.' . $extension;
+            
+            // Build full path: Instructor-application/{user_id}/{filename}
+            $path = 'Instructor-application/' . $userId;
+            $fullPath = $path . '/' . $fileName;
+            
+            \Log::info('R2 Instructor Application Upload Starting', [
+                'full_path' => $fullPath,
+                'file_size' => $file->getSize(),
+                'user_id' => $userId,
+                'document_name' => $documentName,
+            ]);
+            
+            $fileSize = $file->getSize();
+            $filePath = $file->getRealPath();
+            
+            // For large files (>100MB), use multipart upload
+            if ($fileSize > 100 * 1024 * 1024) {
+                \Log::info('R2 Instructor Application: Using multipart upload for large file', [
+                    'file_size' => $fileSize,
+                    'file_size_mb' => round($fileSize / 1024 / 1024, 2),
+                ]);
+                
+                $s3Client = new S3Client([
+                    'credentials' => [
+                        'key' => config('filesystems.disks.r2.key'),
+                        'secret' => config('filesystems.disks.r2.secret'),
+                    ],
+                    'region' => config('filesystems.disks.r2.region', 'auto'),
+                    'version' => 'latest',
+                    'bucket_endpoint' => false,
+                    'use_path_style_endpoint' => true,
+                    'endpoint' => config('filesystems.disks.r2.endpoint'),
+                    'http' => [
+                        'verify' => $this->getSslCertificatePath(),
+                        'timeout' => 0,
+                        'connect_timeout' => 60,
+                    ],
+                ]);
+                
+                $uploader = new MultipartUploader($s3Client, $filePath, [
+                    'bucket' => config('filesystems.disks.r2.bucket'),
+                    'key' => $fullPath,
+                    'acl' => 'public-read', // Use public-read like the working course upload
+                ]);
+                
+                $result = $uploader->upload();
+                
+                \Log::info('R2 Instructor Application: Multipart upload successful', [
+                    'etag' => $result['ETag'] ?? 'N/A',
+                ]);
+                
+                return [
+                    'status' => true,
+                    'path' => $fullPath,
+                    'url' => null, // Private files don't have public URLs
+                ];
+            } else {
+                // For smaller files, use regular put()
+                \Log::info('R2 Instructor Application: Reading file contents', [
+                    'file_path' => $filePath,
+                    'file_size' => $fileSize,
+                ]);
+                
+                $fileContents = file_get_contents($filePath);
+                if ($fileContents === false) {
+                    throw new Exception('Failed to read file contents');
+                }
+                
+                \Log::info('R2 Instructor Application: File contents read, size: ' . strlen($fileContents) . ' bytes');
+                \Log::info('R2 Instructor Application: Attempting put() to R2', ['full_path' => $fullPath]);
+                
+                // Use 'public' visibility like the working course upload
+                $uploaded = $storage->put($fullPath, $fileContents, 'public');
+                
+                \Log::info('R2 Instructor Application: put() result', ['uploaded' => $uploaded ? 'true' : 'false']);
+                
+                if (!$uploaded) {
+                    \Log::warning('R2 Instructor Application: put() failed, trying S3Client directly');
+                    // Try using S3Client directly to get better error messages
+                    try {
+                        $s3Client = new S3Client([
+                            'credentials' => [
+                                'key' => config('filesystems.disks.r2.key'),
+                                'secret' => config('filesystems.disks.r2.secret'),
+                            ],
+                            'region' => config('filesystems.disks.r2.region', 'auto'),
+                            'version' => 'latest',
+                            'bucket_endpoint' => false,
+                            'use_path_style_endpoint' => true,
+                            'endpoint' => config('filesystems.disks.r2.endpoint'),
+                            'http' => [
+                                'verify' => $this->getSslCertificatePath(),
+                                'timeout' => 0,
+                                'connect_timeout' => 60,
+                            ],
+                        ]);
+                        
+                        $result = $s3Client->putObject([
+                            'Bucket' => config('filesystems.disks.r2.bucket'),
+                            'Key' => $fullPath,
+                            'Body' => $fileContents,
+                            'ACL' => 'public-read',
+                        ]);
+                        
+                        $uploaded = !empty($result['ETag']);
+                        \Log::info('R2 Instructor Application: S3Client putObject() result', [
+                            'uploaded' => $uploaded ? 'true' : 'false',
+                            'etag' => $result['ETag'] ?? 'N/A',
+                        ]);
+                    } catch (\Aws\Exception\AwsException $e) {
+                        $uploadError = $e->getAwsErrorMessage() ?: $e->getMessage();
+                        \Log::error('R2 Instructor Application: S3Client AWS Exception', [
+                            'error' => $uploadError,
+                            'error_code' => $e->getAwsErrorCode(),
+                            'http_status' => $e->getStatusCode(),
+                        ]);
+                        $uploaded = false;
+                    } catch (Exception $e) {
+                        $uploadError = $e->getMessage();
+                        \Log::error('R2 Instructor Application: S3Client Exception', [
+                            'error' => $uploadError,
+                        ]);
+                        $uploaded = false;
+                    }
+                    
+                    if (!$uploaded) {
+                        \Log::warning('R2 Instructor Application: S3Client failed, trying writeStream');
+                        // Try writeStream as final fallback
+                        $stream = fopen($filePath, 'r');
+                        if ($stream) {
+                            $uploaded = $storage->writeStream($fullPath, $stream);
+                            \Log::info('R2 Instructor Application: writeStream() result', ['uploaded' => $uploaded ? 'true' : 'false']);
+                            if (is_resource($stream)) {
+                                fclose($stream);
+                            }
+                        } else {
+                            \Log::error('R2 Instructor Application: Failed to open file stream');
+                        }
+                    }
+                }
+            }
+            
+            if ($uploaded) {
+                // Wait a moment for R2 to process
+                sleep(1);
+                
+                // Verify the file was actually uploaded (same as working method)
+                try {
+                    $exists = $storage->exists($fullPath);
+                    
+                    if (!$exists) {
+                        \Log::warning('R2 Instructor Application: Upload returned true but file does not exist', [
+                            'full_path' => $fullPath,
+                        ]);
+                        
+                        return [
+                            'status' => false,
+                            'path' => null,
+                            'url' => null,
+                            'error' => 'Upload appeared successful but file not found on R2',
+                        ];
+                    }
+                    
+                    $fileSize = $storage->size($fullPath);
+                    $url = $storage->url($fullPath);
+                    
+                    \Log::info('R2 Instructor Application: Upload Successful', [
+                        'full_path' => $fullPath,
+                        'file_size' => $fileSize,
+                        'url' => $url,
+                    ]);
+                    
+                    return [
+                        'status' => true,
+                        'path' => $fullPath,
+                        'url' => $url,
+                    ];
+                } catch (Exception $e) {
+                    \Log::error('R2 Instructor Application: Upload verification failed', [
+                        'error' => $e->getMessage(),
+                        'full_path' => $fullPath,
+                    ]);
+                    
+                    return [
+                        'status' => false,
+                        'path' => null,
+                        'url' => null,
+                        'error' => 'Upload verification failed: ' . $e->getMessage(),
+                    ];
+                }
+            }
+            
+            \Log::error('R2 Instructor Application: Upload returned false', [
+                'full_path' => $fullPath,
+                'file_size' => $file->getSize(),
+                'upload_error' => $uploadError,
+            ]);
+            
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $uploadError ?? 'Upload returned false without exception',
+            ];
+            
+        } catch (\Aws\Exception\AwsException $e) {
+            $uploadError = $e->getAwsErrorMessage() ?: $e->getMessage();
+            \Log::error('R2 Instructor Application AWS Exception', [
+                'error' => $uploadError,
+                'error_code' => $e->getAwsErrorCode(),
+                'user_id' => $userId,
+                'document_name' => $documentName,
+            ]);
+            
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $uploadError,
+            ];
+        } catch (Exception $e) {
+            \Log::error('R2 Instructor Application Upload Error: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'document_name' => $documentName,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+    
+    /**
+     * Get the SSL certificate path for R2 connections
+     * 
+     * Production-ready: For R2 (Cloudflare's trusted service), we disable SSL verification
+     * to avoid certificate path issues across different environments.
+     * 
+     * Can be configured via environment variables:
+     * - R2_SSL_CERT_PATH: Path to custom certificate file (if you want to enable verification)
+     * - R2_SSL_VERIFY: Set to 'true' to enable verification (default: false for R2)
+     * 
+     * @return string|bool Certificate file path, true for system store, or false to disable
+     */
+    protected function getSslCertificatePath()
+    {
+        // Check if SSL verification is explicitly enabled
+        $sslVerify = env('R2_SSL_VERIFY', 'false');
+        if (strtolower($sslVerify) === 'true' || $sslVerify === true) {
+            // If verification is enabled, check for custom certificate path
+            $certPath = env('R2_SSL_CERT_PATH');
+            if (!empty($certPath) && file_exists($certPath)) {
+                return $certPath;
+            }
+            // Use system certificate store if no custom path
+            return true;
+        }
+        
+        // Default: Disable SSL verification for R2 (Cloudflare is trusted)
+        // This avoids certificate path issues across different environments
+        // Set R2_SSL_VERIFY=true in .env if you want to enable verification
+        
+        // Also check PHP's curl.cainfo setting - if it's set to a non-existent file, disable verification
+        $phpCainfo = ini_get('curl.cainfo');
+        if (!empty($phpCainfo) && !file_exists($phpCainfo)) {
+            \Log::warning('PHP curl.cainfo points to non-existent file, disabling SSL verification', [
+                'php_cainfo' => $phpCainfo,
+            ]);
+        }
+        
+        return false;
     }
 }

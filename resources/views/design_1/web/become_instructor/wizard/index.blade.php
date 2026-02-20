@@ -16,7 +16,7 @@
                     <p class="mt-8 font-16 text-gray-500">{{ trans('update.become_instructor_organization_page_top_hint') }}</p>
                 </div>
 
-                <form id="becomeInstructorForm" action="/become-instructor/store" method="post">
+                <form id="becomeInstructorForm" action="/become-instructor/store" method="post" enctype="multipart/form-data">
                     {{ csrf_field() }}
 
                     <div class="become-instructor-wizard position-relative bg-white rounded-32 p-16 mt-56">

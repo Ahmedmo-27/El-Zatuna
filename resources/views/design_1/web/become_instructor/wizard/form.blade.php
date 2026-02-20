@@ -1,38 +1,38 @@
 <div class="">
-    <h3 class="font-24 font-weight-bold">{{ trans('update.information') }} 🎓</h3>
-    <div class="mt-8 text-gray-500">{{ trans('update.become_instructor_organization_page_information_form_hint') }}</div>
+    <h3 class="font-24 font-weight-bold text-[#072923]">{{ trans('update.information') }} 🎓</h3>
+    <div class="mt-8 text-[#072923]/70">{{ trans('update.become_instructor_organization_page_information_form_hint') }}</div>
 
-    {{-- Role --}}
+    {{-- Role Selection --}}
     <div class="form-group mt-20">
-        <label class="font-12 font-weight-bold">{{ trans('financial.account_type') }}</label>
+        <label class="font-12 font-weight-bold text-[#072923]">Select Account Type</label>
 
-        <div class="d-flex align-items-center gap-5 p-4 border-gray-300 rounded-12 mt-8">
-            <div class="custom-input-button custom-input-button-none-border-and-active-bg  position-relative flex-1">
+        <div class="d-flex align-items-center gap-5 p-4 border-[#ECF4B8] rounded-12 mt-8 bg-[#F5F9E8]/30">
+            <div class="custom-input-button custom-input-button-none-border-and-active-bg position-relative flex-1">
                 <input type="radio" class="" name="role" id="role_teacher" value="teacher" checked/>
-                <label for="role_teacher" class="position-relative d-flex-center flex-column p-12 rounded-8 text-center text-gray-500">
+                <label for="role_teacher" class="position-relative d-flex-center flex-column p-12 rounded-8 text-center text-[#072923] hover:text-[#C8CD06] transition-colors cursor-pointer">
                     {{ trans("update.instructor") }}
                 </label>
             </div>
 
-            <div class="custom-input-button custom-input-button-none-border-and-active-bg  position-relative flex-1">
+            <div class="custom-input-button custom-input-button-none-border-and-active-bg position-relative flex-1">
                 <input type="radio" class="" name="role" id="role_organization" value="organization">
-                <label for="role_organization" class="position-relative d-flex-center flex-column p-12 rounded-8 text-center text-gray-500">
+                <label for="role_organization" class="position-relative d-flex-center flex-column p-12 rounded-8 text-center text-[#072923] hover:text-[#C8CD06] transition-colors cursor-pointer">
                     {{ trans("update.organization") }}
                 </label>
             </div>
         </div>
 
         @error('role')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
+        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
         @enderror
     </div>
 
-    {{-- Occupations --}}
-    <div class="form-group ">
-        <label class="form-group-label">{{ trans('public.occupations') }}</label>
+    {{-- Areas of Expertise --}}
+    <div class="form-group">
+        <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach</p>
 
-        <select name="occupations[]" class="form-control select2" multiple data-placeholder="{{ trans('update.select_your_occupations') }}">
-            <option value="">{{ trans('update.select_your_occupations') }}</option>
+        <select name="occupations[]" class="form-control select2 border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06]" multiple data-placeholder="Select Your Occupations">
+            <option value="">Select Your Occupations</option>
 
             @foreach($categories as $category)
                 @if(!empty($category->subCategories) and count($category->subCategories))
@@ -46,13 +46,15 @@
         </select>
 
         @error('occupations')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
+        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
         @enderror
     </div>
 
-    {{-- Extra Information --}}
-    <h5 class="font-12 mt-24">{{ trans('public.extra_information') }}</h5>
+    {{-- Documents Section --}}
+    <h5 class="font-12 mt-24 text-[#072923] font-weight-bold">Required Documents</h5>
 
+    {{-- Bank Account Section - Commented Out --}}
+    {{--
     <div class="form-group  mt-24">
         <label class="form-group-label">{{ trans('update.select_account_type') }}</label>
 
@@ -83,47 +85,48 @@
             @endforeach
         @endif
     </div>
+    --}}
 
 
     <div class="form-group custom-input-file flex-1 mt-24">
-        <label class="form-group-label">{{ trans('update.certificate_and_documents') }}</label>
+        <p class="text-sm text-[#072923]/60 mb-2">Upload your professional certificates and credentials (optional)</p>
 
-        <div class="custom-file bg-white js-ajax-certificate">
-            <input type="file" name="certificate" class="custom-file-input js-ajax-upload-file-input" id="certificatesInput" data-upload-name="certificate">
-            <span class="custom-file-text text-gray-500"></span>
-            <label class="custom-file-label bg-transparent" for="certificatesInput">
-                <x-iconsax-lin-export class="icons text-gray-400" width="24px" height="24px"/>
+        <div class="custom-file bg-[#F5F9E8] border border-[#ECF4B8] rounded-12 js-ajax-certificate hover:border-[#C8CD06] transition-colors">
+            <input type="file" name="certificate" class="custom-file-input js-ajax-upload-file-input" id="certificatesInput" data-upload-name="certificate" accept=".pdf,.jpg,.jpeg,.png">
+            <span class="custom-file-text text-[#072923]/70"></span>
+            <label class="custom-file-label bg-transparent cursor-pointer" for="certificatesInput">
+                <x-iconsax-lin-export class="icons text-[#072923]/60 hover:text-[#C8CD06] transition-colors" width="24px" height="24px"/>
             </label>
         </div>
 
         @error('certificate')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
+        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
         @enderror
     </div>
 
 
     <div class="form-group custom-input-file flex-1 mt-24">
-        <label class="form-group-label">{{ trans('update.identity_scan') }}</label>
+        <p class="text-sm text-[#072923]/60 mt-1 mb-2">Upload a scanned copy of your ID card or passport (required)</p>
 
-        <div class="custom-file bg-white js-ajax-identity_scan">
-            <input type="file" name="identity_scan" class="custom-file-input js-ajax-upload-file-input" id="identity_scansInput" data-upload-name="identity_scan">
-            <span class="custom-file-text text-gray-500"></span>
-            <label class="custom-file-label bg-transparent" for="identity_scansInput">
-                <x-iconsax-lin-export class="icons text-gray-400" width="24px" height="24px"/>
+        <div class="custom-file bg-[#F5F9E8] border border-[#ECF4B8] rounded-12 js-ajax-identity_scan hover:border-[#C8CD06] transition-colors">
+            <input type="file" name="identity_scan" class="custom-file-input js-ajax-upload-file-input" id="identity_scansInput" data-upload-name="identity_scan" accept=".pdf,.jpg,.jpeg,.png">
+            <span class="custom-file-text text-[#072923]/70"></span>
+            <label class="custom-file-label bg-transparent cursor-pointer" for="identity_scansInput">
+                <x-iconsax-lin-export class="icons text-[#072923]/60 hover:text-[#C8CD06] transition-colors" width="24px" height="24px"/>
             </label>
         </div>
 
         @error('identity_scan')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
+        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
         @enderror
     </div>
 
-    <div class="form-group">
-        <label class="form-group-label">{{ trans('public.extra_information') }}</label>
-        <textarea name="description" rows="6" class="form-control">{{ !empty($lastRequest) ? $lastRequest->description : old('description') }}</textarea>
+    <div class="form-group mt-24">
+        <p class="text-sm text-[#072923]/60 mb-2">Tell us about yourself, your experience, and qualifications</p>
+        <textarea name="description" rows="6" class="form-control border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06] text-[#072923] placeholder:text-[#072923]/40" placeholder="Describe your teaching experience, qualifications, and what makes you a great instructor...">{{ !empty($lastRequest) ? $lastRequest->description : old('description') }}</textarea>
 
         @error('description')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
+        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
         @enderror
     </div>
 
