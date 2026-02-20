@@ -829,7 +829,53 @@
             },
             error: function (err) {
                 $this.removeClass('loadingbar').prop('disabled', false);
-                var errors = err.responseJSON;
+                var errors = err.responseJSON || {};
+                var status = err.status || 0;
+                var statusText = err.statusText || '';
+                var errorMessage = err.responseText || '';
+
+                // Handle 413 (Content Too Large) errors specifically
+                // Check status code, status text, or error message for 413/Content Too Large
+                var is413Error = status === 413 || 
+                                statusText.toLowerCase().indexOf('content too large') !== -1 ||
+                                errorMessage.toLowerCase().indexOf('413') !== -1 ||
+                                errorMessage.toLowerCase().indexOf('content too large') !== -1 ||
+                                (status === 0 && err.responseText && err.responseText.toLowerCase().indexOf('413') !== -1);
+
+                if (is413Error) {
+                    const errorMessage = 'The file you are trying to upload is too large. Maximum file size is 2GB. Please try uploading a smaller file or contact support if you need to upload larger files.';
+                    
+                    // Show custom alert if available
+                    if ($customAlertEl.length > 0) {
+                        $customAlertEl.removeClass("d-none").addClass("d-flex");
+                        $customAlertEl.find("span").text(errorMessage);
+                    } else {
+                        // Fallback to toast notification
+                        showToast('error', 'File Upload Error', errorMessage);
+                    }
+                    
+                    // Try to find file upload input and show error
+                    const $fileInput = $form.find('.js-ajax-upload-file-input');
+                    if ($fileInput.length) {
+                        $fileInput.addClass('is-invalid');
+                        const $formGroup = $fileInput.closest('.form-group');
+                        if ($formGroup.length) {
+                            let $feedback = $formGroup.find('.invalid-feedback');
+                            if (!$feedback.length) {
+                                $feedback = $('<div class="invalid-feedback"></div>');
+                                $formGroup.append($feedback);
+                            }
+                            $feedback.text(errorMessage);
+                        }
+                    }
+                    
+                    // Refresh Captcha if needed
+                    if ($form.find(".js-ajax-captcha").length) {
+                        refreshCaptcha();
+                    }
+                    
+                    return;
+                }
 
                 if (errors && errors.errors) {
                     Object.keys(errors.errors).forEach((key) => {
@@ -858,14 +904,14 @@
                     }
                 }
 
-                // Custom Alert
-                if (errors.custom_alert && $customAlertEl.length > 0) {
+                // Custom Alert - Check if errors exists before accessing properties
+                if (errors && errors.custom_alert && $customAlertEl.length > 0) {
                     $customAlertEl.removeClass("d-none").addClass("d-flex")
                     $customAlertEl.find("span").text(errors.custom_alert)
                 }
 
-                // toast
-                if (errors.toast_alert) {
+                // toast - Check if errors exists before accessing properties
+                if (errors && errors.toast_alert) {
                     showToast('error', errors.toast_alert.title, errors.toast_alert.msg)
                 }
 
