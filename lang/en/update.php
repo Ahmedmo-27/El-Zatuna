@@ -261,7 +261,7 @@ return [
 'file_source_external_link' => 'External Link',
 'file_source_google_drive' => 'Google Drive',
 'file_source_iframe' => 'iFrame',
-'file_source_s3' => 'Amazon S3',
+'file_source_r2' => 'Cloudflare R2',
 
 'file_source_upload_placeholder' => 'Upload files from your device',
 'file_source_youtube_placeholder' => 'Paste YouTube link',
@@ -269,7 +269,7 @@ return [
 'file_source_external_link_placeholder' => 'Paste external link',
 'file_source_google_drive_placeholder' => 'Embed link starting with iframe tag',
 'file_source_iframe_placeholder' => 'Paste full iframe embed code',
-'file_source_s3_placeholder' => 'Upload files to S3 from your device',
+'file_source_r2_placeholder' => 'Upload files to R2 from your device',
 'file_source_upload_archive' => 'Upload',
 
 'new_interactive_file' => 'New SCORM File',

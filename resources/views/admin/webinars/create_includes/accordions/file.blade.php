@@ -93,7 +93,15 @@
                                             $availableSources = json_decode($availableSources, true);
                                         }
                                         if (empty($availableSources) || !is_array($availableSources)) {
-                                            $availableSources = ['upload', 'youtube', 'vimeo', 'external_link', 'secure_host'];
+                                            $availableSources = ['upload', 'youtube', 'vimeo', 'external_link', 'secure_host', 'r2'];
+                                        }
+                                        // Remove s3 if present
+                                        $availableSources = array_filter($availableSources, function($source) {
+                                            return $source !== 's3';
+                                        });
+                                        // Ensure r2 is in the list if not already
+                                        if (!in_array('r2', $availableSources)) {
+                                            $availableSources[] = 'r2';
                                         }
                                     @endphp
                                     @foreach($availableSources as $source)
@@ -157,7 +165,7 @@
                             </div>
 
 
-                            <div class="form-group js-file-path-input {{ (!empty($file) and $file->storage == 's3') ? 'd-none' : '' }}">
+                            <div class="form-group js-file-path-input">
                                 <div class="local-input input-group">
                                     <div class="input-group-prepend">
                                         <button type="button" class="input-group-text admin-file-manager " data-input="file_path{{ !empty($file) ? $file->id : 'record' }}" data-preview="holder">
@@ -169,7 +177,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group js-s3-file-path-input {{ (!empty($file) and in_array($file->storage, ['s3', 'r2'])) ? '' : 'd-none' }}">
+                            <div class="form-group js-s3-file-path-input {{ (!empty($file) and $file->storage == 'r2') ? '' : 'd-none' }}">
                                 <label class="input-label" for="s3File{{ !empty($file) ? $file->id : 'record' }}">
                                     {{ trans('update.choose_file') }}
                                     <span class="sr-only">{{ trans('update.drag_drop_or_click_to_upload') }}</span>
@@ -282,15 +290,6 @@
                                 </div>
                             </div>
 
-                            <div class="js-downloadable-input form-group mt-20">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <label class="cursor-pointer input-label" for="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('home.downloadable') }}</label>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][downloadable]" class="custom-control-input" id="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (empty($file) or $file->downloadable) ? 'checked' : ''  }}>
-                                        <label class="custom-control-label" for="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div class="form-group mt-20">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -425,8 +424,7 @@
                 google_drive: '{{ trans('update.file_source_google_drive_placeholder') }}',
                 dropbox: '{{ trans('update.file_source_dropbox_placeholder') }}',
                 iframe: '{{ trans('update.file_source_iframe_placeholder') }}',
-                s3: '{{ trans('update.file_source_s3_placeholder') }}',
-                r2: '{{ trans('update.file_source_r2_placeholder') ?? trans('update.file_source_s3_placeholder') }}',
+                r2: '{{ trans('update.file_source_r2_placeholder') ?? 'Enter R2 file path or upload file' }}',
             }
         </script>
         <script src="/assets/design_1/js/panel/file-drag-drop.js"></script>

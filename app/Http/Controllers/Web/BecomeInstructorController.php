@@ -216,7 +216,7 @@ class BecomeInstructorController extends Controller
                     $certificateFile,
                     $user->id,
                     $userName,
-                    'certificate'
+                    'certificates'
                 );
                 
                 if ($result['status']) {

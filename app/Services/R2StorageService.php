@@ -65,7 +65,7 @@ class R2StorageService
                         'file_size_mb' => round($fileSize / 1024 / 1024, 2),
                     ]);
                     
-                    // Create S3 client directly for multipart upload (same config as R2StorageServiceProvider)
+                    $sslVerify = $this->getSslCertificatePath();
                     $s3Client = new S3Client([
                         'credentials' => [
                             'key' => config('filesystems.disks.r2.key'),
@@ -76,8 +76,9 @@ class R2StorageService
                         'bucket_endpoint' => false,
                         'use_path_style_endpoint' => true,
                         'endpoint' => config('filesystems.disks.r2.endpoint'),
+                        'verify' => $sslVerify,
                         'http' => [
-                            'verify' => $this->getSslCertificatePath(),
+                            'verify' => $sslVerify,
                             'timeout' => 0,
                             'connect_timeout' => 60,
                         ],
@@ -406,12 +407,12 @@ class R2StorageService
      * Upload instructor application file to R2
      * 
      * Path structure: Instructor-application/{user_id}/{document_name}_{user_id}_{user_name}.{extension}
-     * Example: Instructor-application/123/certificate_123_John_Doe.pdf
+     * Example: Instructor-application/123/certificates_123_John_Doe.pdf or identity_scan_123_John_Doe.pdf
      * 
      * @param UploadedFile $file
      * @param int $userId
      * @param string $userName
-     * @param string $documentName (e.g., 'certificate', 'identity_scan')
+     * @param string $documentName (e.g., 'certificates', 'identity_scan')
      * @return array ['status' => bool, 'path' => string|null, 'error' => string|null]
      */
     public function uploadInstructorApplicationFile(UploadedFile $file, int $userId, string $userName, string $documentName): array
@@ -434,7 +435,7 @@ class R2StorageService
             // Build filename: {document_name}_{user_id}_{user_name}.{extension}
             $fileName = $documentName . '_' . $userId . '_' . $sanitizedName . '.' . $extension;
             
-            // Build full path: Instructor-application/{user_id}/{filename}
+            // Build full path: Instructor-application/{user_id}/{filename} (no bucket prefix - key only)
             $path = 'Instructor-application/' . $userId;
             $fullPath = $path . '/' . $fileName;
             
@@ -455,6 +456,7 @@ class R2StorageService
                     'file_size_mb' => round($fileSize / 1024 / 1024, 2),
                 ]);
                 
+                $sslVerify = $this->getSslCertificatePath();
                 $s3Client = new S3Client([
                     'credentials' => [
                         'key' => config('filesystems.disks.r2.key'),
@@ -465,8 +467,9 @@ class R2StorageService
                     'bucket_endpoint' => false,
                     'use_path_style_endpoint' => true,
                     'endpoint' => config('filesystems.disks.r2.endpoint'),
+                    'verify' => $sslVerify,
                     'http' => [
-                        'verify' => $this->getSslCertificatePath(),
+                        'verify' => $sslVerify,
                         'timeout' => 0,
                         'connect_timeout' => 60,
                     ],
@@ -513,6 +516,7 @@ class R2StorageService
                     \Log::warning('R2 Instructor Application: put() failed, trying S3Client directly');
                     // Try using S3Client directly to get better error messages
                     try {
+                        $sslVerify = $this->getSslCertificatePath();
                         $s3Client = new S3Client([
                             'credentials' => [
                                 'key' => config('filesystems.disks.r2.key'),
@@ -523,8 +527,9 @@ class R2StorageService
                             'bucket_endpoint' => false,
                             'use_path_style_endpoint' => true,
                             'endpoint' => config('filesystems.disks.r2.endpoint'),
+                            'verify' => $sslVerify,
                             'http' => [
-                                'verify' => $this->getSslCertificatePath(),
+                                'verify' => $sslVerify,
                                 'timeout' => 0,
                                 'connect_timeout' => 60,
                             ],
@@ -673,7 +678,8 @@ class R2StorageService
      * Get the SSL certificate path for R2 connections
      * 
      * Production-ready: For R2 (Cloudflare's trusted service), we disable SSL verification
-     * to avoid certificate path issues across different environments.
+     * to avoid certificate path issues (e.g. cURL error 77 when php.ini or env points to
+     * a non-existent cacert.pem from another project).
      * 
      * Can be configured via environment variables:
      * - R2_SSL_CERT_PATH: Path to custom certificate file (if you want to enable verification)
@@ -683,30 +689,18 @@ class R2StorageService
      */
     protected function getSslCertificatePath()
     {
-        // Check if SSL verification is explicitly enabled
+        // If verification is explicitly enabled, only use a path that exists and is in this project
         $sslVerify = env('R2_SSL_VERIFY', 'false');
         if (strtolower($sslVerify) === 'true' || $sslVerify === true) {
-            // If verification is enabled, check for custom certificate path
             $certPath = env('R2_SSL_CERT_PATH');
             if (!empty($certPath) && file_exists($certPath)) {
                 return $certPath;
             }
-            // Use system certificate store if no custom path
             return true;
         }
         
-        // Default: Disable SSL verification for R2 (Cloudflare is trusted)
-        // This avoids certificate path issues across different environments
-        // Set R2_SSL_VERIFY=true in .env if you want to enable verification
-        
-        // Also check PHP's curl.cainfo setting - if it's set to a non-existent file, disable verification
-        $phpCainfo = ini_get('curl.cainfo');
-        if (!empty($phpCainfo) && !file_exists($phpCainfo)) {
-            \Log::warning('PHP curl.cainfo points to non-existent file, disabling SSL verification', [
-                'php_cainfo' => $phpCainfo,
-            ]);
-        }
-        
+        // Force disable SSL verification to avoid cURL error 77 when php.ini curl.cainfo
+        // or another env points to a missing/invalid path (e.g. D:\Work\lms-backend\cacert.pem)
         return false;
     }
 }

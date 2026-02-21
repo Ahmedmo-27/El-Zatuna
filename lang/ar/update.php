@@ -256,7 +256,7 @@ return [
 'file_source_external_link' => 'رابط خارجي',
 'file_source_google_drive' => 'جوجل درايف',
 'file_source_iframe' => 'آي فريم',
-'file_source_s3' => 'أمازون S3',
+'file_source_r2' => 'Cloudflare R2',
 
 'file_source_upload_placeholder' => 'رفع ملفات من جهاز الكمبيوتر الخاص بك',
 'file_source_youtube_placeholder' => 'الصق رابط يوتيوب',
@@ -264,7 +264,7 @@ return [
 'file_source_external_link_placeholder' => 'الصق الرابط الخارجي',
 'file_source_google_drive_placeholder' => 'رابط معاينة جوجل درايف (تضمين) يبدأ بوسم iframe',
 'file_source_iframe_placeholder' => 'الصق كامل كود الـ iframe',
-'file_source_s3_placeholder' => 'رفع ملفات من جهاز الكمبيوتر الخاص بك إلى S3',
+'file_source_r2_placeholder' => 'رفع ملفات من جهاز الكمبيوتر الخاص بك إلى R2',
 'file_source_upload_archive' => 'رفع',
 'new_interactive_file' => 'SCORM جديد',
 'interactive_feature_toggle' => 'تمكين رفع ملف SCORM',

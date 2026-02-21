@@ -773,11 +773,11 @@
         if (uploadFiles.length) {
             for (const uploadFileEl of uploadFiles) {
                 const uploadFile = $(uploadFileEl);
+                const file = uploadFile.prop('files') && uploadFile.prop('files')[0];
 
-                if (uploadFile && uploadFile.prop('files') && uploadFile.prop('files')[0]) {
-                    const name = uploadFile.attr('data-upload-name') ? uploadFile.attr('data-upload-name') : 'upload_file';
-
-                    formData.append(name, uploadFile.prop('files')[0]);
+                if (uploadFile.length && file) {
+                    const name = uploadFile.attr('data-upload-name') || uploadFile.attr('name') || 'upload_file';
+                    formData.append(name, file);
                 }
             }
         }
@@ -801,7 +801,17 @@
             cache: false,
             success: function (result) {
                 if (result && result.code === 200) {
-                    //window.location.reload();
+                    // Panel file upload: only treat as success when file was actually stored (must have path)
+                    const isPanelFileUpload = typeof action === 'string' && action.indexOf('/panel/files/') !== -1;
+                    const hasStoredFile = result.path && (result.path + '').length > 0;
+                    if (isPanelFileUpload && !hasStoredFile) {
+                        $this.removeClass('loadingbar').prop('disabled', false);
+                        if (typeof showToast === 'function') {
+                            showToast('error', 'Upload failed', 'File was not uploaded. Please choose a file and try again.');
+                        }
+                        return;
+                    }
+
                     const dontReloadPage = (typeof result.dont_reload !== "undefined" && result.dont_reload);
 
                     const isCartStore = (typeof action === 'string' && action.indexOf('/cart/store') !== -1);
@@ -829,7 +839,24 @@
             },
             error: function (err) {
                 $this.removeClass('loadingbar').prop('disabled', false);
-                var errors = err.responseJSON || {};
+                
+                // Safely parse response JSON - handle cases where response might be HTML or invalid JSON
+                var errors = {};
+                try {
+                    if (err.responseJSON) {
+                        errors = err.responseJSON;
+                    } else if (err.responseText) {
+                        // Try to parse as JSON if it's not already an object
+                        var parsed = typeof err.responseText === 'string' ? JSON.parse(err.responseText) : err.responseText;
+                        if (parsed && typeof parsed === 'object') {
+                            errors = parsed;
+                        }
+                    }
+                } catch (e) {
+                    // If parsing fails, errors remains empty object
+                    errors = {};
+                }
+                
                 var status = err.status || 0;
                 var statusText = err.statusText || '';
                 var errorMessage = err.responseText || '';
@@ -838,8 +865,10 @@
                 // Check status code, status text, or error message for 413/Content Too Large
                 var is413Error = status === 413 || 
                                 statusText.toLowerCase().indexOf('content too large') !== -1 ||
+                                statusText.toLowerCase().indexOf('request entity too large') !== -1 ||
                                 errorMessage.toLowerCase().indexOf('413') !== -1 ||
                                 errorMessage.toLowerCase().indexOf('content too large') !== -1 ||
+                                errorMessage.toLowerCase().indexOf('request entity too large') !== -1 ||
                                 (status === 0 && err.responseText && err.responseText.toLowerCase().indexOf('413') !== -1);
 
                 if (is413Error) {
@@ -904,8 +933,8 @@
                     }
                 }
 
-                // Custom Alert - Check if errors exists before accessing properties
-                if (errors && errors.custom_alert && $customAlertEl.length > 0) {
+                // Custom Alert - Check if errors exists and has custom_alert property before accessing
+                if (errors && typeof errors === 'object' && errors.custom_alert && $customAlertEl.length > 0) {
                     $customAlertEl.removeClass("d-none").addClass("d-flex")
                     $customAlertEl.find("span").text(errors.custom_alert)
                 }

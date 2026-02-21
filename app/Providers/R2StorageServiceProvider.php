@@ -18,6 +18,7 @@ class R2StorageServiceProvider extends ServiceProvider
     {
         Storage::extend('r2', function ($app, $config) {
             // Create S3 client with proper R2 configuration
+            $verify = $this->getSslCertificatePath();
             $client = new S3Client([
                 'credentials' => [
                     'key' => $config['key'],
@@ -28,8 +29,9 @@ class R2StorageServiceProvider extends ServiceProvider
                 'bucket_endpoint' => false,
                 'use_path_style_endpoint' => true,
                 'endpoint' => $config['endpoint'],
+                'verify' => $verify,
                 'http' => [
-                    'verify' => $this->getSslCertificatePath(),
+                    'verify' => $verify,
                 ],
             ]);
 
@@ -58,32 +60,21 @@ class R2StorageServiceProvider extends ServiceProvider
     /**
      * Get the SSL certificate path for R2 connections
      * 
-     * Production-ready: For R2 (Cloudflare's trusted service), we disable SSL verification
-     * to avoid certificate path issues across different environments.
-     * 
-     * Can be configured via environment variables:
-     * - R2_SSL_CERT_PATH: Path to custom certificate file (if you want to enable verification)
-     * - R2_SSL_VERIFY: Set to 'true' to enable verification (default: false for R2)
+     * We default to false (disable verification) to avoid cURL error 77 when
+     * php.ini curl.cainfo or env points to a non-existent path (e.g. another project's cacert.pem).
      * 
      * @return string|bool Certificate file path, true for system store, or false to disable
      */
     protected function getSslCertificatePath()
     {
-        // Check if SSL verification is explicitly enabled
         $sslVerify = env('R2_SSL_VERIFY', 'false');
         if (strtolower($sslVerify) === 'true' || $sslVerify === true) {
-            // If verification is enabled, check for custom certificate path
             $certPath = env('R2_SSL_CERT_PATH');
             if (!empty($certPath) && file_exists($certPath)) {
                 return $certPath;
             }
-            // Use system certificate store if no custom path
             return true;
         }
-        
-        // Default: Disable SSL verification for R2 (Cloudflare is trusted)
-        // This avoids certificate path issues across different environments
-        // Set R2_SSL_VERIFY=true in .env if you want to enable verification
         return false;
     }
 }

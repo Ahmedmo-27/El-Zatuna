@@ -145,7 +145,16 @@ return [
             'secret' => env('R2_SECRET_ACCESS_KEY'),
             'region' => env('R2_REGION', 'auto'),
             'bucket' => env('R2_BUCKET'),
-            'endpoint' => env('R2_ENDPOINT'),
+            // Endpoint must be the base URL only (no /bucket). Keys like "Courses/..." then store at bucket root, not "el-zatuna/Courses/..."
+            'endpoint' => (function () {
+                $endpoint = rtrim(env('R2_ENDPOINT', ''), '/');
+                $bucket = trim(env('R2_BUCKET', ''), '/');
+                $suffix = '/' . $bucket;
+                if ($bucket !== '' && $endpoint !== '' && substr($endpoint, -strlen($suffix)) === $suffix) {
+                    return substr($endpoint, 0, -strlen($suffix));
+                }
+                return $endpoint;
+            })(),
             'url' => env('R2_PUBLIC_URL'),
             'use_path_style_endpoint' => true,
             'visibility' => 'public',

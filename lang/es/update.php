@@ -256,7 +256,7 @@ return [
 'file_source_external_link' => 'External Link',
 'file_source_google_drive' => 'Google Drive',
 'file_source_iframe' => 'iFrame',
-'file_source_s3' => 'Amazon S3',
+'file_source_r2' => 'Cloudflare R2',
 
 'file_source_upload_placeholder' => 'Uploads files from your PC',
 'file_source_youtube_placeholder' => 'Paste Youtube link',
@@ -264,7 +264,7 @@ return [
 'file_source_external_link_placeholder' => 'Paste the external link',
 'file_source_google_drive_placeholder' => 'Drive preview link (Embed) starts with iframe tag',
 'file_source_iframe_placeholder' => 'Paste whole of the iframe code',
-'file_source_s3_placeholder' => 'Upload files from your PC to S3',
+'file_source_r2_placeholder' => 'Upload files from your PC to R2',
 'file_source_upload_archive' => 'Upload',
 'new_interactive_file' => 'New SCORM',
 'interactive_feature_toggle' => 'Enable SCORM file upload',

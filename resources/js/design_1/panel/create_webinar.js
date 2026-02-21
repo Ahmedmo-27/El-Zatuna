@@ -506,7 +506,7 @@
                         
                         // Ensure upload input is visible for new files (it should be by default from Blade)
                         const $uploadInput = $newForm.find('.js-file-upload-input');
-                        if ($uploadInput.hasClass('d-none') && ['upload', 's3', 'r2'].includes(storageValue)) {
+                        if ($uploadInput.hasClass('d-none') && ['upload', 'r2'].includes(storageValue)) {
                             $uploadInput.removeClass('d-none');
                         }
                         
@@ -609,6 +609,23 @@
         const $this = $(this);
         const $form = $this.closest('.js-content-form');
 
+        // For file forms with R2/upload: require a file to be selected before submit
+        if ($form.hasClass('file-form')) {
+            const storage = $form.find('.js-file-storage').val() || $form.find('select[name*="[storage]"]').val() || 'r2';
+            if (storage === 'r2' || storage === 'upload') {
+                const $fileInput = $form.find('.js-ajax-upload-file-input');
+                const hasFile = $fileInput.length && $fileInput[0].files && $fileInput[0].files.length > 0;
+                if (!hasFile) {
+                    if (typeof showToast === 'function') {
+                        showToast('error', 'File required', 'Please choose a file to upload before saving.');
+                    }
+                    $form.find('.js-file-upload-input .invalid-feedback').text('Please choose a file to upload.').addClass('d-block');
+                    return;
+                }
+                $form.find('.js-file-upload-input .invalid-feedback').removeClass('d-block').text('');
+            }
+        }
+
         handleSendRequestItemForm($form, $this)
     });
 
@@ -659,20 +676,16 @@
                 break;
 
             case 'external_link':
-            case 's3':
             case 'r2':
                 $fileTypeVolumeInputs.removeClass('d-none');
 
-                if (fileType && fileType === 'video') {
-                    $downloadableInput.removeClass('d-none');
-                } else {
-                    $downloadableInput.find('input').prop('checked', false);
-                    $downloadableInput.addClass('d-none');
-                }
+                // Remove downloadable input - always hide it
+                $downloadableInput.find('input').prop('checked', false);
+                $downloadableInput.addClass('d-none');
 
                 if (source === 'external_link') {
                     $volumeInputs.removeClass('d-none');
-                } else if (source === 's3' || source === 'r2') {
+                } else if (source === 'r2') {
                     $fileUrlInputCard.addClass('d-none');
                     $fileUploadInputCard.removeClass('d-none');
                 }

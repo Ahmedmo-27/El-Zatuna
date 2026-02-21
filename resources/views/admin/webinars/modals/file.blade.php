@@ -194,15 +194,6 @@
             </div>
         </div>
 
-        <div class="js-downloadable-input form-group mt-20">
-            <div class="d-flex align-items-center justify-content-between">
-                <label class="cursor-pointer input-label" for="downloadableSwitch_record">{{ trans('home.downloadable') }}</label>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" name="downloadable" class="custom-control-input" id="downloadableSwitch_record">
-                    <label class="custom-control-label" for="downloadableSwitch_record"></label>
-                </div>
-            </div>
-        </div>
 
         <div class="form-group mt-20">
             <div class="d-flex align-items-center justify-content-between">

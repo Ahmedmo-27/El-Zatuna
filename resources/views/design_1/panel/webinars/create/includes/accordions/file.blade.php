@@ -94,8 +94,12 @@
                             }
                         }
                         if (!is_array($availableSources) || empty($availableSources)) {
-                            $availableSources = ['upload', 'external_link', 'youtube', 'vimeo', 'iframe', 's3', 'r2', 'google_drive', 'secure_host'];
+                            $availableSources = ['upload', 'external_link', 'youtube', 'vimeo', 'iframe', 'r2', 'google_drive', 'secure_host'];
                         }
+                        // Remove s3 if present
+                        $availableSources = array_filter($availableSources, function($source) {
+                            return $source !== 's3';
+                        });
                         // Ensure r2 is in the list if not already
                         if (!in_array('r2', $availableSources)) {
                             $availableSources[] = 'r2';
@@ -161,7 +165,7 @@
                     <div class="invalid-feedback"></div>
                 </div>
 
-                <div class="form-group js-file-upload-input {{ (empty($file) or (in_array($file->storage, ['upload', 's3', 'r2']) or ($file->storage == 'secure_host' and $file->secure_host_upload_type == 'direct'))) ? '' : 'd-none' }}">
+                <div class="form-group js-file-upload-input {{ (empty($file) or (in_array($file->storage, ['upload', 'r2']) or ($file->storage == 'secure_host' and $file->secure_host_upload_type == 'direct'))) ? '' : 'd-none' }}">
                     <label class="form-group-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}">
                         {{ trans('update.choose_file') }}
                         <span class="sr-only">Drag and drop or click to upload</span>
@@ -279,18 +283,6 @@
                     </div>
                 </div>
 
-                <div class="js-downloadable-input">
-                    <div class="form-group d-flex align-items-center">
-                        <div class="custom-switch mr-8">
-                            <input id="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}" type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][downloadable]" class="custom-control-input" {{ (empty($file) or $file->downloadable) ? 'checked' : ''  }}>
-                            <label class="custom-control-label cursor-pointer" for="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                        </div>
-
-                        <div class="">
-                            <label class="cursor-pointer" for="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('home.downloadable') }}</label>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="form-group d-flex align-items-center">
                     <div class="custom-switch mr-8">
@@ -436,8 +428,7 @@
             google_drive: '{{ trans('update.file_source_google_drive_placeholder') }}',
             dropbox: '{{ trans('update.file_source_dropbox_placeholder') }}',
             iframe: '{{ trans('update.file_source_iframe_placeholder') }}',
-            s3: '{{ trans('update.file_source_s3_placeholder') }}',
-            r2: '{{ trans('update.file_source_r2_placeholder') ?? trans('update.file_source_s3_placeholder') }}',
+            r2: '{{ trans('update.file_source_r2_placeholder') ?? 'Enter R2 file path or upload file' }}',
         }
     </script>
     <script src="/assets/design_1/js/panel/file-drag-drop.js"></script>
