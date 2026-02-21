@@ -67,7 +67,7 @@ class Handler extends ExceptionHandler
         if ($this->isHttpException($exception) && $exception->getStatusCode() === 413) {
             // Check if this is an AJAX request or expects JSON response
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
-                $errorMessage = 'The file you are trying to upload is too large. Maximum file size is 2GB. Please try uploading a smaller file or contact support if you need to upload larger files.';
+                $errorMessage = 'The server rejected the upload. This often means the server\'s upload limit is lower than your file (the site supports up to 2GB). If your file is small, increase nginx client_max_body_size and PHP upload_max_filesize/post_max_size on the server.';
                 return response()->json([
                     'code' => 413,
                     'msg' => $errorMessage,

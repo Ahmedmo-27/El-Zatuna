@@ -872,7 +872,7 @@
                                 (status === 0 && err.responseText && err.responseText.toLowerCase().indexOf('413') !== -1);
 
                 if (is413Error) {
-                    const errorMessage = 'The file you are trying to upload is too large. Maximum file size is 2GB. Please try uploading a smaller file or contact support if you need to upload larger files.';
+                    const errorMessage = 'The server rejected the upload. This often means the server\'s upload limit is lower than your file size (the site supports up to 2GB). If your file is small (e.g. under 100MB), ask your administrator to increase the server limit: nginx uses client_max_body_size; PHP uses upload_max_filesize and post_max_size.';
                     
                     // Show custom alert if available
                     if ($customAlertEl.length > 0) {
