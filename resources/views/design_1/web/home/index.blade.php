@@ -107,31 +107,31 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
-                    <div class="bg-[#072923] text-[#FAFFE0] rounded-[24px] p-8 h-[200px] flex flex-col gap-4">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-[24px] p-9 h-[220px] flex flex-col gap-5">
                         <div class="h-10 w-10 rounded-full bg-[#FAFFE0] text-[#072923] flex items-center justify-center self-end">
                              <x-iconsax-lin-tick-circle class="w-6 h-6"/>
                         </div>
                         <div>
                             <div class="font-semibold text-base leading-relaxed">Courses Club<br>To Support Student</div>
-                            <p class="mt-3 text-sm text-[#FAFFE0]/75 leading-relaxed">Support student in each courses to boost understanding and track progress effectively.</p>
+                            <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">Support student in each courses to boost understanding and track progress effectively.</p>
                         </div>
                     </div>
-                    <div class="bg-[#072923] text-[#FAFFE0] rounded-[24px] p-8 h-[200px] flex flex-col gap-4">
+                    <div class="bg-[#072923] text-[#FAFFE0] rounded-[24px] p-9 h-[220px] flex flex-col gap-5">
                         <div class="h-10 w-10 rounded-full bg-[#FAFFE0] text-[#072923] flex items-center justify-center self-end">
                              <x-iconsax-lin-star class="w-6 h-6"/>
                         </div>
                         <div>
                             <div class="font-semibold text-base leading-relaxed">Explanation Practicing<br>Content</div>
-                            <p class="mt-3 text-sm text-[#FAFFE0]/75 leading-relaxed">Earn official certificates upon completion to showcase skills and add credibility.</p>
+                            <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">Earn official certificates upon completion to showcase skills and add credibility.</p>
                         </div>
                     </div>
-                    <div class="sm:col-span-2 sm:max-w-[520px] sm:mx-auto bg-[#072923] text-[#FAFFE0] rounded-[24px] p-7 h-[175px] flex flex-col gap-4">
+                    <div class="sm:col-span-2 sm:w-[calc(50%-14px)] sm:mx-auto bg-[#072923] text-[#FAFFE0] rounded-[24px] p-9 h-[220px] flex flex-col gap-5">
                         <div class="h-10 w-10 rounded-full bg-[#FAFFE0] text-[#072923] flex items-center justify-center self-end">
                              <x-iconsax-lin-element-4 class="w-6 h-6"/>
                         </div>
                         <div>
                             <div class="font-semibold text-base leading-relaxed">Courses Content<br>Specific To Your Uni</div>
-                            <p class="mt-3 text-sm text-[#FAFFE0]/75 leading-relaxed">Apply what you learn with real assignments that reinforce skills and deepen practical knowledge.</p>
+                            <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">Apply what you learn with real assignments that reinforce skills and deepen practical knowledge.</p>
                         </div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
                         </a>
                     @endforeach
                 </div>
-                <p class="mt-14 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
+                <p class="mt-20 md:mt-24 pt-2 pb-4 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
             </div>
         </section>
 
