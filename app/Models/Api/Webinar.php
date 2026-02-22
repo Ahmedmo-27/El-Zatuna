@@ -273,9 +273,9 @@ class Webinar extends Model
                 return $review->details;
             }),
 
-            'video_demo' => $this->video_demo ? url($this->video_demo) : null,
+            'video_demo' => $this->getVideoDemoUrl(),
             'video_demo_source' => $this->video_demo_source,
-            'image_cover' => $this->image_cover ? url($this->image_cover) : null,
+            'image_cover' => $this->getImageCover(),
 
             'tickets' => $this->tickets->map(function ($ticket) {
                 return $ticket->details;

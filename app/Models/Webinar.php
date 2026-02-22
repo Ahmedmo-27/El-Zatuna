@@ -896,12 +896,42 @@ class Webinar extends Model implements TranslatableContract
 
     public function getImageCover()
     {
-        return $this->image_cover;
+        return $this->resolveContentAssetUrl($this->image_cover);
     }
 
     public function getImage()
     {
-        return $this->thumbnail;
+        return $this->resolveContentAssetUrl($this->thumbnail);
+    }
+
+    /**
+     * Return the playable URL for the course demo video (R2 Course-Assets or local).
+     *
+     * @return string|null
+     */
+    public function getVideoDemoUrl(): ?string
+    {
+        return $this->resolveContentAssetUrl($this->video_demo);
+    }
+
+    /**
+     * Resolve thumbnail/cover path to full URL (R2 Course-Assets or local).
+     *
+     * @param string|null $path
+     * @return string|null
+     */
+    protected function resolveContentAssetUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'Course-Assets/')) {
+            return \App\Helpers\R2Helper::getUrl($path) ?: $path;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return url($path);
     }
 
     public function getUrl()
@@ -1391,7 +1421,7 @@ class Webinar extends Model implements TranslatableContract
             $icon = $this->thumbnail;
         }
 
-        return $icon;
+        return $this->resolveContentAssetUrl($icon);
     }
 
 }

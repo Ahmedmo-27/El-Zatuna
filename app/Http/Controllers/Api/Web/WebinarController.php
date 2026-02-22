@@ -446,7 +446,7 @@ class WebinarController extends Controller
                 'progress' => $progress,
                 //'progressa' => $webinar->$progress,
                 'category' => $webinar->category->title,
-                'video_demo' => $webinar->video_demo,
+                'video_demo' => $webinar->getVideoDemoUrl(),
                 'image' => $webinar->getImage(),
                 'description' => $webinar->description,
                 'isDownloadable' => $webinar->isDownloadable(),

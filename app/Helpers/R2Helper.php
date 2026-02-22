@@ -61,8 +61,29 @@ class R2Helper
     }
     
     /**
+     * Resolve a content asset path (thumbnail, cover, demo video) to full URL.
+     * Use when you have a raw path from DB (e.g. from toArray()) and need the playable/display URL.
+     *
+     * @param string|null $path
+     * @return string|null
+     */
+    public static function resolveContentAssetUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'Course-Assets/')) {
+            return self::getUrl($path) ?: $path;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return url($path);
+    }
+
+    /**
      * Check if R2 is properly configured
-     * 
+     *
      * @return bool
      */
     public static function isConfigured(): bool

@@ -173,7 +173,7 @@
                 @enderror
 
                 @if(!empty($webinar) and !empty($webinar->icon))
-                    <a href="{{ url($webinar->icon) }}" target="_blank" class="text-danger mt-4 font-12">{{ trans('update.preview') }}</a>
+                    <a href="{{ $webinar->getIcon() }}" target="_blank" class="text-danger mt-4 font-12">{{ trans('update.preview') }}</a>
                 @endif
             </div>
         </div>

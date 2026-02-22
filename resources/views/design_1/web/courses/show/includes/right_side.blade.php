@@ -9,7 +9,7 @@
 
             @if($course->video_demo)
                 <div id="webinarDemoVideoBtn" class="has-video-icon d-flex-center size-64 rounded-circle cursor-pointer"
-                     data-video-path="{{ $course->video_demo_source == 'upload' ?  url($course->video_demo) : $course->video_demo }}"
+                     data-video-path="{{ $course->video_demo_source == 'upload' ? $course->getVideoDemoUrl() : $course->video_demo }}"
                      data-video-source="{{ $course->video_demo_source }}"
                      data-thumbnail="{{ $course->getImage() }}"
                 >

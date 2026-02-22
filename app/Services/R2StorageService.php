@@ -404,6 +404,228 @@ class R2StorageService
     }
     
     /**
+     * Upload a course asset (thumbnail or cover image) to R2
+     *
+     * Path structure: Course-Assets/{course_id}/thumbnail_{timestamp}.{ext},
+     *                 Course-Assets/{course_id}/image_cover_{timestamp}.{ext},
+     *                 Course-Assets/{course_id}/icon_{timestamp}.{ext}
+     * Same folder structure as courses (by course ID).
+     *
+     * @param UploadedFile $file
+     * @param int $courseId The course/webinar ID
+     * @param string $assetType One of: 'thumbnail', 'image_cover', 'icon'
+     * @return array ['status' => bool, 'path' => string|null, 'url' => string|null, 'error' => string|null]
+     */
+    public function uploadCourseAsset(UploadedFile $file, int $courseId, string $assetType): array
+    {
+        $allowedTypes = ['thumbnail', 'image_cover', 'icon'];
+        if (!in_array($assetType, $allowedTypes, true)) {
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => 'Invalid asset type. Must be: ' . implode(', ', $allowedTypes),
+            ];
+        }
+
+        try {
+            config(['filesystems.disks.r2.throw' => true]);
+            $storage = Storage::disk('r2');
+
+            $ext = $file->getClientOriginalExtension() ?: 'jpg';
+            $fileName = $assetType . '_' . time() . '.' . $ext;
+            $path = 'Course-Assets/' . $courseId;
+            $fullPath = $path . '/' . $fileName;
+
+            \Log::info('R2 Course Asset Upload Starting', [
+                'full_path' => $fullPath,
+                'course_id' => $courseId,
+                'asset_type' => $assetType,
+            ]);
+
+            $fileContents = file_get_contents($file->getRealPath());
+            if ($fileContents === false) {
+                throw new Exception('Failed to read file contents');
+            }
+
+            $uploaded = $storage->put($fullPath, $fileContents, 'public');
+
+            if (!$uploaded) {
+                $stream = fopen($file->getRealPath(), 'r');
+                if ($stream) {
+                    $uploaded = $storage->writeStream($fullPath, $stream);
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }
+            }
+
+            if ($uploaded) {
+                sleep(1);
+                $exists = $storage->exists($fullPath);
+                if (!$exists) {
+                    return [
+                        'status' => false,
+                        'path' => null,
+                        'url' => null,
+                        'error' => 'Upload appeared successful but file not found on R2',
+                    ];
+                }
+                $url = $storage->url($fullPath);
+                \Log::info('R2 Course Asset Upload Successful', ['full_path' => $fullPath]);
+                return [
+                    'status' => true,
+                    'path' => $fullPath,
+                    'url' => $url,
+                ];
+            }
+
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => 'Upload returned false',
+            ];
+        } catch (Exception $e) {
+            \Log::error('R2 Course Asset Upload Error: ' . $e->getMessage(), [
+                'course_id' => $courseId,
+                'asset_type' => $assetType,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Delete a course asset from R2 by path (e.g. Course-Assets/123/thumbnail_123.jpg)
+     *
+     * @param string $path
+     * @return bool
+     */
+    public function deleteCourseAsset(string $path): bool
+    {
+        return $this->deleteFile($path);
+    }
+
+    /**
+     * Upload course demo video to R2 (Course-Assets/{course_id}/demo_video_{timestamp}.{ext}).
+     * Supports large files via multipart upload.
+     *
+     * @param UploadedFile $file
+     * @param int $courseId The course/webinar ID
+     * @return array ['status' => bool, 'path' => string|null, 'url' => string|null, 'error' => string|null]
+     */
+    public function uploadCourseDemoVideo(UploadedFile $file, int $courseId): array
+    {
+        try {
+            config(['filesystems.disks.r2.throw' => true]);
+            $storage = Storage::disk('r2');
+
+            $ext = $file->getClientOriginalExtension() ?: 'mp4';
+            $fileName = 'demo_video_' . time() . '.' . $ext;
+            $path = 'Course-Assets/' . $courseId;
+            $fullPath = $path . '/' . $fileName;
+
+            \Log::info('R2 Course Demo Video Upload Starting', [
+                'full_path' => $fullPath,
+                'course_id' => $courseId,
+                'file_size' => $file->getSize(),
+            ]);
+
+            $fileSize = $file->getSize();
+            $filePath = $file->getRealPath();
+            $uploaded = false;
+            $uploadError = null;
+
+            if ($fileSize > 100 * 1024 * 1024) {
+                $sslVerify = $this->getSslCertificatePath();
+                $s3Client = new S3Client([
+                    'credentials' => [
+                        'key' => config('filesystems.disks.r2.key'),
+                        'secret' => config('filesystems.disks.r2.secret'),
+                    ],
+                    'region' => config('filesystems.disks.r2.region', 'auto'),
+                    'version' => 'latest',
+                    'bucket_endpoint' => false,
+                    'use_path_style_endpoint' => true,
+                    'endpoint' => config('filesystems.disks.r2.endpoint'),
+                    'verify' => $sslVerify,
+                    'http' => [
+                        'verify' => $sslVerify,
+                        'timeout' => 0,
+                        'connect_timeout' => 60,
+                    ],
+                ]);
+                $uploader = new MultipartUploader($s3Client, $filePath, [
+                    'bucket' => config('filesystems.disks.r2.bucket'),
+                    'key' => $fullPath,
+                    'acl' => 'public-read',
+                ]);
+                $uploader->upload();
+                $uploaded = true;
+            } else {
+                $fileContents = file_get_contents($filePath);
+                if ($fileContents === false) {
+                    throw new Exception('Failed to read file contents');
+                }
+                $uploaded = $storage->put($fullPath, $fileContents, 'public');
+                if (!$uploaded) {
+                    $stream = fopen($filePath, 'r');
+                    if ($stream) {
+                        $uploaded = $storage->writeStream($fullPath, $stream);
+                        if (is_resource($stream)) {
+                            fclose($stream);
+                        }
+                    }
+                }
+            }
+
+            if ($uploaded) {
+                sleep(1);
+                $exists = $storage->exists($fullPath);
+                if (!$exists) {
+                    return [
+                        'status' => false,
+                        'path' => null,
+                        'url' => null,
+                        'error' => 'Upload appeared successful but file not found on R2',
+                    ];
+                }
+                $url = $storage->url($fullPath);
+                \Log::info('R2 Course Demo Video Upload Successful', ['full_path' => $fullPath]);
+                return [
+                    'status' => true,
+                    'path' => $fullPath,
+                    'url' => $url,
+                ];
+            }
+
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $uploadError ?? 'Upload returned false',
+            ];
+        } catch (Exception $e) {
+            \Log::error('R2 Course Demo Video Upload Error: ' . $e->getMessage(), [
+                'course_id' => $courseId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Upload instructor application file to R2
      * 
      * Path structure: Instructor-application/{user_id}/{document_name}_{user_id}_{user_name}.{extension}

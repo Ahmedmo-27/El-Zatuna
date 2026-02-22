@@ -516,9 +516,9 @@ class QuizzesController extends Controller
             $quizzesResults = $quizzesResults->toArray();
             foreach($quizzesResults as &$quiz){
                 if (isset($quiz["quiz"]["webinar"])){
-                    $quiz["quiz"]["webinar"]["thumbnail"] = url($quiz["quiz"]["webinar"]["thumbnail"]);
-                    $quiz["quiz"]["webinar"]["image_cover"] = url($quiz["quiz"]["webinar"]["image_cover"]);
-                    $quiz["quiz"]["webinar"]["video_demo"] = url($quiz["quiz"]["webinar"]["video_demo"]);
+                    $quiz["quiz"]["webinar"]["thumbnail"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["thumbnail"] ?? null);
+                    $quiz["quiz"]["webinar"]["image_cover"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["image_cover"] ?? null);
+                    $quiz["quiz"]["webinar"]["video_demo"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["video_demo"] ?? null);
                 }
                 if (isset($quiz["user"])){
                     $quiz["user"]["avatar"] = url($quiz["user"]["avatar"]);
@@ -530,9 +530,9 @@ class QuizzesController extends Controller
             $quizzes = $quizzes->toArray();
             foreach($quizzes as &$quiz){
                 if (isset($quiz["webinar"])){
-                    $quiz["webinar"]["thumbnail"] = url($quiz["webinar"]["thumbnail"]);
-                    $quiz["webinar"]["image_cover"] = url($quiz["webinar"]["image_cover"]);
-                    $quiz["webinar"]["video_demo"] = url($quiz["webinar"]["video_demo"]);
+                    $quiz["webinar"]["thumbnail"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["webinar"]["thumbnail"] ?? null);
+                    $quiz["webinar"]["image_cover"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["webinar"]["image_cover"] ?? null);
+                    $quiz["webinar"]["video_demo"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["webinar"]["video_demo"] ?? null);
                 }
             }
 

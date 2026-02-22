@@ -30,6 +30,8 @@ use App\User;
 use App\Models\Webinar;
 use App\Models\WebinarPartnerTeacher;
 use App\Models\WebinarFilterOption;
+use App\Helpers\R2Helper;
+use App\Services\R2StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -668,15 +670,54 @@ class WebinarController extends Controller
 
 
         if (!empty($request->file('thumbnail'))) {
-            $thumbnail = $this->uploadFile($request->file('thumbnail'), "webinars/{$webinar->id}", 'thumbnail', $webinar->creator_id);
+            if (R2Helper::isConfigured()) {
+                $r2 = new R2StorageService();
+                if (str_starts_with((string) $webinar->thumbnail, 'Course-Assets/')) {
+                    $r2->deleteCourseAsset($webinar->thumbnail);
+                }
+                $result = $r2->uploadCourseAsset($request->file('thumbnail'), (int) $webinar->id, 'thumbnail');
+                if ($result['status'] && !empty($result['path'])) {
+                    $thumbnail = $result['path'];
+                } else {
+                    $thumbnail = $this->uploadFile($request->file('thumbnail'), "webinars/{$webinar->id}", 'thumbnail', $webinar->creator_id);
+                }
+            } else {
+                $thumbnail = $this->uploadFile($request->file('thumbnail'), "webinars/{$webinar->id}", 'thumbnail', $webinar->creator_id);
+            }
         }
 
         if (!empty($request->file('image_cover'))) {
-            $imageCover = $this->uploadFile($request->file('image_cover'), "webinars/{$webinar->id}", 'image_cover', $webinar->creator_id);
+            if (R2Helper::isConfigured()) {
+                $r2 = new R2StorageService();
+                if (str_starts_with((string) $webinar->image_cover, 'Course-Assets/')) {
+                    $r2->deleteCourseAsset($webinar->image_cover);
+                }
+                $result = $r2->uploadCourseAsset($request->file('image_cover'), (int) $webinar->id, 'image_cover');
+                if ($result['status'] && !empty($result['path'])) {
+                    $imageCover = $result['path'];
+                } else {
+                    $imageCover = $this->uploadFile($request->file('image_cover'), "webinars/{$webinar->id}", 'image_cover', $webinar->creator_id);
+                }
+            } else {
+                $imageCover = $this->uploadFile($request->file('image_cover'), "webinars/{$webinar->id}", 'image_cover', $webinar->creator_id);
+            }
         }
 
         if (!empty($request->file('icon'))) {
-            $icon = $this->uploadFile($request->file('icon'), "webinars/{$webinar->id}", 'icon', $webinar->creator_id);
+            if (R2Helper::isConfigured()) {
+                $r2 = new R2StorageService();
+                if (str_starts_with((string) $webinar->icon, 'Course-Assets/')) {
+                    $r2->deleteCourseAsset($webinar->icon);
+                }
+                $result = $r2->uploadCourseAsset($request->file('icon'), (int) $webinar->id, 'icon');
+                if ($result['status'] && !empty($result['path'])) {
+                    $icon = $result['path'];
+                } else {
+                    $icon = $this->uploadFile($request->file('icon'), "webinars/{$webinar->id}", 'icon', $webinar->creator_id);
+                }
+            } else {
+                $icon = $this->uploadFile($request->file('icon'), "webinars/{$webinar->id}", 'icon', $webinar->creator_id);
+            }
         }
 
 
@@ -685,7 +726,20 @@ class WebinarController extends Controller
             $videoDemo = $request->get('demo_video_path');
         } elseif ($request->get('video_demo_source') == UploadSource::UPLOAD and !empty($request->file('demo_video_local'))) {
             $videoDemoSource = UploadSource::UPLOAD;
-            $videoDemo = $this->uploadFile($request->file('demo_video_local'), "webinars/{$webinar->id}", 'video', $webinar->creator_id);
+            if (R2Helper::isConfigured()) {
+                $r2 = new R2StorageService();
+                if (str_starts_with((string) $webinar->video_demo, 'Course-Assets/')) {
+                    $r2->deleteCourseAsset($webinar->video_demo);
+                }
+                $result = $r2->uploadCourseDemoVideo($request->file('demo_video_local'), (int) $webinar->id);
+                if ($result['status'] && !empty($result['path'])) {
+                    $videoDemo = $result['path'];
+                } else {
+                    $videoDemo = $this->uploadFile($request->file('demo_video_local'), "webinars/{$webinar->id}", 'video', $webinar->creator_id);
+                }
+            } else {
+                $videoDemo = $this->uploadFile($request->file('demo_video_local'), "webinars/{$webinar->id}", 'video', $webinar->creator_id);
+            }
         } elseif ($request->get('video_demo_source') == UploadSource::S3 and !empty($request->file('demo_video_local'))) {
             $videoDemoSource = UploadSource::S3;
             $videoDemo = $this->uploadFile($request->file('demo_video_local'), "webinars/{$webinar->id}", 'video', $webinar->creator_id, 'minio');
