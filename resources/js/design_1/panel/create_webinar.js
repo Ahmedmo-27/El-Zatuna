@@ -611,7 +611,7 @@
 
         // For file forms with R2/upload: require a file to be selected before submit
         if ($form.hasClass('file-form')) {
-            const storage = $form.find('.js-file-storage').val() || $form.find('select[name*="[storage]"]').val() || 'r2';
+            const storage = $form.find('.js-file-storage').val() || $form.find('select[name*="[storage]"]').val() || 'upload';
             if (storage === 'r2' || storage === 'upload') {
                 const $fileInput = $form.find('.js-ajax-upload-file-input');
                 const hasFile = $fileInput.length && $fileInput[0].files && $fileInput[0].files.length > 0;
@@ -634,9 +634,9 @@
     // ======
 
     function handleShowFileInputsBySource($form, source, fileType) {
-        // Default to 'r2' if source is not provided or invalid
+        // Default to 'upload' (stored as R2 in backend) if source not provided
         if (!source || source === '') {
-            source = 'r2';
+            source = 'upload';
         }
 
         const $fileTypeVolumeInputs = $form.find('.js-file-type-volume');

@@ -94,22 +94,21 @@
                             }
                         }
                         if (!is_array($availableSources) || empty($availableSources)) {
-                            $availableSources = ['upload', 'external_link', 'youtube', 'vimeo', 'iframe', 'r2', 'google_drive', 'secure_host'];
+                            $availableSources = ['upload', 'external_link', 'youtube', 'vimeo', 'iframe', 'google_drive', 'secure_host'];
                         }
-                        // Remove s3 if present
-                        $availableSources = array_filter($availableSources, function($source) {
-                            return $source !== 's3';
-                        });
-                        // Ensure r2 is in the list if not already
-                        if (!in_array('r2', $availableSources)) {
-                            $availableSources[] = 'r2';
+                        // Remove s3 and r2: only "Upload" is shown; backend stores to R2 when user chooses Upload
+                        $availableSources = array_values(array_filter($availableSources, function($source) {
+                            return $source !== 's3' && $source !== 'r2';
+                        }));
+                        if (!in_array('upload', $availableSources)) {
+                            $availableSources = array_merge(['upload'], $availableSources);
                         }
                     @endphp
                     <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][storage]"
                             class="js-file-storage form-control"
                     >
                         @foreach($availableSources as $source)
-                            <option value="{{ $source }}" @if((!empty($file) and $file->storage == $source) or (empty($file) and $source == 'r2')) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
+                            <option value="{{ $source }}" @if((!empty($file) && in_array($file->storage, ['upload', 'r2']) && $source == 'upload') or (!empty($file) && $file->storage == $source && $source != 'upload') or (empty($file) && $source == 'upload')) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -428,7 +427,6 @@
             google_drive: '{{ trans('update.file_source_google_drive_placeholder') }}',
             dropbox: '{{ trans('update.file_source_dropbox_placeholder') }}',
             iframe: '{{ trans('update.file_source_iframe_placeholder') }}',
-            r2: '{{ trans('update.file_source_r2_placeholder') ?? 'Enter R2 file path or upload file' }}',
         }
     </script>
     <script src="/assets/design_1/js/panel/file-drag-drop.js"></script>

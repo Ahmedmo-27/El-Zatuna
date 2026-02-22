@@ -93,19 +93,18 @@
                                             $availableSources = json_decode($availableSources, true);
                                         }
                                         if (empty($availableSources) || !is_array($availableSources)) {
-                                            $availableSources = ['upload', 'youtube', 'vimeo', 'external_link', 'secure_host', 'r2'];
+                                            $availableSources = ['upload', 'youtube', 'vimeo', 'external_link', 'secure_host'];
                                         }
-                                        // Remove s3 if present
-                                        $availableSources = array_filter($availableSources, function($source) {
-                                            return $source !== 's3';
-                                        });
-                                        // Ensure r2 is in the list if not already
-                                        if (!in_array('r2', $availableSources)) {
-                                            $availableSources[] = 'r2';
+                                        // Remove s3 and r2: only "Upload" is shown; backend stores to R2 when user chooses Upload
+                                        $availableSources = array_values(array_filter($availableSources, function($source) {
+                                            return $source !== 's3' && $source !== 'r2';
+                                        }));
+                                        if (!in_array('upload', $availableSources)) {
+                                            $availableSources = array_merge(['upload'], $availableSources);
                                         }
                                     @endphp
                                     @foreach($availableSources as $source)
-                                        <option value="{{ $source }}" @if(!empty($file) and $file->storage == $source) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
+                                        <option value="{{ $source }}" @if((!empty($file) && in_array($file->storage, ['upload', 'r2']) && $source == 'upload') or (!empty($file) && $file->storage == $source && $source != 'upload') or (empty($file) && $source == 'upload')) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
                                     @endforeach
                                 </select>
                             </div>

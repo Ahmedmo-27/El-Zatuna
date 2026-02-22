@@ -176,11 +176,11 @@ class FileController extends Controller
                 $volume = convertToMB($fileInfos['size'] ?? 0);
                 $fileInfos['extension'] = 'archive';
                 $data['interactive_file_path'] = $this->handleUnZipFile($webinar, $data);
-            } elseif ($data['storage'] == 'upload') {
-                $volume = convertToMB($fileUpload->getSize());
-
-                $data['file_url'] = $this->uploadFile($fileUpload, "webinars/{$webinar->id}/files", null, $webinar->creator_id);
-            } elseif (in_array($data['storage'], ['secure_host', 'r2'])) {
+            } elseif (in_array($data['storage'], ['secure_host', 'r2']) || $data['storage'] == 'upload') {
+                // "Upload" in UI is stored as R2 (only cloud storage); no local upload for course files
+                if ($data['storage'] == 'upload') {
+                    $data['storage'] = 'r2';
+                }
                 if ($data['storage'] == 'r2') {
                     $data['volume'] = convertToMB($fileUpload->getSize());
                     $sectionId = $data['chapter_id'] ?? null;
@@ -521,13 +521,11 @@ class FileController extends Controller
                     $fileInfos['extension'] = 'archive';
                     $data['interactive_file_path'] = $this->handleUnZipFile($webinar, $data);
 
-                } elseif ($data['storage'] == 'upload') {
-                    if (!empty($fileUpload)) {
-                        $volume = convertToMB($fileUpload->getSize());
-
-                        $data['file_url'] = $this->uploadFile($fileUpload, "webinars/{$webinar->id}/files", null, $webinar->creator_id);
+                } elseif (in_array($data['storage'], ['secure_host', 'r2']) || $data['storage'] == 'upload') {
+                    // "Upload" in UI is stored as R2 (only cloud storage)
+                    if ($data['storage'] == 'upload') {
+                        $data['storage'] = 'r2';
                     }
-                } elseif (in_array($data['storage'], ['secure_host', 'r2'])) {
                     $result = ['status' => false, 'path' => null, 'error' => null];
                     if ($data['storage'] == 'r2') {
                         $sectionId = $data['chapter_id'] ?? null;
