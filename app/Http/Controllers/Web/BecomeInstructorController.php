@@ -10,6 +10,7 @@ use App\Mixins\RegistrationPackage\UserPackage;
 use App\Models\BecomeInstructor;
 use App\Models\Category;
 use App\Models\RegistrationPackage;
+use App\Models\Translation\CategoryTranslation;
 use App\Models\Role;
 use App\Models\UserBank;
 use App\Models\UserOccupation;
@@ -97,33 +98,15 @@ class BecomeInstructorController extends Controller
                 'has_identity_scan' => $request->hasFile('identity_scan'),
             ]);
 
-            // Build validation rules dynamically based on whether files are uploaded
+            // Build validation rules - certificate and identity_scan commented out in form, so both optional
             $rules = [
                 'role' => 'required',
                 'occupations' => 'required',
                 'bank_id' => 'nullable', // Commented out in form, so making optional
                 'description' => 'nullable|string',
+                'certificate' => 'nullable',
+                'identity_scan' => 'nullable',
             ];
-            
-            // Handle certificate validation
-            if ($request->hasFile('certificate')) {
-                $rules['certificate'] = 'nullable|file|max:10240'; // 10MB max
-            } else {
-                $rules['certificate'] = 'nullable|string';
-            }
-            
-            // Handle identity_scan validation - it's required
-            if ($request->hasFile('identity_scan')) {
-                $rules['identity_scan'] = 'required|file|max:10240'; // 10MB max
-            } else {
-                // If no file uploaded, check if there's an existing path
-                // If user already has identity_scan, it's optional (they're updating)
-                if (empty($user->identity_scan) && empty($data['identity_scan'])) {
-                    $rules['identity_scan'] = 'required';
-                } else {
-                    $rules['identity_scan'] = 'nullable|string';
-                }
-            }
 
             $validate = Validator::make($data, $rules);
 
@@ -343,11 +326,14 @@ class BecomeInstructorController extends Controller
             if (!empty($data['occupations'])) {
                 UserOccupation::where('user_id', $user->id)->delete();
 
-                foreach ($data['occupations'] as $category_id) {
-                    UserOccupation::create([
-                        'user_id' => $user->id,
-                        'category_id' => $category_id
-                    ]);
+                foreach ($data['occupations'] as $item) {
+                    $categoryId = $this->resolveOccupationCategoryId($item);
+                    if ($categoryId) {
+                        UserOccupation::create([
+                            'user_id' => $user->id,
+                            'category_id' => $categoryId
+                        ]);
+                    }
                 }
             }
 
@@ -435,5 +421,100 @@ class BecomeInstructorController extends Controller
         return response()->json([
             'has_installment' => false
         ]);
+    }
+
+    /**
+     * Search subjects/categories by title (for become-instructor occupations select).
+     */
+    public function searchSubjects(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        if ($q === '') {
+            return response()->json(['results' => []]);
+        }
+
+        $locale = mb_strtolower(app()->getLocale());
+        $categoryIds = CategoryTranslation::where('locale', $locale)
+            ->where('title', 'like', '%' . $q . '%')
+            ->pluck('category_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($categoryIds)) {
+            return response()->json(['results' => []]);
+        }
+
+        $categories = Category::whereIn('id', $categoryIds)->get();
+        $results = $categories->map(function ($cat) {
+            return ['id' => $cat->id, 'text' => $cat->title];
+        })->values()->toArray();
+
+        return response()->json(['results' => $results]);
+    }
+
+    /**
+     * Create a new subject/category so it appears for future users (for become-instructor form).
+     */
+    public function createSubject(Request $request)
+    {
+        $request->validate(['title' => 'required|string|min:2|max:255']);
+        $title = trim($request->input('title'));
+        $locale = mb_strtolower(app()->getLocale());
+
+        $existing = CategoryTranslation::where('locale', $locale)
+            ->where('title', $title)
+            ->first();
+        if ($existing) {
+            return response()->json(['id' => $existing->category_id, 'text' => $title]);
+        }
+
+        $order = Category::whereNull('parent_id')->max('order') + 1;
+        $category = Category::create([
+            'parent_id' => null,
+            'slug' => Category::makeSlug($title),
+            'order' => $order,
+        ]);
+        CategoryTranslation::create([
+            'category_id' => $category->id,
+            'locale' => $locale,
+            'title' => $title,
+        ]);
+
+        cache()->forget(Category::$cacheKey);
+
+        return response()->json(['id' => $category->id, 'text' => $title]);
+    }
+
+    /**
+     * Resolve occupation item to a category id: existing id (int) or create category from new title (string).
+     */
+    private function resolveOccupationCategoryId($item)
+    {
+        if (is_numeric($item)) {
+            return (int) $item;
+        }
+        $title = trim((string) $item);
+        if ($title === '') {
+            return null;
+        }
+        $locale = mb_strtolower(app()->getLocale());
+        $existing = CategoryTranslation::where('locale', $locale)->where('title', $title)->first();
+        if ($existing) {
+            return $existing->category_id;
+        }
+        $order = Category::whereNull('parent_id')->max('order') + 1;
+        $category = Category::create([
+            'parent_id' => null,
+            'slug' => Category::makeSlug($title),
+            'order' => $order,
+        ]);
+        CategoryTranslation::create([
+            'category_id' => $category->id,
+            'locale' => $locale,
+            'title' => $title,
+        ]);
+        cache()->forget(Category::$cacheKey);
+        return $category->id;
     }
 }

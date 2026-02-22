@@ -27,23 +27,42 @@
         @enderror
     </div>
 
-    {{-- Areas of Expertise --}}
-    <div class="form-group">
-        <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach</p>
+    {{-- Areas of Expertise: text field with search + "Add as new subject" option --}}
+    @php
+        $occupationsInitial = [];
+        if (!empty($occupations) && !empty($categories)) {
+            foreach ($categories as $cat) {
+                if (!empty($cat->subCategories) && count($cat->subCategories)) {
+                    foreach ($cat->subCategories as $sub) {
+                        if (in_array($sub->id, $occupations)) {
+                            $occupationsInitial[] = ['id' => $sub->id, 'text' => $sub->title];
+                        }
+                    }
+                } else {
+                    if (in_array($cat->id, $occupations)) {
+                        $occupationsInitial[] = ['id' => $cat->id, 'text' => $cat->title];
+                    }
+                }
+            }
+        }
+    @endphp
+    <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
+        <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
 
-        <select name="occupations[]" class="form-control select2 border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06]" multiple data-placeholder="Select Your Occupations">
-            <option value="">Select Your Occupations</option>
+        <div class="position-relative">
+            <input type="text" id="occupationsInput" class="form-control border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06] js-occupations-input" placeholder="Type a subject name..." autocomplete="off">
 
-            @foreach($categories as $category)
-                @if(!empty($category->subCategories) and count($category->subCategories))
-                    @foreach($category->subCategories as $subCategory)
-                        <option value="{{ $subCategory->id }}" {{ (!empty($occupations) and in_array($subCategory->id, $occupations)) ? 'selected' : '' }}>{{ $subCategory->title }}</option>
-                    @endforeach
-                @else
-                    <option value="{{ $category->id }}" {{ (!empty($occupations) and in_array($category->id, $occupations)) ? 'selected' : '' }}>{{ $category->title }}</option>
-                @endif
-            @endforeach
-        </select>
+            <div class="js-occupations-dropdown position-absolute bg-white border border-[#ECF4B8] rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050;">
+                <div class="js-occupations-results p-2"></div>
+                <div class="js-occupations-add-new border-top border-[#ECF4B8] p-2 text-[#072923]/70 cursor-pointer hover:bg-[#F5F9E8]/50" style="font-size: 13px;">
+                    <span class="js-add-new-text">Add different subject</span> – <span class="js-add-new-term font-weight-medium text-[#C8CD06]"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="js-occupations-tags mt-8 d-flex flex-wrap gap-2" style="min-height: 24px;"></div>
+
+        <div class="js-occupations-hidden-container"></div>
 
         @error('occupations')
         <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
@@ -88,6 +107,8 @@
     --}}
 
 
+    {{-- Certificate upload - commented out to allow form submission without filling --}}
+    {{--
     <div class="form-group custom-input-file flex-1 mt-24">
         <p class="text-sm text-[#072923]/60 mb-2">Upload your professional certificates and credentials (optional)</p>
 
@@ -120,6 +141,7 @@
         <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
         @enderror
     </div>
+    --}}
 
     <div class="form-group mt-24">
         <p class="text-sm text-[#072923]/60 mb-2">Tell us about yourself, your experience, and qualifications</p>

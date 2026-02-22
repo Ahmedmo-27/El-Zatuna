@@ -281,6 +281,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/packages', 'BecomeInstructorController@packages')->name('becomeInstructorPackages');
             Route::get('/packages/{id}/checkHasInstallment', 'BecomeInstructorController@checkPackageHasInstallment');
             Route::get('/packages/{id}/installments', 'BecomeInstructorController@getInstallmentsByRegistrationPackage');
+            Route::get('/search-subjects', 'BecomeInstructorController@searchSubjects');
+            Route::post('/create-subject', 'BecomeInstructorController@createSubject');
             Route::post('/store', 'BecomeInstructorController@store');
             Route::post('/form-fields', 'BecomeInstructorController@getFormFieldsByUserType');
         });
