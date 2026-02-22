@@ -47,7 +47,7 @@
 
             <div class="profile-video-card">
                 <video class="js-init-plyr-io plyr-io-video" controls preload="auto" width="100%">
-                    <source src="{{ $user->profile_video }}" type="video/mp4"/>
+                    <source src="{{ $user->getProfileVideoUrl() }}" type="video/mp4"/>
                 </video>
             </div>
         </div>

@@ -58,7 +58,9 @@ return [
         'otp_length' => 5,
     ],
 
-    // Cloudflare Worker Stream Service
+    // Cloudflare Worker Stream Service (for course videos in R2 under Courses/ only)
+    // When STREAM_WORKER_BASE is set, getFilePath() returns worker URL with token and playFile() redirects to worker.
+    // Course-Assets/ and Profile-Assets/ are never sent to the worker; they use R2_PUBLIC_URL or Laravel proxy (/r2-asset/).
     'stream' => [
         'token_secret' => env('STREAM_TOKEN_SECRET'),
         'worker_base' => env('STREAM_WORKER_BASE'),

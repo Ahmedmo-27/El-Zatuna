@@ -554,7 +554,7 @@ class WebinarController extends Controller
                     } elseif ($file->storage == 'upload_archive') {
                         $path = url("/course/$webinar->slug/file/$file->id/showHtml");
                     } elseif ($file->storage == 'r2' && $file->isVideo()) {
-                        // R2 videos use Cloudflare Worker with signed tokens
+                        // R2 course videos (Courses/...) use Cloudflare Worker when STREAM_WORKER_BASE is set
                         $r2Path = $this->extractR2Path($file->file);
                         if (!empty($r2Path)) {
                             $token = $this->makeStreamToken($r2Path, $file->id);

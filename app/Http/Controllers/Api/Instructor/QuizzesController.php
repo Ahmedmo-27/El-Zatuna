@@ -521,10 +521,10 @@ class QuizzesController extends Controller
                     $quiz["quiz"]["webinar"]["video_demo"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["video_demo"] ?? null);
                 }
                 if (isset($quiz["user"])){
-                    $quiz["user"]["avatar"] = url($quiz["user"]["avatar"]);
-                    $quiz["user"]["cover_img"] = url($quiz["user"]["cover_img"]);
-                    $quiz["user"]["identity_scan"] = url($quiz["user"]["identity_scan"]);
-                    $quiz["user"]["certificate"] = url($quiz["user"]["certificate"]);
+                    $quiz["user"]["avatar"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["avatar"] ?? null);
+                    $quiz["user"]["cover_img"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["cover_img"] ?? null);
+                    $quiz["user"]["identity_scan"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["identity_scan"] ?? null);
+                    $quiz["user"]["certificate"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["certificate"] ?? null);
                 }
             }
             $quizzes = $quizzes->toArray();

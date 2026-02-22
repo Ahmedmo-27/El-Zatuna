@@ -22,8 +22,8 @@ class R2Helper
             if (!empty($publicUrl)) {
                 return rtrim($publicUrl, '/') . '/' . $path;
             }
-            // Private bucket or no public URL: use Laravel proxy for Course-Assets
-            if (str_starts_with($path, 'Course-Assets/')) {
+            // Private bucket or no public URL: use Laravel proxy for Course-Assets and Profile-Assets
+            if (str_starts_with($path, 'Course-Assets/') || str_starts_with($path, 'Profile-Assets/')) {
                 return url('/r2-asset/' . $path);
             }
             return Storage::disk('r2')->url($path);
@@ -82,7 +82,7 @@ class R2Helper
         if (empty($path)) {
             return null;
         }
-        if (str_starts_with($path, 'Course-Assets/')) {
+        if (str_starts_with($path, 'Course-Assets/') || str_starts_with($path, 'Profile-Assets/')) {
             return self::getUrl($path) ?: $path;
         }
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {

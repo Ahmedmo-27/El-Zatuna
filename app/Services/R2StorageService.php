@@ -513,6 +513,137 @@ class R2StorageService
     }
 
     /**
+     * Upload a profile asset to R2 (Profile-Assets/{user_id}/{assetType}_{timestamp}.{ext}).
+     * For profile_video, uses multipart if file > 100MB.
+     *
+     * @param UploadedFile $file
+     * @param int $userId
+     * @param string $assetType One of: 'avatar', 'profile_secondary_image', 'cover_img', 'signature_img', 'profile_video'
+     * @return array ['status' => bool, 'path' => string|null, 'url' => string|null, 'error' => string|null]
+     */
+    public function uploadProfileAsset(UploadedFile $file, int $userId, string $assetType): array
+    {
+        $allowedTypes = ['avatar', 'profile_secondary_image', 'cover_img', 'signature_img', 'profile_video'];
+        if (!in_array($assetType, $allowedTypes, true)) {
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => 'Invalid profile asset type. Must be: ' . implode(', ', $allowedTypes),
+            ];
+        }
+
+        try {
+            config(['filesystems.disks.r2.throw' => true]);
+            $storage = Storage::disk('r2');
+
+            $ext = $file->getClientOriginalExtension() ?: pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION) ?: 'jpg';
+            if (empty($ext)) {
+                $ext = $assetType === 'profile_video' ? 'mp4' : 'jpg';
+            }
+            $fileName = $assetType . '_' . time() . '.' . $ext;
+            $path = 'Profile-Assets/' . $userId;
+            $fullPath = $path . '/' . $fileName;
+
+            \Log::info('R2 Profile Asset Upload Starting', [
+                'full_path' => $fullPath,
+                'user_id' => $userId,
+                'asset_type' => $assetType,
+            ]);
+
+            $fileSize = $file->getSize();
+            $filePath = $file->getRealPath();
+            $uploaded = false;
+
+            if ($assetType === 'profile_video' && $fileSize > 100 * 1024 * 1024) {
+                $sslVerify = $this->getSslCertificatePath();
+                $s3Client = new S3Client([
+                    'credentials' => [
+                        'key' => config('filesystems.disks.r2.key'),
+                        'secret' => config('filesystems.disks.r2.secret'),
+                    ],
+                    'region' => config('filesystems.disks.r2.region', 'auto'),
+                    'version' => 'latest',
+                    'bucket_endpoint' => false,
+                    'use_path_style_endpoint' => true,
+                    'endpoint' => config('filesystems.disks.r2.endpoint'),
+                    'verify' => $sslVerify,
+                    'http' => ['verify' => $sslVerify, 'timeout' => 0, 'connect_timeout' => 60],
+                ]);
+                $uploader = new MultipartUploader($s3Client, $filePath, [
+                    'bucket' => config('filesystems.disks.r2.bucket'),
+                    'key' => $fullPath,
+                    'acl' => 'public-read',
+                ]);
+                $uploader->upload();
+                $uploaded = true;
+            } else {
+                $fileContents = file_get_contents($filePath);
+                if ($fileContents === false) {
+                    throw new Exception('Failed to read file contents');
+                }
+                $uploaded = $storage->put($fullPath, $fileContents, 'public');
+                if (!$uploaded) {
+                    $stream = fopen($filePath, 'r');
+                    if ($stream) {
+                        $uploaded = $storage->writeStream($fullPath, $stream);
+                        if (is_resource($stream)) {
+                            fclose($stream);
+                        }
+                    }
+                }
+            }
+
+            if ($uploaded) {
+                sleep(1);
+                $exists = $storage->exists($fullPath);
+                if (!$exists) {
+                    return [
+                        'status' => false,
+                        'path' => null,
+                        'url' => null,
+                        'error' => 'Upload appeared successful but file not found on R2',
+                    ];
+                }
+                $url = $storage->url($fullPath);
+                \Log::info('R2 Profile Asset Upload Successful', ['full_path' => $fullPath]);
+                return [
+                    'status' => true,
+                    'path' => $fullPath,
+                    'url' => $url,
+                ];
+            }
+
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => 'Upload returned false',
+            ];
+        } catch (Exception $e) {
+            \Log::error('R2 Profile Asset Upload Error: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'asset_type' => $assetType,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return [
+                'status' => false,
+                'path' => null,
+                'url' => null,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Delete a profile asset from R2 by path.
+     */
+    public function deleteProfileAsset(string $path): bool
+    {
+        return $this->deleteFile($path);
+    }
+
+    /**
      * Upload course demo video to R2 (Course-Assets/{course_id}/demo_video_{timestamp}.{ext}).
      * Supports large files via multipart upload.
      *
