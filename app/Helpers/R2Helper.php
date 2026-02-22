@@ -8,14 +8,24 @@ use Illuminate\Support\Facades\Storage;
 class R2Helper
 {
     /**
-     * Get the full R2 URL for a file path
-     * 
+     * Get the full R2 URL for a file path.
+     * For Course-Assets, when R2_PUBLIC_URL is empty we return the Laravel proxy URL.
+     *
      * @param string $path
      * @return string|null
      */
     public static function getUrl(string $path): ?string
     {
         try {
+            $path = ltrim($path, '/');
+            $publicUrl = config('r2.public_url');
+            if (!empty($publicUrl)) {
+                return rtrim($publicUrl, '/') . '/' . $path;
+            }
+            // Private bucket or no public URL: use Laravel proxy for Course-Assets
+            if (str_starts_with($path, 'Course-Assets/')) {
+                return url('/r2-asset/' . $path);
+            }
             return Storage::disk('r2')->url($path);
         } catch (\Exception $e) {
             \Log::error('R2Helper getUrl error: ' . $e->getMessage());

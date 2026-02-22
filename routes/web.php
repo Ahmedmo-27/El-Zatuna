@@ -40,6 +40,9 @@ Route::group(['prefix' => 'api_sessions'], function () {
 
 });
 
+// R2 Course-Assets proxy (thumbnail, cover, icon, demo video) when R2_PUBLIC_URL is not set
+Route::get('/r2-asset/{path}', 'Web\R2AssetController@show')->where('path', '.*')->name('r2.asset');
+
 Route::get('/mobile-app', 'Web\MobileAppController@index')->middleware(['share', 'impersonate'])->name('mobileAppRoute');
 Route::get('/maintenance', 'Web\MaintenanceController@index')->middleware(['share', 'impersonate'])->name('maintenanceRoute');
 Route::get('/restriction', 'Web\RestrictionController@index')->middleware(['share', 'impersonate'])->name('restrictionRoute');
