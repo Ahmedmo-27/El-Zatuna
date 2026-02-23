@@ -136,35 +136,9 @@
                         }
                     }
                 @endphp
-                <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
+                <div class="form-group">
                     <label class="form-group-label">Subjects you want to teach:</label>
-                    <p class="text-sm text-gray-500 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
-
-                    <div class="position-relative">
-                        <input type="text" id="occupationsInput" class="form-control js-occupations-input border-gray-300 focus:border-primary focus:ring-primary" placeholder="Type a subject name..." autocomplete="off">
-
-                        <div class="js-occupations-dropdown position-absolute bg-white border border-gray-300 rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050;">
-                            <div class="js-occupations-results p-2"></div>
-                            <div class="js-occupations-add-new border-top border-gray-300 p-2 text-gray-600 cursor-pointer hover:bg-gray-100" style="font-size: 13px;">
-                                <span class="js-add-new-text">Add different subject</span> – <span class="js-add-new-term font-weight-medium text-primary"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="js-occupations-tags mt-8 d-flex flex-wrap gap-2" style="min-height: 24px;"></div>
-
-                    <div class="js-occupations-hidden-container"></div>
-
-                    @error('occupations')
-                    <div class="invalid-feedback d-block">
-                        {{ $message }}
-                    </div>
-                    @enderror
-                    @error('occupations.*')
-                    <div class="invalid-feedback d-block">
-                        {{ $message }}
-                    </div>
-                    @enderror
+                    @include('design_1.web.includes.occupations_input')
                 </div>
 
                 <div class="form-group">

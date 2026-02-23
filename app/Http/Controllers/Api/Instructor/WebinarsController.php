@@ -492,6 +492,9 @@ class WebinarsController extends Controller
 
         if ($currentStep == 3) {
             $data['subscribe'] = (!empty($data['subscribe']) && $data['subscribe'] == 1) ? true : false;
+
+            // A course's price is set by admin, not the instructor
+            unset($data['price'], $data['organization_price']);
         }
 
         $filters = $request->get('filters', null);
@@ -762,6 +765,9 @@ class WebinarsController extends Controller
 
         if ($currentStep == 3) {
             $data['subscribe'] = !empty($data['subscribe']) ? true : false;
+
+            // A course's price is set by admin, not the instructor
+            unset($data['price'], $data['organization_price']);
         }
 
         $filters = $request->get('filters', null);

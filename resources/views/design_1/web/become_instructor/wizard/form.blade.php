@@ -27,7 +27,7 @@
         @enderror
     </div>
 
-    {{-- Areas of Expertise: text field with search + "Add as new subject" option --}}
+    {{-- Areas of Expertise: searchable input + "Add different subject" (shared partial) --}}
     @php
         $occupationsInitial = [];
         if (!empty($occupations) && !empty($categories)) {
@@ -46,28 +46,7 @@
             }
         }
     @endphp
-    <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
-        <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
-
-        <div class="position-relative">
-            <input type="text" id="occupationsInput" class="form-control border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06] js-occupations-input" placeholder="Type a subject name..." autocomplete="off">
-
-            <div class="js-occupations-dropdown position-absolute bg-white border border-[#ECF4B8] rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050;">
-                <div class="js-occupations-results p-2"></div>
-                <div class="js-occupations-add-new border-top border-[#ECF4B8] p-2 text-[#072923]/70 cursor-pointer hover:bg-[#F5F9E8]/50" style="font-size: 13px;">
-                    <span class="js-add-new-text">Add different subject</span> – <span class="js-add-new-term font-weight-medium text-[#C8CD06]"></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="js-occupations-tags mt-8 d-flex flex-wrap gap-2" style="min-height: 24px;"></div>
-
-        <div class="js-occupations-hidden-container"></div>
-
-        @error('occupations')
-        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
-        @enderror
-    </div>
+    @include('design_1.web.includes.occupations_input')
 
     {{-- Documents Section --}}
     <h5 class="font-12 mt-24 text-[#072923] font-weight-bold">Required Documents</h5>

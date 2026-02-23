@@ -515,8 +515,9 @@ class WebinarController extends Controller
 
         if ($currentStep == 3) {
             $data['subscribe'] = !empty($data['subscribe']) ? true : false;
-            $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
-            $data['organization_price'] = !empty($data['organization_price']) ? convertPriceToDefaultCurrency($data['organization_price']) : null;
+
+            // A course's price is set by admin, not the teacher
+            unset($data['price'], $data['organization_price']);
         }
 
         if ($currentStep == 6) {
