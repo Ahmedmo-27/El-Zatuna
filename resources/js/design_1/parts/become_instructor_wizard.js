@@ -157,7 +157,7 @@
         $addNew.on('click', function () {
             const term = $.trim($input.val()) || $.trim($addNewTerm.text());
             if (!term || term === 'type above first') return;
-            const token = $('meta[name="csrf-token"]').attr('content') || $('#becomeInstructorForm input[name="_token"]').val();
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
             $.post('/become-instructor/create-subject', { title: term, _token: token }, function (data) {
                 addSelected({ id: data.id, text: data.text || term });
                 $input.val('');

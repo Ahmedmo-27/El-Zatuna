@@ -118,23 +118,43 @@
             </div>
 
             @if(!empty($isTeacher))
-                <div class="form-group">
-                    <label class="form-group-label" for="occupations">Subjects you want to teach:</label>
-                    <select name="occupations[]" id="occupations" class="form-control select2 @error('occupations') is-invalid @enderror" multiple data-placeholder="Select one or more subjects" required>
-                        @foreach(($instructorCategories ?? []) as $category)
-                            @if(!empty($category->subCategories) and count($category->subCategories))
-                                @foreach($category->subCategories as $subCategory)
-                                    <option value="{{ $subCategory->id }}" {{ (is_array(old('occupations')) && in_array($subCategory->id, old('occupations'))) ? 'selected' : '' }}>
-                                        {{ $subCategory->title }}
-                                    </option>
-                                @endforeach
-                            @else
-                                <option value="{{ $category->id }}" {{ (is_array(old('occupations')) && in_array($category->id, old('occupations'))) ? 'selected' : '' }}>
-                                    {{ $category->title }}
-                                </option>
-                            @endif
-                        @endforeach
-                    </select>
+                @php
+                    $occupationsInitial = [];
+                    $occupationsOld = is_array(old('occupations')) ? old('occupations') : [];
+                    $instructorCategoriesList = $instructorCategories ?? [];
+                    foreach ($instructorCategoriesList as $cat) {
+                        if (!empty($cat->subCategories) && count($cat->subCategories)) {
+                            foreach ($cat->subCategories as $sub) {
+                                if (in_array($sub->id, $occupationsOld)) {
+                                    $occupationsInitial[] = ['id' => $sub->id, 'text' => $sub->title];
+                                }
+                            }
+                        } else {
+                            if (in_array($cat->id, $occupationsOld)) {
+                                $occupationsInitial[] = ['id' => $cat->id, 'text' => $cat->title];
+                            }
+                        }
+                    }
+                @endphp
+                <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
+                    <label class="form-group-label">Subjects you want to teach:</label>
+                    <p class="text-sm text-gray-500 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
+
+                    <div class="position-relative">
+                        <input type="text" id="occupationsInput" class="form-control js-occupations-input border-gray-300 focus:border-primary focus:ring-primary" placeholder="Type a subject name..." autocomplete="off">
+
+                        <div class="js-occupations-dropdown position-absolute bg-white border border-gray-300 rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050;">
+                            <div class="js-occupations-results p-2"></div>
+                            <div class="js-occupations-add-new border-top border-gray-300 p-2 text-gray-600 cursor-pointer hover:bg-gray-100" style="font-size: 13px;">
+                                <span class="js-add-new-text">Add different subject</span> – <span class="js-add-new-term font-weight-medium text-primary"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="js-occupations-tags mt-8 d-flex flex-wrap gap-2" style="min-height: 24px;"></div>
+
+                    <div class="js-occupations-hidden-container"></div>
+
                     @error('occupations')
                     <div class="invalid-feedback d-block">
                         {{ $message }}
@@ -241,6 +261,9 @@
 
 @push('scripts_bottom')
     <script src="{{ getDesign1ScriptPath("forms") }}"></script>
+    @if(!empty($isTeacher))
+    <script src="{{ getDesign1ScriptPath("become_instructor_wizard") }}"></script>
+    @endif
     <script>
         // Preloaded faculties data to avoid AJAX calls
         window.facultiesByUniversity = @json($facultiesByUniversity ?? []);
