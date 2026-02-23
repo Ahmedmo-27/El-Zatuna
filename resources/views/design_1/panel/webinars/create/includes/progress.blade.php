@@ -1,4 +1,5 @@
 @php
+    // Step 3 (pricing) removed: course price is set by admin when reviewing the course
     $progressSteps = [
         1 => [
             'name' => 'basic_information',
@@ -11,26 +12,21 @@
         ],
 
         3 => [
-            'name' => 'pricing',
-            'icon' => 'empty-wallet'
-        ],
-
-        4 => [
             'name' => 'content',
             'icon' => 'document-cloud'
         ],
 
-        5 => [
+        4 => [
             'name' => 'prerequisites',
             'icon' => 'archive-tick'
         ],
 
-        6 => [
+        5 => [
             'name' => 'faq',
             'icon' => 'bill'
         ],
 
-        7 => [
+        6 => [
             'name' => 'quiz_certificate',
             'icon' => 'clipboard-tick'
         ],
@@ -38,7 +34,7 @@
     ];
 
     if (empty(getGeneralOptionsSettings('direct_publication_of_courses'))) {
-        $progressSteps[8] = [
+        $progressSteps[7] = [
             'name' => 'message_to_reviewer',
             'icon' => 'shield-search'
         ];

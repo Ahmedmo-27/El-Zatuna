@@ -210,6 +210,52 @@ class CategoryController extends Controller
         return response()->json($result, 200);
     }
 
+    /**
+     * Quick create a category (e.g. from webinar form when typing a non-existing category).
+     * Returns JSON { id, title } for the new category.
+     */
+    public function quickStore(Request $request)
+    {
+        $this->authorize('admin_categories_create');
+
+        $this->validate($request, [
+            'title' => 'required|min:2|max:255',
+        ]);
+
+        $title = $request->input('title');
+        $locale = $request->input('locale', getDefaultLocale());
+
+        $order = Category::whereNull('parent_id')->count() + 1;
+
+        $category = Category::create([
+            'parent_id' => null,
+            'slug' => Category::makeSlug($title),
+            'icon' => null,
+            'cover_image' => null,
+            'icon2' => null,
+            'icon2_box_color' => null,
+            'overlay_image' => null,
+            'order' => $order,
+        ]);
+
+        CategoryTranslation::updateOrCreate([
+            'category_id' => $category->id,
+            'locale' => mb_strtolower($locale),
+        ], [
+            'title' => $title,
+            'subtitle' => null,
+            'bottom_seo_title' => null,
+            'bottom_seo_content' => null,
+        ]);
+
+        cache()->forget(Category::$cacheKey);
+
+        return response()->json([
+            'id' => $category->id,
+            'title' => $category->title,
+        ], 200);
+    }
+
     public function setSubCategory(Category $category, $subCategories, $hasSubCategories, $locale)
     {
         $order = 1;

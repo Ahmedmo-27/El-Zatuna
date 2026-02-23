@@ -457,7 +457,7 @@ class WebinarsController extends Controller
         }
 
         $webinarRulesRequired = false;
-        if (($currentStep == 8 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
+        if (($currentStep == 7 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
@@ -488,13 +488,6 @@ class WebinarsController extends Controller
             if ($data['category_id'] !== $webinar->category_id) {
                 WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
             }
-        }
-
-        if ($currentStep == 3) {
-            $data['subscribe'] = (!empty($data['subscribe']) && $data['subscribe'] == 1) ? true : false;
-
-            // A course's price is set by admin, not the instructor
-            unset($data['price'], $data['organization_price']);
         }
 
         $filters = $request->get('filters', null);
@@ -539,11 +532,11 @@ class WebinarsController extends Controller
         if ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
-            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 8) ? $nextStep : 8);
+            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 7) ? $nextStep : 7);
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/8';
+            $url = '/panel/courses/' . $webinar->id . '/step/7';
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }
@@ -729,7 +722,7 @@ class WebinarsController extends Controller
         }
 
         $webinarRulesRequired = false;
-        if (($currentStep == 8 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
+        if (($currentStep == 7 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
@@ -761,13 +754,6 @@ class WebinarsController extends Controller
             if ($data['category_id'] !== $webinar->category_id) {
                 WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
             }
-        }
-
-        if ($currentStep == 3) {
-            $data['subscribe'] = !empty($data['subscribe']) ? true : false;
-
-            // A course's price is set by admin, not the instructor
-            unset($data['price'], $data['organization_price']);
         }
 
         $filters = $request->get('filters', null);
@@ -812,11 +798,11 @@ class WebinarsController extends Controller
         if ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
-            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 8) ? $nextStep : 8);
+            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 7) ? $nextStep : 7);
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/8';
+            $url = '/panel/courses/' . $webinar->id . '/step/7';
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }

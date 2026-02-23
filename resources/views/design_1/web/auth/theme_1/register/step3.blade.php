@@ -137,7 +137,6 @@
                     }
                 @endphp
                 <div class="form-group">
-                    <label class="form-group-label">Subjects you want to teach:</label>
                     <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
                         <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
 

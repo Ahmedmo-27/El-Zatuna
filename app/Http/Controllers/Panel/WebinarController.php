@@ -75,9 +75,10 @@ class WebinarController extends Controller
         }
 
         $universities = University::orderBy('name')->get();
-        $faculties = Faculty::orderBy('name')->get();
+        $facultiesAll = Faculty::orderBy('name')->get();
+        $faculties = $facultiesAll->unique('name')->values();
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 8 : 7;
+        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 7 : 6;
 
         $data = [
             'pageTitle' => trans('webinars.new_page_title'),
@@ -89,6 +90,7 @@ class WebinarController extends Controller
             'userLanguages' => getUserLanguagesLists(),
             'universities' => $universities,
             'faculties' => $faculties,
+            'facultiesAll' => $facultiesAll,
         ];
 
         return view('design_1.panel.webinars.create.index', $data);
@@ -138,12 +140,8 @@ class WebinarController extends Controller
         $data['university_id'] = !empty($data['university_id']) ? $data['university_id'] : null;
         $data['faculty_id'] = !empty($data['faculty_id']) ? $data['faculty_id'] : null;
 
-        if (!empty($data['faculty_id']) && empty($data['university_id'])) {
-            $faculty = Faculty::find($data['faculty_id']);
-            if (!empty($faculty)) {
-                $data['university_id'] = $faculty->university_id;
-            }
-        }
+        // When faculty is selected but university is not: keep university_id null so the course is
+        // "public" for that faculty name (any user with that faculty can enroll regardless of university).
 
         $status = ((!empty($data['draft']) and $data['draft'] == 1) or (!empty($data['get_next']) and $data['get_next'] == 1))
             ? Webinar::$isDraft
@@ -204,7 +202,7 @@ class WebinarController extends Controller
         }
         $locale = $request->get('locale', app()->getLocale());
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 8 : 7;
+        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 7 : 6;
 
         if ($step > $stepCount) {
             return redirect("/panel/courses/{$id}/step/{$stepCount}");
@@ -235,7 +233,12 @@ class WebinarController extends Controller
         if ($step == '1') {
             $data['teachers'] = $user->getOrganizationTeachers()->get();
             $data['universities'] = University::orderBy('name')->get();
-            $data['faculties'] = Faculty::orderBy('name')->get();
+            $facultiesAll = Faculty::orderBy('name')->get();
+            $webinarFacultyId = $webinar->faculty_id ?? null;
+            $data['faculties'] = $facultiesAll->sortByDesc(function ($f) use ($webinarFacultyId) {
+                return (int)($f->id == $webinarFacultyId);
+            })->unique('name')->values();
+            $data['facultiesAll'] = $facultiesAll;
         } elseif ($step == 2) {
             $query->with([
                 'category' => function ($query) {
@@ -259,12 +262,6 @@ class WebinarController extends Controller
             $data['categories'] = $categories;
         } elseif ($step == 3) {
             $query->with([
-                'tickets' => function ($query) {
-                    $query->orderBy('order', 'asc');
-                },
-            ]);
-        } elseif ($step == 4) {
-            $query->with([
                 'chapters' => function ($query) {
                     $query->orderBy('order', 'asc');
                     $query->with([
@@ -284,7 +281,7 @@ class WebinarController extends Controller
                     ]);
                 },
             ]);
-        } elseif ($step == 5) {
+        } elseif ($step == 4) {
             $query->with([
                 'prerequisites' => function ($query) {
                     $query->with(['prerequisiteWebinar' => function ($qu) {
@@ -294,7 +291,7 @@ class WebinarController extends Controller
                     }])->orderBy('order', 'asc');
                 }
             ]);
-        } elseif ($step == 6) {
+        } elseif ($step == 5) {
             $query->with([
                 'faqs' => function ($query) {
                     $query->orderBy('order', 'asc');
@@ -303,7 +300,7 @@ class WebinarController extends Controller
                     $query->orderBy('order', 'asc');
                 }
             ]);
-        } elseif ($step == 7) {
+        } elseif ($step == 6) {
             $query->with([
                 'quizzes',
                 'chapters' => function ($query) {
@@ -353,11 +350,6 @@ class WebinarController extends Controller
 
             $data['webinarCategoryFilters'] = $webinarCategoryFilters;
         }
-
-        if ($step == 3) {
-            $data['sumTicketsCapacities'] = $webinar->tickets->sum('capacity');
-        }
-
 
         return view('design_1.panel.webinars.create.index', $data);
     }
@@ -424,16 +416,10 @@ class WebinarController extends Controller
             }
         }
 
-        if ($currentStep == 3) {
-            $rules = [
-                'price' => 'nullable|numeric|min:0',
-            ];
-        }
-
         $webinarRulesRequired = false;
         $directPublicationOfCourses = !empty(getGeneralOptionsSettings('direct_publication_of_courses'));
 
-        if (!$directPublicationOfCourses and (($currentStep == 8 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft))) {
+        if (!$directPublicationOfCourses and (($currentStep == 7 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft))) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
@@ -454,12 +440,7 @@ class WebinarController extends Controller
             $data['university_id'] = !empty($data['university_id']) ? $data['university_id'] : null;
             $data['faculty_id'] = !empty($data['faculty_id']) ? $data['faculty_id'] : null;
 
-            if (!empty($data['faculty_id']) && empty($data['university_id'])) {
-                $faculty = Faculty::find($data['faculty_id']);
-                if (!empty($faculty)) {
-                    $data['university_id'] = $faculty->university_id;
-                }
-            }
+            // When faculty is selected but university is not: keep university_id null (public faculty).
 
             // Handle Image and Video
             $webinar = $this->storeWebinarMedia($request, $webinar);
@@ -513,14 +494,7 @@ class WebinarController extends Controller
             }
         }
 
-        if ($currentStep == 3) {
-            $data['subscribe'] = !empty($data['subscribe']) ? true : false;
-
-            // A course's price is set by admin, not the teacher
-            unset($data['price'], $data['organization_price']);
-        }
-
-        if ($currentStep == 6) {
+        if ($currentStep == 5) {
             $webinarExtraDescriptionController = (new WebinarExtraDescriptionController());
             $webinarExtraDescriptionController->storeCompanyLogos($request, 'webinar_id', $webinar->id, 'webinars');
         }
@@ -591,7 +565,7 @@ class WebinarController extends Controller
 
         $webinar->update($data);
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 8 : 7;
+        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 7 : 6;
 
         $url = '/panel/courses';
         if ($getNextStep) {
@@ -601,7 +575,7 @@ class WebinarController extends Controller
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/8';
+            $url = '/panel/courses/' . $webinar->id . '/step/7';
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }
