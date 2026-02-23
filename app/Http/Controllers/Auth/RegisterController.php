@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\traits\UserFormFieldsTrait;
 use App\Mixins\RegistrationBonus\RegistrationBonusAccounting;
 use App\Models\Affiliate;
+use App\Models\Category;
 use App\Models\Faculty;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\Role;
 use App\Models\University;
+use App\Models\UserOccupation;
 use App\Models\UserMeta;
 use App\Models\RegistrationVerificationToken;
 use App\User;
@@ -94,6 +96,10 @@ class RegisterController extends Controller
                 ]);
             }
 
+            $registrationUser = User::find($userId);
+            $isTeacher = !empty($registrationUser) && $registrationUser->role_name == Role::$teacher;
+            $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
+
             $seoSettings = getSeoMetas('register');
             $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
             $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
@@ -121,6 +127,8 @@ class RegisterController extends Controller
                 'pageRobot' => $pageRobot,
                 'verificationToken' => $verificationToken,
                 'verified' => $verified,
+                'isTeacher' => $isTeacher,
+                'instructorCategories' => $instructorCategories,
                 'universities' => $universities,
                 'faculties' => collect(),
                 'facultiesByUniversity' => $facultiesByUniversity,
@@ -154,10 +162,20 @@ class RegisterController extends Controller
     {
         $data = $request->all();
 
+        $allowedAccountTypes = [Role::$user, Role::$teacher];
+        $accountType = $data['account_type'] ?? Role::$user;
+        if (!in_array($accountType, $allowedAccountTypes)) {
+            $accountType = Role::$user;
+        }
+
+        $roleName = ($accountType == Role::$teacher) ? Role::$teacher : Role::$user;
+        $roleId = ($accountType == Role::$teacher) ? Role::getTeacherRoleId() : Role::getUserRoleId();
+
         // Step 1: Initial registration - collect full_name and email only
         $rules = [
             'full_name' => 'required|string|min:3',
             'email' => 'required|string|email|max:255|unique:users',
+            'account_type' => ['nullable', Rule::in($allowedAccountTypes)],
         ];
 
         // Use different validation for web vs API
@@ -178,6 +196,11 @@ class RegisterController extends Controller
                 }
                 return back()->withErrors(['email' => trans('api.auth.already_registered')])->withInput();
             } else {
+                $userCase->update([
+                    'role_name' => $roleName,
+                    'role_id' => $roleId,
+                ]);
+
                 // User exists but incomplete - generate new token for step 3
                 $tokenData = [
                     'user_id' => $userCase->id,
@@ -215,6 +238,7 @@ class RegisterController extends Controller
                 $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
                 $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
                 $pageRobot = getPageRobot('register');
+                $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
 
                 $authTemplate = getThemeAuthenticationPagesStyleName();
                 return view("design_1.web.auth.{$authTemplate}.register.step3", [
@@ -223,6 +247,8 @@ class RegisterController extends Controller
                     'pageRobot' => $pageRobot,
                     'verificationToken' => $verificationToken,
                     'verified' => false,
+                    'isTeacher' => ($roleName == Role::$teacher),
+                    'instructorCategories' => $instructorCategories,
                     'universities' => $universities,
                     'faculties' => collect(),
                     'facultiesByUniversity' => $facultiesByUniversity,
@@ -240,8 +266,8 @@ class RegisterController extends Controller
             $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
             $user = User::create([
-                'role_name' => Role::$user,
-                'role_id' => Role::getUserRoleId(),
+                'role_name' => $roleName,
+                'role_id' => $roleId,
                 'full_name' => $data['full_name'],
                 'email' => $data['email'],
                 'status' => User::$pending,
@@ -270,8 +296,8 @@ class RegisterController extends Controller
         $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
         $user = User::create([
-            'role_name' => Role::$user,
-            'role_id' => Role::getUserRoleId(),
+            'role_name' => $roleName,
+            'role_id' => $roleId,
             'full_name' => $data['full_name'],
             'email' => $data['email'],
             'status' => User::$pending,
@@ -417,28 +443,12 @@ class RegisterController extends Controller
     private function stepThree(Request $request)
     {
         $data = $request->all();
-        
-        // Step 3: Complete profile with username, password, university, faculty, and optional referral code
-        $rules = [
-            'verification_token' => 'required|string',
-            'username' => 'required|string|min:3|max:255|unique:users',
-            'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
-            'password_confirmation' => 'required|same:password',
-            'university_id' => 'required|exists:universities,id',
-            'faculty_id' => [
-                'required',
-                Rule::exists('faculties', 'id')->where(function ($query) use ($data) {
-                    $query->where('university_id', $data['university_id'] ?? null);
-                })
-            ],
-            'referral_code' => 'nullable|exists:affiliates_codes,code'
-        ];
-        
-        // Use different validation for web vs API
-        if ($request->wantsJson()) {
-            validateParam($data, $rules);
-        } else {
-            $request->validate($rules);
+
+        if (empty($data['verification_token'])) {
+            if ($request->wantsJson()) {
+                return apiResponse2(0, 'invalid_token', 'Verification token is required');
+            }
+            return back()->withErrors(['verification_token' => 'Verification token is required'])->withInput();
         }
 
         // Verify the token
@@ -473,14 +483,57 @@ class RegisterController extends Controller
             return back()->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
         }
 
-        // Update user profile with username, password, university, and faculty
+        $isTeacher = $user->role_name == Role::$teacher;
+
+        // Step 3: Complete profile with username/password and role-specific fields
+        $rules = [
+            'verification_token' => 'required|string',
+            'username' => 'required|string|min:3|max:255|unique:users',
+            'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
+            'password_confirmation' => 'required|same:password',
+            'university_id' => $isTeacher ? 'nullable' : 'required|exists:universities,id',
+            'faculty_id' => $isTeacher ? 'nullable' : [
+                'required',
+                Rule::exists('faculties', 'id')->where(function ($query) use ($data) {
+                    $query->where('university_id', $data['university_id'] ?? null);
+                })
+            ],
+            'occupations' => $isTeacher ? 'required|array|min:1' : 'nullable',
+            'occupations.*' => $isTeacher ? 'required|integer|exists:categories,id' : 'nullable',
+            'description' => $isTeacher ? 'required|string|min:10' : 'nullable|string',
+            'referral_code' => 'nullable|exists:affiliates_codes,code'
+        ];
+
+        // Use different validation for web vs API
+        if ($request->wantsJson()) {
+            validateParam($data, $rules);
+        } else {
+            $request->validate($rules);
+        }
+
+        // Update user profile
         $user->update([
             'username' => $data['username'],
             'password' => Hash::make($data['password']),
-            'university_id' => $data['university_id'],
-            'faculty_id' => $data['faculty_id'],
+            'university_id' => $isTeacher ? null : ($data['university_id'] ?? null),
+            'faculty_id' => $isTeacher ? null : ($data['faculty_id'] ?? null),
+            'about' => $isTeacher ? ($data['description'] ?? null) : $user->about,
             'status' => User::$active, // Activate user now
         ]);
+
+        if ($isTeacher) {
+            UserOccupation::query()->where('user_id', $user->id)->delete();
+
+            if (!empty($data['occupations']) && is_array($data['occupations'])) {
+                foreach (array_unique($data['occupations']) as $occupationId) {
+                    UserOccupation::query()->create([
+                        'user_id' => $user->id,
+                        'category_id' => $occupationId,
+                        'created_at' => time(),
+                    ]);
+                }
+            }
+        }
 
         // Mark token as used
         RegistrationVerificationToken::markAsUsed($data['verification_token']);
