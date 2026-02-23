@@ -117,37 +117,80 @@
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label class="form-group-label" for="university_id">{{ trans('update.university') }}:</label>
-                <select name="university_id" id="university_id" class="js-university-select form-control @error('university_id') is-invalid @enderror" required>
-                    <option value="" disabled {{ empty(old('university_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
-                    @foreach($universities as $university)
-                        <option value="{{ $university->id }}" {{ (old('university_id') == $university->id) ? 'selected' : '' }}>{{ $university->name }}</option>
-                    @endforeach
-                </select>
-                @error('university_id')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label class="form-group-label" for="faculty_id">{{ trans('update.faculty') }}:</label>
-                <select name="faculty_id" id="faculty_id" class="js-faculty-select form-control @error('faculty_id') is-invalid @enderror" required>
-                    <option value="" disabled {{ empty(old('faculty_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
-                    @if(!empty($faculties))
-                        @foreach($faculties as $faculty)
-                            <option value="{{ $faculty->id }}" {{ (old('faculty_id') == $faculty->id) ? 'selected' : '' }}>{{ $faculty->name }}</option>
+            @if(!empty($isTeacher))
+                <div class="form-group">
+                    <label class="form-group-label" for="occupations">Subjects you want to teach:</label>
+                    <select name="occupations[]" id="occupations" class="form-control select2 @error('occupations') is-invalid @enderror" multiple data-placeholder="Select one or more subjects" required>
+                        @foreach(($instructorCategories ?? []) as $category)
+                            @if(!empty($category->subCategories) and count($category->subCategories))
+                                @foreach($category->subCategories as $subCategory)
+                                    <option value="{{ $subCategory->id }}" {{ (is_array(old('occupations')) && in_array($subCategory->id, old('occupations'))) ? 'selected' : '' }}>
+                                        {{ $subCategory->title }}
+                                    </option>
+                                @endforeach
+                            @else
+                                <option value="{{ $category->id }}" {{ (is_array(old('occupations')) && in_array($category->id, old('occupations'))) ? 'selected' : '' }}>
+                                    {{ $category->title }}
+                                </option>
+                            @endif
                         @endforeach
-                    @endif
-                </select>
-                @error('faculty_id')
-                <div class="invalid-feedback">
-                    {{ $message }}
+                    </select>
+                    @error('occupations')
+                    <div class="invalid-feedback d-block">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                    @error('occupations.*')
+                    <div class="invalid-feedback d-block">
+                        {{ $message }}
+                    </div>
+                    @enderror
                 </div>
-                @enderror
-            </div>
+
+                <div class="form-group">
+                    <label class="form-group-label" for="description">{{ trans('public.description') }}:</label>
+                    <textarea name="description" id="description" rows="5" class="form-control @error('description') is-invalid @enderror" placeholder="Tell us about your teaching experience and expertise" required>{{ old('description') }}</textarea>
+                    @error('description')
+                    <div class="invalid-feedback d-block">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+            @endif
+
+            @if(empty($isTeacher))
+                <div class="form-group">
+                    <label class="form-group-label" for="university_id">{{ trans('update.university') }}:</label>
+                    <select name="university_id" id="university_id" class="js-university-select form-control @error('university_id') is-invalid @enderror" required>
+                        <option value="" disabled {{ empty(old('university_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
+                        @foreach($universities as $university)
+                            <option value="{{ $university->id }}" {{ (old('university_id') == $university->id) ? 'selected' : '' }}>{{ $university->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('university_id')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label class="form-group-label" for="faculty_id">{{ trans('update.faculty') }}:</label>
+                    <select name="faculty_id" id="faculty_id" class="js-faculty-select form-control @error('faculty_id') is-invalid @enderror" required>
+                        <option value="" disabled {{ empty(old('faculty_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
+                        @if(!empty($faculties))
+                            @foreach($faculties as $faculty)
+                                <option value="{{ $faculty->id }}" {{ (old('faculty_id') == $faculty->id) ? 'selected' : '' }}>{{ $faculty->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                    @error('faculty_id')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+            @endif
 
             @if(!empty($referralSettings) and $referralSettings['status'])
                 <div class="form-group">
@@ -169,7 +212,7 @@
                     <input type="checkbox" name="term" value="1" id="termCheckbox" class="custom-control-input" {{ (old('term') == '1') ? 'checked' : '' }} required>
                     <label class="custom-control__label cursor-pointer" for="termCheckbox">
                         {{ trans('auth.i_agree_with') }}
-                        <a href="/pages/terms" target="_blank" class="font-weight-bold text-dark ml-4">{{ trans('auth.terms_and_rules') }}</a>
+                        <a href="/terms" target="_blank" class="font-weight-bold text-dark ml-4">{{ trans('auth.terms_and_rules') }}</a>
                     </label>
                 </div>
 
