@@ -125,7 +125,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(250, 255, 224, 0.95);
+            background: rgba(250, 255, 224, 0.92);
             backdrop-filter: blur(2px);
             transition: opacity .25s ease, visibility .25s ease;
         }
@@ -136,13 +136,38 @@
             pointer-events: none;
         }
 
+        .page-loader__inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            padding: 20px 24px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .74);
+            border: 1px solid rgba(236, 244, 184, .9);
+            box-shadow: 0 10px 36px rgba(7, 41, 35, 0.08);
+        }
+
+        .page-loader__logo {
+            width: 170px;
+            height: auto;
+            object-fit: contain;
+        }
+
         .page-loader__box {
-            width: 72px;
-            height: 72px;
+            width: 56px;
+            height: 56px;
             border-radius: 999px;
-            border: 4px solid rgba(7, 41, 35, .15);
+            border: 4px solid rgba(7, 41, 35, .17);
             border-top-color: #C8CD06;
-            animation: page-loader-spin 0.9s linear infinite;
+            animation: page-loader-spin .8s linear infinite;
+        }
+
+        .page-loader__text {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .02em;
+            color: rgba(7, 41, 35, .78);
         }
 
         @keyframes page-loader-spin {
@@ -161,7 +186,11 @@
 
 @if($showPageLoader)
     <div id="pageLoader" class="page-loader" aria-hidden="true">
-        <div class="page-loader__box"></div>
+        <div class="page-loader__inner">
+            <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="page-loader__logo" />
+            <div class="page-loader__box"></div>
+            <div class="page-loader__text">Loading your experience...</div>
+        </div>
     </div>
 @endif
 
@@ -238,8 +267,16 @@
 @if($showPageLoader)
     <script>
         (function () {
+            var loaderHasBeenHidden = false;
+
             var hideLoader = function () {
+                if (loaderHasBeenHidden) {
+                    return;
+                }
+
                 var loader = document.getElementById('pageLoader');
+
+                loaderHasBeenHidden = true;
 
                 if (loader) {
                     loader.classList.add('hidden');
@@ -254,9 +291,14 @@
 
             if (document.readyState === 'complete') {
                 hideLoader();
-            } else {
-                window.addEventListener('load', hideLoader);
             }
+
+            window.addEventListener('load', hideLoader);
+            document.addEventListener('DOMContentLoaded', function () {
+                setTimeout(hideLoader, 150);
+            });
+
+            setTimeout(hideLoader, 4000);
         })();
     </script>
 @endif
