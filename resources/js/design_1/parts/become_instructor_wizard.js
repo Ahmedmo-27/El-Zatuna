@@ -48,9 +48,31 @@
         const $addNewTerm = $wrapper.find('.js-add-new-term');
         const $tags = $wrapper.find('.js-occupations-tags');
         const $hiddenContainer = $wrapper.find('.js-occupations-hidden-container');
+        const $loading = $wrapper.find('.js-occupations-loading');
+        const $error = $wrapper.find('.js-occupations-error');
 
         let selected = [];
         let searchTimeout = null;
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                $loading.removeClass('d-none');
+                $input.prop('disabled', true);
+                $addNew.addClass('disabled');
+            } else {
+                $loading.addClass('d-none');
+                $input.prop('disabled', false);
+                $addNew.removeClass('disabled');
+            }
+        }
+
+        function showError(message) {
+            if (!message) {
+                $error.addClass('d-none').text('');
+                return;
+            }
+            $error.removeClass('d-none').text(message);
+        }
 
         function syncHiddenInputs() {
             $hiddenContainer.empty();
@@ -90,25 +112,35 @@
                 $results.empty();
                 $addNewTerm.text('');
                 $addNew.toggleClass('d-none', true);
+                showError('');
                 return;
             }
+            showError('');
+            setLoading(true);
             $addNewTerm.text(q);
             $addNew.removeClass('d-none');
-            $.get('/become-instructor/search-subjects', { q: q }, function (data) {
-                const results = data.results || [];
-                $results.empty();
-                if (results.length === 0) {
-                    $results.append(
-                        $('<div class="p-2 text-[#072923]/50">No matching subjects. Use "Add different subject" below to add "' + $('<div>').text(q).html() + '".</div>')
-                    );
-                } else {
-                    results.forEach(function (item) {
-                        const textEsc = $('<div>').text(item.text).html();
-                        const $row = $('<div class="js-result-row p-2 rounded-8 cursor-pointer hover:bg-[#F5F9E8]/50" data-id="' + item.id + '">' + textEsc + '</div>');
-                        $results.append($row);
-                    });
-                }
-            });
+            $.get('/become-instructor/search-subjects', { q: q })
+                .done(function (data) {
+                    const results = data.results || [];
+                    $results.empty();
+                    if (results.length === 0) {
+                        $results.append(
+                            $('<div class="p-2 text-[#072923]/50">No matching subjects. Use "Add different subject" below to add "' + $('<div>').text(q).html() + '".</div>')
+                        );
+                    } else {
+                        results.forEach(function (item) {
+                            const textEsc = $('<div>').text(item.text).html();
+                            const $row = $('<div class="js-result-row p-2 rounded-8 cursor-pointer hover:bg-[#F5F9E8]/50" data-id="' + item.id + '">' + textEsc + '</div>');
+                            $results.append($row);
+                        });
+                    }
+                })
+                .fail(function () {
+                    showError('Could not load subjects. Please check your connection and try again.');
+                })
+                .always(function () {
+                    setLoading(false);
+                });
         }
 
         function showDropdown() {
@@ -157,6 +189,8 @@
         $addNew.on('click', function () {
             const term = $.trim($input.val()) || $.trim($addNewTerm.text());
             if (!term || term === 'type above first') return;
+            showError('');
+            setLoading(true);
             const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
             $.post('/become-instructor/create-subject', { title: term, _token: token }, function (data) {
                 addSelected({ id: data.id, text: data.text || term });
@@ -164,9 +198,13 @@
                 hideDropdown();
                 $input.focus();
             }).fail(function () {
+                // Fall back to local-only tag and show error
                 addSelected({ id: term, text: term });
+                showError('Subject was added locally, but we could not save it on the server. Please try again later.');
                 $input.val('');
                 hideDropdown();
+            }).always(function () {
+                setLoading(false);
             });
         });
 

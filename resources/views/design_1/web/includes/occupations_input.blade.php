@@ -20,6 +20,13 @@
 
     <div class="js-occupations-hidden-container"></div>
 
+    <div class="js-occupations-loading mt-2 small text-muted d-none">
+        <span class="spinner-border spinner-border-sm align-middle mr-1" role="status" aria-hidden="true"></span>
+        <span class="align-middle">{{ trans('public.loading') }}</span>
+    </div>
+
+    <div class="js-occupations-error mt-2 alert alert-danger py-2 px-3 d-none" style="font-size: 13px;"></div>
+
     @error('occupations')
     <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
     @enderror
