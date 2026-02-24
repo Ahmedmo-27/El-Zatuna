@@ -5,11 +5,18 @@
     $rtlLanguages = !empty($generalSettings['rtl_languages']) ? $generalSettings['rtl_languages'] : [];
     $isRtl = ((in_array(mb_strtoupper(app()->getLocale()), $rtlLanguages)) or (!empty($generalSettings['rtl_layout']) and $generalSettings['rtl_layout'] == 1));
     $themeCustomCssAndJs = getThemeCustomCssAndJs();
+    $showPageLoader = !isset($generalSettings['preloading']) || !empty($generalSettings['preloading']);
 @endphp
 
 <head>
     @include('design_1.web.includes.metas')
     <title>{{ $pageTitle ?? '' }}{{ !empty($generalSettings['site_name']) ? (' | '.$generalSettings['site_name']) : '' }}</title>
+
+    @if($showPageLoader)
+        <script>
+            document.documentElement.classList.add('js-enabled');
+        </script>
+    @endif
 
     <!-- General CSS File -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -116,11 +123,86 @@
                 transform: translateX(-100%);
             }
         }
+
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(250, 255, 224, 0.92);
+            backdrop-filter: blur(2px);
+            transition: opacity .25s ease, visibility .25s ease;
+        }
+
+        .js-enabled .page-loader {
+            display: flex;
+        }
+
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .page-loader__inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            padding: 20px 24px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, .74);
+            border: 1px solid rgba(236, 244, 184, .9);
+            box-shadow: 0 10px 36px rgba(7, 41, 35, 0.08);
+        }
+
+        .page-loader__logo {
+            width: 170px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .page-loader__box {
+            width: 56px;
+            height: 56px;
+            border-radius: 999px;
+            border: 4px solid rgba(7, 41, 35, .17);
+            border-top-color: #C8CD06;
+            animation: page-loader-spin .8s linear infinite;
+        }
+
+        .page-loader__text {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .02em;
+            color: rgba(7, 41, 35, .78);
+        }
+
+        @keyframes page-loader-spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
 </head>
 
 <body class="bg-[#FAFFE0] text-[#072923] {{ $isRtl ? 'rtl' : '' }} {{ "{$userThemeColorMode}-mode" }}">
+
+@if($showPageLoader)
+    <div id="pageLoader" class="page-loader" role="status" aria-live="polite" aria-label="{{ trans('update.loading_data,_please_wait') }}">
+        <div class="page-loader__inner">
+            <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="page-loader__logo" />
+            <div class="page-loader__box"></div>
+            <div class="page-loader__text">{{ trans('update.loading_data,_please_wait') }}</div>
+        </div>
+    </div>
+@endif
 
 <div id="app">
 
@@ -191,6 +273,45 @@
 <script type="text/javascript" src="/assets/design_1/js/app.min.js"></script>
 <script type="text/javascript" src="/assets/default/vendors/simplebar/simplebar.min.js"></script>
 <script defer src="/assets/design_1/js/parts/content_delete.min.js"></script>
+
+@if($showPageLoader)
+    <script>
+        (function () {
+            var loaderHasBeenHidden = false;
+
+            var hideLoader = function () {
+                if (loaderHasBeenHidden) {
+                    return;
+                }
+
+                var loader = document.getElementById('pageLoader');
+
+                loaderHasBeenHidden = true;
+
+                if (loader) {
+                    loader.classList.add('hidden');
+
+                    setTimeout(function () {
+                        if (loader && loader.parentNode) {
+                            loader.parentNode.removeChild(loader);
+                        }
+                    }, 260);
+                }
+            };
+
+            if (document.readyState === 'complete') {
+                hideLoader();
+            }
+
+            window.addEventListener('load', hideLoader);
+            document.addEventListener('DOMContentLoaded', function () {
+                setTimeout(hideLoader, 150);
+            });
+
+            setTimeout(hideLoader, 4000);
+        })();
+    </script>
+@endif
 
 @if(empty($justMobileApp) and checkShowCookieSecurityDialog() and empty($dontShowCookieSecurity))
     @include('design_1.web.includes.cookie_security.cookie-security')
