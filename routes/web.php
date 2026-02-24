@@ -376,6 +376,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         return view('design_1.web.pages.privacy');
     });
 
+    Route::get('/cookie', function () {
+        return view('design_1.web.pages.cookie');
+    });
+
     Route::get('/faq', function () {
         return view('design_1.web.pages.faq');
     });
@@ -545,6 +549,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     /* Landings */
     Route::group(['prefix' => 'landings'], function () {
         Route::get('/{landing_url}', 'LandingController@index');
+    });
+
+    Route::fallback(function () {
+        abort(404);
     });
 });
 
