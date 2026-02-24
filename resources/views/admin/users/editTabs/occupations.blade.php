@@ -1,29 +1,38 @@
 <div class="tab-pane mt-3 fade" id="occupations" role="tabpanel" aria-labelledby="occupations-tab">
     <div class="row">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-8">
             <form action="{{ getAdminPanelUrl() }}/users/{{ $user->id .'/occupationsUpdate' }}" method="Post">
                 {{ csrf_field() }}
 
-                @foreach($categories as $category)
-                    @if(!empty($category->subCategories) and count($category->subCategories))
-                        @foreach($category->subCategories as $subCategory)
-                            <div class="checkbox-button mr-15 mt-10">
-                                <input type="checkbox" name="occupations[]" id="checkbox{{ $subCategory->id }}" value="{{ $subCategory->id }}" @if(!empty($occupations) and in_array($subCategory->id,$occupations)) checked="checked" @endif>
-                                <label for="checkbox{{ $subCategory->id }}">{{ $subCategory->title }}</label>
-                            </div>
-                        @endforeach
-                    @else
-                        <div class="checkbox-button mr-15 mt-10">
-                            <input type="checkbox" name="occupations[]" id="checkbox{{ $category->id }}" value="{{ $category->id }}" @if(!empty($occupations) and in_array($category->id,$occupations)) checked="checked" @endif>
-                            <label for="checkbox{{ $category->id }}">{{ $category->title }}</label>
-                        </div>
-                    @endif
-                @endforeach
+                @php
+                    $occupationsInitial = [];
+                    if (!empty($occupations) && !empty($categories)) {
+                        foreach ($categories as $cat) {
+                            if (!empty($cat->subCategories) && count($cat->subCategories)) {
+                                foreach ($cat->subCategories as $sub) {
+                                    if (in_array($sub->id, $occupations)) {
+                                        $occupationsInitial[] = ['id' => $sub->id, 'text' => $sub->title];
+                                    }
+                                }
+                            } else {
+                                if (in_array($cat->id, $occupations)) {
+                                    $occupationsInitial[] = ['id' => $cat->id, 'text' => $cat->title];
+                                }
+                            }
+                        }
+                    }
+                @endphp
 
-                <div class=" mt-4">
+                @include('design_1.web.includes.occupations_input')
+
+                <div class="mt-4">
                     <button class="btn btn-primary">{{ trans('admin/main.submit') }}</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+@push('scripts_bottom')
+    <script src="{{ getDesign1ScriptPath('become_instructor_wizard') }}"></script>
+@endpush
