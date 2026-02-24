@@ -12,6 +12,12 @@
     @include('design_1.web.includes.metas')
     <title>{{ $pageTitle ?? '' }}{{ !empty($generalSettings['site_name']) ? (' | '.$generalSettings['site_name']) : '' }}</title>
 
+    @if($showPageLoader)
+        <script>
+            document.documentElement.classList.add('js-enabled');
+        </script>
+    @endif
+
     <!-- General CSS File -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,12 +128,16 @@
             position: fixed;
             inset: 0;
             z-index: 9999;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             background: rgba(250, 255, 224, 0.92);
             backdrop-filter: blur(2px);
             transition: opacity .25s ease, visibility .25s ease;
+        }
+
+        .js-enabled .page-loader {
+            display: flex;
         }
 
         .page-loader.hidden {
@@ -185,11 +195,11 @@
 <body class="bg-[#FAFFE0] text-[#072923] {{ $isRtl ? 'rtl' : '' }} {{ "{$userThemeColorMode}-mode" }}">
 
 @if($showPageLoader)
-    <div id="pageLoader" class="page-loader" aria-hidden="true">
+    <div id="pageLoader" class="page-loader" role="status" aria-live="polite" aria-label="{{ trans('update.loading_data,_please_wait') }}">
         <div class="page-loader__inner">
             <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="page-loader__logo" />
             <div class="page-loader__box"></div>
-            <div class="page-loader__text">Loading your experience...</div>
+            <div class="page-loader__text">{{ trans('update.loading_data,_please_wait') }}</div>
         </div>
     </div>
 @endif
