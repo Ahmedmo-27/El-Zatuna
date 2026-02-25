@@ -60,11 +60,9 @@
         function setLoading(isLoading) {
             if (isLoading) {
                 $loading.removeClass('d-none');
-                $input.prop('disabled', true);
                 $addNew.addClass('disabled');
             } else {
                 $loading.addClass('d-none');
-                $input.prop('disabled', false);
                 $addNew.removeClass('disabled');
             }
         }
