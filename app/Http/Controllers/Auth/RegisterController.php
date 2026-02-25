@@ -412,6 +412,16 @@ class RegisterController extends Controller
         
         $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
 
+        // IMPORTANT: Always store verification data in session after successful code verification
+        // This is required for the web 3-step flow (`/register/step/3`) to work correctly.
+        // Previously this was only done for non-JSON requests, which caused users to be
+        // redirected back to step 1 after entering a valid code.
+        session([
+            'registration_step_3_token' => $verificationToken,
+            'registration_verified' => true,
+            'registration_user_id' => $user->id,
+        ]);
+
         if ($request->wantsJson()) {
             return apiResponse2(1, 'email_verified', trans('api.auth.email_verified'), [
                 'verification_token' => $verificationToken,
@@ -419,13 +429,6 @@ class RegisterController extends Controller
                 'message' => 'Email verified successfully. Please complete your profile.'
             ]);
         }
-        
-        // Web request: Store verification token and user info in session
-        session([
-            'registration_step_3_token' => $verificationToken,
-            'registration_verified' => true,
-            'registration_user_id' => $user->id,
-        ]);
 
         // For AJAX requests, return JSON with success
         if ($request->ajax()) {
