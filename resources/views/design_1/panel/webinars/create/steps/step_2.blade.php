@@ -6,29 +6,9 @@
 <div class="bg-white rounded-16 p-16 mt-32">
     <h3 class="font-14 font-weight-bold">{{ trans('update.taxonomy') }}</h3>
 
-    <div class="form-group  mt-24">
+    <div class="form-group mt-24">
         <label class="form-group-label is-required">{{ trans('public.category') }}</label>
-
-        <select name="category_id" id="categories" class="select2 @error('category_id')  is-invalid @enderror">
-            <option {{ (!empty($webinar) and !empty($webinar->category_id)) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>
-            @foreach($categories as $category)
-                @if(!empty($category->subCategories) and $category->subCategories->count() > 0)
-                    <optgroup label="{{  $category->title }}">
-                        @foreach($category->subCategories as $subCategory)
-                            <option value="{{ $subCategory->id }}" {{ ((!empty($webinar) and $webinar->category_id == $subCategory->id) or old('category_id') == $subCategory->id) ? 'selected' : '' }}>{{ $subCategory->title }}</option>
-                        @endforeach
-                    </optgroup>
-                @else
-                    <option value="{{ $category->id }}" {{ ((!empty($webinar) and $webinar->category_id == $category->id) or old('category_id') == $category->id) ? 'selected' : '' }}>{{ $category->title }}</option>
-                @endif
-            @endforeach
-        </select>
-
-        @error('category_id')
-        <div class="invalid-feedback d-block">
-            {{ $message }}
-        </div>
-        @enderror
+        @include('design_1.panel.webinars.create.includes.category_input', ['webinar' => $webinar ?? null])
     </div>
 
     <div class="mt-24 {{ (!empty($webinarCategoryFilters) and count($webinarCategoryFilters)) ? '' : 'd-none' }}" id="categoriesFiltersContainer">

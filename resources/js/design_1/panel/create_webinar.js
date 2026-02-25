@@ -155,6 +155,133 @@
         handleCategoryFilters(path);
     });
 
+    // Panel category input (same UX as occupations: search + add) – single selection, triggers #categories change for filters
+    function initPanelCategoryInput() {
+        const $wrapper = $('.js-panel-category-wrapper');
+        if (!$wrapper.length) return;
+
+        const $input = $wrapper.find('.js-panel-category-input');
+        const $dropdown = $wrapper.find('.js-panel-category-dropdown');
+        const $results = $wrapper.find('.js-panel-category-results');
+        const $addNew = $wrapper.find('.js-panel-category-add-new');
+        const $addNewTerm = $wrapper.find('.js-panel-category-add-new-term');
+        const $tagContainer = $wrapper.find('.js-panel-category-tag');
+        const $hidden = $wrapper.find('.js-panel-category-hidden');
+        const $loading = $wrapper.find('.js-panel-category-loading');
+        const $error = $wrapper.find('.js-panel-category-error');
+
+        let selected = null;
+        let searchTimeout = null;
+        let hideDropdownTimeout = null;
+
+        function setLoading(isLoading) {
+            if (isLoading) $loading.removeClass('d-none');
+            else $loading.addClass('d-none');
+        }
+        function showError(msg) {
+            if (!msg) { $error.addClass('d-none').text(''); return; }
+            $error.removeClass('d-none').text(msg);
+        }
+        function syncHidden() {
+            const id = selected ? selected.id : '';
+            $hidden.val(id);
+            if ($hidden.attr('id') === 'categories') $hidden.trigger('change');
+        }
+        function renderTag() {
+            $tagContainer.empty();
+            if (selected) {
+                const textEsc = $('<div>').text(selected.text).html();
+                const $tag = $('<span class="badge bg-[#F5F9E8] text-[#072923] px-3 py-1 rounded-8 d-inline-flex align-items-center gap-1">' +
+                    '<span>' + textEsc + '</span>' +
+                    '<button type="button" class="js-panel-category-remove btn btn-link p-0 text-[#072923]/60 hover:text-danger" style="font-size: 14px; line-height: 1;" data-id="' + selected.id + '">&times;</button></span>');
+                $tagContainer.append($tag);
+            }
+        }
+        function setSelected(item) {
+            selected = item;
+            renderTag();
+            syncHidden();
+        }
+
+        function doSearch(q) {
+            showError('');
+            if (q && q.length) setLoading(true);
+            $addNewTerm.text(q || 'type above first');
+            $addNew.removeClass('d-none');
+            $.get('/become-instructor/search-subjects', { q: q || '' })
+                .done(function (data) {
+                    const results = data.results || [];
+                    $results.empty();
+                    if (!results.length) {
+                        if (q) $results.append($('<div class="p-2 text-[#072923]/50">No matching categories. Use "Add different subject" below to add "' + $('<div>').text(q).html() + '".</div>'));
+                        else $results.append($('<div class="p-2 text-[#072923]/50">No categories found.</div>'));
+                    } else {
+                        results.forEach(function (item) {
+                            const textEsc = $('<div>').text(item.text).html();
+                            $results.append($('<div class="js-panel-category-row p-2 rounded-8 cursor-pointer hover:bg-[#F5F9E8]/50" style="min-height: 44px; display: flex; align-items: center;" data-id="' + item.id + '">' + textEsc + '</div>'));
+                        });
+                    }
+                })
+                .fail(function () { showError('Could not load categories. Please try again.'); })
+                .always(function () { if (q && q.length) setLoading(false); });
+        }
+        function showDropdown() { $dropdown.removeClass('d-none'); }
+        function hideDropdown() {
+            if (hideDropdownTimeout) clearTimeout(hideDropdownTimeout);
+            hideDropdownTimeout = setTimeout(function () { hideDropdownTimeout = null; $dropdown.addClass('d-none'); }, 280);
+        }
+        function cancelHide() { if (hideDropdownTimeout) { clearTimeout(hideDropdownTimeout); hideDropdownTimeout = null; } }
+
+        $dropdown.on('mousedown touchstart', function (e) { e.preventDefault(); cancelHide(); });
+        $input.on('focus', function () {
+            cancelHide();
+            if ($dropdown.hasClass('d-none')) { showDropdown(); doSearch($.trim($input.val())); }
+        });
+        $input.on('input', function () {
+            const q = $.trim($input.val());
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () { doSearch(q); showDropdown(); }, 200);
+        });
+        $input.on('blur', function () { hideDropdown(); });
+
+        $results.on('click', '.js-panel-category-row', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const text = $(this).text().trim();
+            setSelected({ id: id, text: text });
+            $input.val('');
+            cancelHide();
+            hideDropdown();
+        });
+        $addNew.on('click', function (e) {
+            e.preventDefault();
+            const term = $.trim($input.val()) || $.trim($addNewTerm.text());
+            if (!term || term === 'type above first') return;
+            showError('');
+            setLoading(true);
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
+            $.post('/become-instructor/create-subject', { title: term, _token: token })
+                .done(function (data) { setSelected({ id: data.id, text: data.text || term }); $input.val(''); doSearch(''); showDropdown(); })
+                .fail(function () { showError('Could not create category. Please try again.'); })
+                .always(function () { setLoading(false); });
+        });
+        $tagContainer.on('click', '.js-panel-category-remove', function (e) {
+            e.preventDefault();
+            setSelected(null);
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.js-panel-category-wrapper').length) hideDropdown();
+        });
+
+        try {
+            const initial = $wrapper.data('initial') || [];
+            if (Array.isArray(initial) && initial.length) setSelected(initial[0]);
+        } catch (err) {}
+        syncHidden();
+    }
+    $(document).ready(function () { initPanelCategoryInput(); });
+
 
     // Options
 
