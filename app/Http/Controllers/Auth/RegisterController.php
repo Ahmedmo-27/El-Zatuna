@@ -85,18 +85,40 @@ class RegisterController extends Controller
     {
         // Handle GET requests for specific steps
         if ($step == 3) {
-            // Step 3 requires verification token from session
-            $verificationToken = session('registration_step_3_token');
-            $verified = session('registration_verified');
-            $userId = session('registration_user_id');
+            // Prefer token from URL (more robust across devices), fallback to session
+            $verificationToken = $request->query('token');
+            $verified = $request->query('verified') ? true : false;
+            $registrationUser = null;
 
-            if (!$verificationToken || !$verified || !$userId) {
+            if (!empty($verificationToken)) {
+                $tokenData = RegistrationVerificationToken::verifyToken($verificationToken);
+
+                if (!empty($tokenData) && !empty($tokenData['step']) && (int)$tokenData['step'] === 3) {
+                    if (!empty($tokenData['user_id'])) {
+                        $registrationUser = User::find($tokenData['user_id']);
+                    } elseif (!empty($tokenData['email'])) {
+                        $registrationUser = User::where('email', $tokenData['email'])->first();
+                    }
+                }
+            }
+
+            // Fallback to session-based flow if no valid token found in URL
+            if (empty($verificationToken) || empty($registrationUser)) {
+                $verificationToken = session('registration_step_3_token');
+                $verified = session('registration_verified');
+                $userId = session('registration_user_id');
+
+                if ($verificationToken && $userId) {
+                    $registrationUser = User::find($userId);
+                }
+            }
+
+            if (empty($verificationToken) || empty($registrationUser)) {
                 return redirect('/register/step/1')->withErrors([
                     'email' => trans('auth.please_complete_verification_first')
                 ]);
             }
 
-            $registrationUser = User::find($userId);
             $isTeacher = !empty($registrationUser) && $registrationUser->role_name == Role::$teacher;
             $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
 
@@ -126,7 +148,7 @@ class RegisterController extends Controller
                 'pageDescription' => $pageDescription,
                 'pageRobot' => $pageRobot,
                 'verificationToken' => $verificationToken,
-                'verified' => $verified,
+                'verified' => (bool) $verified,
                 'isTeacher' => $isTeacher,
                 'instructorCategories' => $instructorCategories,
                 'universities' => $universities,
@@ -412,10 +434,7 @@ class RegisterController extends Controller
         
         $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
 
-        // IMPORTANT: Always store verification data in session after successful code verification
-        // This is required for the web 3-step flow (`/register/step/3`) to work correctly.
-        // Previously this was only done for non-JSON requests, which caused users to be
-        // redirected back to step 1 after entering a valid code.
+        // Store verification data in session for backward compatibility
         session([
             'registration_step_3_token' => $verificationToken,
             'registration_verified' => true,
@@ -426,7 +445,8 @@ class RegisterController extends Controller
             return apiResponse2(1, 'email_verified', trans('api.auth.email_verified'), [
                 'verification_token' => $verificationToken,
                 'expires_at' => now()->addMinutes(60)->toIso8601String(),
-                'message' => 'Email verified successfully. Please complete your profile.'
+                'message' => 'Email verified successfully. Please complete your profile.',
+                'redirect_url' => url('/register/step/3') . '?token=' . $verificationToken . '&verified=true',
             ]);
         }
 
@@ -435,12 +455,13 @@ class RegisterController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => trans('auth.email_verified_successfully'),
-                'redirect' => '/register/step/3'
+                'redirect' => '/register/step/3?token=' . $verificationToken . '&verified=true'
             ]);
         }
 
         // Redirect to step 3
-        return redirect('/register/step/3')->with('success', trans('auth.email_verified_successfully'));
+        return redirect('/register/step/3?token=' . $verificationToken . '&verified=true')
+            ->with('success', trans('auth.email_verified_successfully'));
     }
 
     private function stepThree(Request $request)

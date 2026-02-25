@@ -41,7 +41,7 @@ class VerifyRegistrationEmailCode extends Notification implements ShouldQueue
             ->line('# **' . $this->verificationCode . '**')
             ->line('Enter this code on the registration page to verify your email address.')
             ->line('This verification code will expire in **' . $this->expiresAt->diffInMinutes(now()) . ' minutes**.')
-            ->line('If you close the registration page, you can return later to complete Step 3 (profile details) using the button below (as long as your verification session is still active).')
+            ->line('After you enter this code and verify your email, you can return later to complete Step 3 (profile details) using the button below, as long as you use the same browser/device.')
             ->action('Continue registration (Step 3)', url('/register/step/3'))
             ->line('If you did not create an account, no further action is required.')
             ->salutation("Best regards,  \n**The " . $fromName . " Team** 🌟");
