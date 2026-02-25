@@ -213,7 +213,7 @@
                     const results = data.results || [];
                     $results.empty();
                     if (!results.length) {
-                        if (q) $results.append($('<div class="p-2 text-[#072923]/50">No matching categories. Use "Add different subject" below to add "' + $('<div>').text(q).html() + '".</div>'));
+                        if (q) $results.append($('<div class="p-2 text-[#072923]/50">No matching categories. Use "Add new category" below to add "' + $('<div>').text(q).html() + '".</div>'));
                         else $results.append($('<div class="p-2 text-[#072923]/50">No categories found.</div>'));
                     } else {
                         results.forEach(function (item) {

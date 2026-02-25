@@ -17,7 +17,7 @@
     if (!empty($categoryId) && !empty($categoryTitle)) {
         $categoryInitial = [['id' => $categoryId, 'text' => $categoryTitle]];
     }
-    $categoryDescription = $categoryDescription ?? trans('public.choose_category');
+    $categoryDescription = $categoryDescription ?? trans('public.choose_category') . ' Type to search or add a new category if it doesn\'t exist.';
 @endphp
 <div class="form-group js-panel-category-wrapper" data-initial="{{ e(json_encode($categoryInitial)) }}">
     @if(!empty($categoryDescription))
@@ -30,7 +30,7 @@
         <div class="js-panel-category-dropdown position-absolute bg-white border border-[#ECF4B8] rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050; -webkit-tap-highlight-color: transparent;" tabindex="-1">
             <div class="js-panel-category-results p-2"></div>
             <div class="js-panel-category-add-new border-top border-[#ECF4B8] p-2 text-[#072923]/70 cursor-pointer hover:bg-[#F5F9E8]/50" style="font-size: 13px; min-height: 44px; display: flex; align-items: center;">
-                <span class="js-panel-category-add-new-text">Add different subject</span> – <span class="js-panel-category-add-new-term font-weight-medium text-[#C8CD06]"></span>
+                <span class="js-panel-category-add-new-text">Add new category</span>: <span class="js-panel-category-add-new-term font-weight-medium text-[#C8CD06]"></span>
             </div>
         </div>
     </div>
