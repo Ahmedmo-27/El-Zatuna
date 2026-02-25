@@ -181,7 +181,7 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(function () {
                 doSearch(q);
-                if (q) showDropdown();
+                showDropdown();
             }, 200);
         });
 
@@ -198,8 +198,13 @@
             setLoading(true);
             addSelected({ id: id, text: text });
             $input.val('');
-            // keep dropdown open so admin can select multiple subjects
-            setTimeout(function () { setLoading(false); }, 250);
+            cancelHideDropdown();
+            setTimeout(function () {
+                setLoading(false);
+                $input.focus();
+                showDropdown();
+                doSearch('');
+            }, 250);
         }
 
         $results.on('click', '.js-result-row', function (e) {
@@ -223,10 +228,16 @@
             $.post('/become-instructor/create-subject', { title: term, _token: token }, function (data) {
                 addSelected({ id: data.id, text: data.text || term });
                 $input.val('');
+                $input.focus();
+                showDropdown();
+                doSearch('');
             }).fail(function () {
                 addSelected({ id: term, text: term });
                 showError('Subject was added locally, but we could not save it on the server. Please try again later.');
                 $input.val('');
+                $input.focus();
+                showDropdown();
+                doSearch('');
             }).always(function () {
                 setLoading(false);
             });
