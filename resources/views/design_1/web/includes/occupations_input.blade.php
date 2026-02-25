@@ -8,9 +8,9 @@
     <div class="position-relative">
         <input type="text" id="occupationsInput" class="form-control border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06] js-occupations-input" placeholder="Type a subject name..." autocomplete="off">
 
-        <div class="js-occupations-dropdown position-absolute bg-white border border-[#ECF4B8] rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050;">
+        <div class="js-occupations-dropdown position-absolute bg-white border border-[#ECF4B8] rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050; -webkit-tap-highlight-color: transparent;" tabindex="-1">
             <div class="js-occupations-results p-2"></div>
-            <div class="js-occupations-add-new border-top border-[#ECF4B8] p-2 text-[#072923]/70 cursor-pointer hover:bg-[#F5F9E8]/50" style="font-size: 13px;">
+            <div class="js-occupations-add-new border-top border-[#ECF4B8] p-2 text-[#072923]/70 cursor-pointer hover:bg-[#F5F9E8]/50" style="font-size: 13px; min-height: 44px; display: flex; align-items: center;">
                 <span class="js-add-new-text">Add different subject</span> – <span class="js-add-new-term font-weight-medium text-[#C8CD06]"></span>
             </div>
         </div>
