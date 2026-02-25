@@ -112,7 +112,7 @@
 
         function doSearch(q) {
             showError('');
-            setLoading(true);
+            if (q && q.length > 0) setLoading(true);
             $addNewTerm.text(q || 'type above first');
             $addNew.removeClass('d-none');
             $.get('/become-instructor/search-subjects', { q: q || '' })
@@ -139,7 +139,7 @@
                     showError('Could not load subjects. Please check your connection and try again.');
                 })
                 .always(function () {
-                    setLoading(false);
+                    if (q && q.length > 0) setLoading(false);
                 });
         }
 
@@ -162,15 +162,18 @@
             }
         }
 
-        $dropdown.on('mousedown touchstart', function () {
+        $dropdown.on('mousedown touchstart', function (e) {
+            e.preventDefault();
             cancelHideDropdown();
         });
 
         $input.on('focus', function () {
             cancelHideDropdown();
             const q = $.trim($input.val());
-            showDropdown();
-            doSearch(q);
+            if ($dropdown.hasClass('d-none')) {
+                showDropdown();
+                doSearch(q);
+            }
         });
 
         $input.on('input', function () {
