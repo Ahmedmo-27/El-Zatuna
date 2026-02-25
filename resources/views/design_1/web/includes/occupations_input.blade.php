@@ -1,9 +1,12 @@
 {{-- Shared searchable occupations/subjects input: search + "Add different subject", same UX on become-instructor and registration step 3. Expects $occupationsInitial = [['id' => x, 'text' => y], ...] --}}
 @php
     $occupationsInitial = $occupationsInitial ?? [];
+    $occupationsDescription = $occupationsDescription ?? trans('update.occupations_input_hint');
 @endphp
 <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
-    <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
+    @if(!empty($occupationsDescription))
+    <p class="text-sm text-[#072923]/60 mb-2">{{ $occupationsDescription }}</p>
+    @endif
 
     <div class="position-relative">
         <input type="text" id="occupationsInput" class="form-control border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06] js-occupations-input" placeholder="Type a subject name..." autocomplete="off">

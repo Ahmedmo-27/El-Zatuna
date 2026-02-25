@@ -71,6 +71,8 @@ return [
 'delete' => 'Delete',
 'select' => 'Select',
 'submit' => 'Save',
+'occupations_tab_hint' => 'Manage this user\'s subjects or skills. Search and select existing ones or add a new subject.',
+'occupations_input_placeholder_hint' => 'Search or add subjects below.',
 'subject' => 'Title',
 'approved' => 'Approved',
 'reject' => 'Reject',

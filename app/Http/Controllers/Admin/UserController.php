@@ -1127,7 +1127,6 @@ class UserController extends Controller
 
         UserOccupation::where('user_id', $user->id)->delete();
         if (!empty($data['occupations'])) {
-
             foreach ($data['occupations'] as $category_id) {
                 UserOccupation::create([
                     'user_id' => $user->id,
@@ -1136,7 +1135,7 @@ class UserController extends Controller
             }
         }
 
-        return redirect()->back();
+        return redirect()->back()->with('msg', trans('update.saved_successfully'));
     }
 
     public function badgesUpdate(Request $request, $id)

@@ -198,8 +198,7 @@
             setLoading(true);
             addSelected({ id: id, text: text });
             $input.val('');
-            hideDropdown();
-            $input.focus();
+            // keep dropdown open so admin can select multiple subjects
             setTimeout(function () { setLoading(false); }, 250);
         }
 
@@ -224,13 +223,10 @@
             $.post('/become-instructor/create-subject', { title: term, _token: token }, function (data) {
                 addSelected({ id: data.id, text: data.text || term });
                 $input.val('');
-                hideDropdown();
-                $input.focus();
             }).fail(function () {
                 addSelected({ id: term, text: term });
                 showError('Subject was added locally, but we could not save it on the server. Please try again later.');
                 $input.val('');
-                hideDropdown();
             }).always(function () {
                 setLoading(false);
             });
@@ -256,6 +252,13 @@
                 return;
             }
             $input.focus();
+        });
+
+        // Close when clicking anywhere outside the occupations component
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.js-occupations-wrapper').length) {
+                hideDropdown();
+            }
         });
 
         var $tabPane = $wrapper.closest('.tab-pane');

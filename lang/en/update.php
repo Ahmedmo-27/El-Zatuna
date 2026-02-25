@@ -4212,6 +4212,7 @@ return [
 'delete_account_signature_img_msg' => 'Your signature image will be deleted.',
 'average_rating' => 'Average Rating',
 'select_your_occupations' => 'Select Your Occupations',
+'occupations_input_hint' => 'Select the subjects or topics you want to teach. Type to search existing ones.',
 'tips_and_policies' => 'Tips & Policies',
 'mark_as_read' => 'Mark as Read',
 'become_instructor_organization' => 'Become an Instructor or Organization',
