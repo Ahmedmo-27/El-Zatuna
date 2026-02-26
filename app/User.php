@@ -178,7 +178,7 @@ class User extends Authenticatable
         if (!empty($this->avatar)) {
             $avatarUrl = $this->resolveProfileAssetUrl($this->avatar);
         } else {
-            $avatarUrl = getDefaultAvatarPath($this);
+            $avatarUrl = getDefaultAvatarPath($this, (int) $size);
         }
 
         return $avatarUrl;
