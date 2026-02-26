@@ -235,7 +235,7 @@
                     <a href="/become-instructor" class="mt-10 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">Become instructor</a>
                 </div>
                 <div class="h-[260px] md:h-[320px] lg:h-[360px] flex items-center justify-center">
-                    <img src="/assets/design_1/img/no-result/profile_instructors.svg" alt="Instructors" class="w-full max-w-[520px] md:max-w-[620px] lg:max-w-[700px] h-auto" />
+                    <img src="/pfpfallback.png" alt="Instructors" class="w-full max-w-[520px] md:max-w-[620px] lg:max-w-[700px] h-auto" />
                 </div>
             </div>
         </section>
@@ -323,7 +323,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                 @foreach(($instructors ?? collect()) as $instructor)
                     <a href="/users/{{ $instructor->username ?? $instructor->id }}/profile" class="flex flex-col items-center justify-center gap-4 rounded-[20px] bg-[#072923] p-6 aspect-square w-full">
-                        <img loading="lazy" src="{{ $instructor->avatar ?? $instructor->getAvatar(112) ?? 'https://placehold.co/140x140/FAFFE0/072923' }}" alt="{{ $instructor->full_name }}" class="h-28 w-28 rounded-full object-cover bg-[#FAFFE0]" />
+                        <img loading="lazy" src="{{ $instructor->avatar ?? $instructor->getAvatar(112) ?? '/assets/admin/img/avatar/avatar-4.png' }}" alt="{{ $instructor->full_name }}" class="h-28 w-28 rounded-full object-cover bg-[#FAFFE0]" onerror="this.onerror=null;this.src='/assets/admin/img/avatar/avatar-4.png';" />
                         <div class="text-[#FAFFE0] text-center">
                             <div class="font-semibold text-lg">{{ $instructor->full_name }}</div>
                             <div class="text-sm text-[#FAFFE0]/70">{{ $instructor->headline ?? 'Instructor' }}</div>

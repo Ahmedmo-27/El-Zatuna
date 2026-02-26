@@ -41,7 +41,7 @@
         </div>
     @else
         <div class="d-flex-center h-100 p-24">
-            <img src="/assets/design_1/img/no-result/students.svg" alt="Students" class="img-fluid" style="max-height: 360px;">
+            <img src="/pfpfallback.png" alt="Students" class="img-fluid" style="max-height: 360px;">
         </div>
     @endif
 </div>

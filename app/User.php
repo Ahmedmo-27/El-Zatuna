@@ -178,13 +178,7 @@ class User extends Authenticatable
         if (!empty($this->avatar)) {
             $avatarUrl = $this->resolveProfileAssetUrl($this->avatar);
         } else {
-            $settings = getOthersPersonalizationSettings();
-
-            if (!empty($settings) and !empty($settings['user_avatar_style']) and $settings['user_avatar_style'] == "ui_avatar") {
-                $avatarUrl = "/getDefaultAvatar?item={$this->id}&name={$this->full_name}&size=$size";
-            } else {
-                $avatarUrl = getDefaultAvatarPath();
-            }
+            $avatarUrl = getDefaultAvatarPath($this);
         }
 
         return $avatarUrl;

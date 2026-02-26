@@ -2445,14 +2445,22 @@ function customSortArrayNumAndTextIndex($array)
     return array_merge($numericKeys, $textualKeys);
 }
 
-function getDefaultAvatarPath()
+function getDefaultAvatarPath($user = null)
 {
+    if ($user instanceof \App\User) {
+        if ($user->isTeacher()) {
+            return '/assets/admin/img/avatar/avatar-2.png';
+        }
+
+        return '/pfpfallback.png';
+    }
+
     $settings = getOthersPersonalizationSettings();
 
     if (!empty($settings) and !empty($settings['default_user_avatar'])) {
         $avatarUrl = $settings['default_user_avatar'];
     } else {
-        $avatarUrl = "/assets/default/img/default/avatar-1.png";
+        $avatarUrl = "/pfpfallback.png";
     }
 
     return $avatarUrl;
