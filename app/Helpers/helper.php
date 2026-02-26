@@ -2445,14 +2445,28 @@ function customSortArrayNumAndTextIndex($array)
     return array_merge($numericKeys, $textualKeys);
 }
 
-function getDefaultAvatarPath()
+function getDefaultAvatarPath(?\App\User $user = null, int $size = 40)
 {
+    if ($user instanceof \App\User) {
+        if ($user->isTeacher()) {
+            return '/assets/admin/img/avatar/avatar-4.png';
+        }
+    }
+
     $settings = getOthersPersonalizationSettings();
+
+    if (!empty($settings) and !empty($settings['user_avatar_style']) and $settings['user_avatar_style'] == 'ui_avatar') {
+        if ($user instanceof \App\User) {
+            return "/getDefaultAvatar?item={$user->id}&name={$user->full_name}&size={$size}";
+        }
+
+        return "/getDefaultAvatar?name=User&size={$size}";
+    }
 
     if (!empty($settings) and !empty($settings['default_user_avatar'])) {
         $avatarUrl = $settings['default_user_avatar'];
     } else {
-        $avatarUrl = "/assets/default/img/default/avatar-1.png";
+        $avatarUrl = "/pfpfallback.png";
     }
 
     return $avatarUrl;
