@@ -769,6 +769,7 @@
         });
 
         const uploadFiles = $form.find('.js-ajax-upload-file-input');
+        let totalUploadBytes = 0;
        
         if (uploadFiles.length) {
             for (const uploadFileEl of uploadFiles) {
@@ -778,6 +779,9 @@
                 if (uploadFile.length && file) {
                     const name = uploadFile.attr('data-upload-name') || uploadFile.attr('name') || 'upload_file';
                     formData.append(name, file);
+                    if (typeof file.size === 'number') {
+                        totalUploadBytes += file.size;
+                    }
                 }
             }
         }
@@ -814,18 +818,28 @@
                         .attr('aria-valuenow', 0);
 
                     xhr.upload.addEventListener('progress', function (e) {
-                        if (e.lengthComputable) {
-                            let percent = Math.round((e.loaded / e.total) * 100);
+                        let percent = 0;
 
-                            // Keep a little room for server-side processing; complete to 100% on success
-                            if (percent > 99) {
-                                percent = 99;
-                            }
-
-                            $progressBar
-                                .css('width', percent + '%')
-                                .attr('aria-valuenow', percent);
+                        if (e.lengthComputable && e.total > 0) {
+                            percent = Math.round((e.loaded / e.total) * 100);
+                        } else if (totalUploadBytes > 0) {
+                            // Fallback: use known file size to approximate progress
+                            percent = Math.round((e.loaded / totalUploadBytes) * 100);
+                        } else {
+                            // As a last resort, show a minimal indeterminate-style bump
+                            percent = parseInt($progressBar.attr('aria-valuenow') || '0', 10) + 1;
                         }
+
+                        // Keep a little room for server-side processing; complete to 100% on success
+                        if (percent > 99) {
+                            percent = 99;
+                        } else if (percent < 1) {
+                            percent = 1;
+                        }
+
+                        $progressBar
+                            .css('width', percent + '%')
+                            .attr('aria-valuenow', percent);
                     }, false);
                 }
 
