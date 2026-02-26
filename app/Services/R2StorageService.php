@@ -279,11 +279,12 @@ class R2StorageService
             
             $contentType = $mimeType ?: 'application/octet-stream';
             
+            // For browser-based presigned uploads, avoid signing ACL headers.
+            // The bucket's public access / worker proxy controls visibility.
             $command = $s3Client->getCommand('PutObject', [
                 'Bucket' => config('filesystems.disks.r2.bucket'),
                 'Key' => $fullPath,
                 'ContentType' => $contentType,
-                'ACL' => 'public-read',
             ]);
             
             // Default expiry 1 hour is more than enough for starting the upload
