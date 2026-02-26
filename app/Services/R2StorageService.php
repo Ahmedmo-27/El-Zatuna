@@ -237,6 +237,95 @@ class R2StorageService
     }
     
     /**
+     * Create a pre-signed URL for direct browser upload to R2.
+     * 
+     * This is used to bypass App Platform request timeouts for large files by
+     * letting the browser upload straight to R2, then storing only the path
+     * in the database.
+     * 
+     * @param int $courseId
+     * @param int|null $sectionId
+     * @param string $originalFileName
+     * @param int $fileSizeBytes
+     * @param string|null $mimeType
+     * @return array ['status' => bool, 'path' => string|null, 'upload_url' => string|null, 'headers' => array, 'error' => string|null]
+     */
+    public function createPresignedUploadUrl(int $courseId, ?int $sectionId, string $originalFileName, int $fileSizeBytes, ?string $mimeType = null): array
+    {
+        try {
+            $path = $this->buildPath($courseId, $sectionId, 'video');
+            
+            $fileName = time() . '_' . $originalFileName;
+            $fullPath = $path . '/' . $fileName;
+            
+            $sslVerify = $this->getSslCertificatePath();
+            $s3Client = new S3Client([
+                'credentials' => [
+                    'key' => config('filesystems.disks.r2.key'),
+                    'secret' => config('filesystems.disks.r2.secret'),
+                ],
+                'region' => config('filesystems.disks.r2.region', 'auto'),
+                'version' => 'latest',
+                'bucket_endpoint' => false,
+                'use_path_style_endpoint' => true,
+                'endpoint' => config('filesystems.disks.r2.endpoint'),
+                'verify' => $sslVerify,
+                'http' => [
+                    'verify' => $sslVerify,
+                    'timeout' => 0,
+                    'connect_timeout' => 60,
+                ],
+            ]);
+            
+            $contentType = $mimeType ?: 'application/octet-stream';
+            
+            $command = $s3Client->getCommand('PutObject', [
+                'Bucket' => config('filesystems.disks.r2.bucket'),
+                'Key' => $fullPath,
+                'ContentType' => $contentType,
+                'ACL' => 'public-read',
+            ]);
+            
+            // Default expiry 1 hour is more than enough for starting the upload
+            $request = $s3Client->createPresignedRequest($command, '+1 hour');
+            $uploadUrl = (string) $request->getUri();
+            
+            \Log::info('R2 Presigned Upload URL generated', [
+                'full_path' => $fullPath,
+                'course_id' => $courseId,
+                'section_id' => $sectionId,
+                'file_size_bytes' => $fileSizeBytes,
+                'upload_url_host' => parse_url($uploadUrl, PHP_URL_HOST),
+            ]);
+            
+            return [
+                'status' => true,
+                'path' => $fullPath,
+                'upload_url' => $uploadUrl,
+                'headers' => [
+                    'Content-Type' => $contentType,
+                ],
+                'error' => null,
+            ];
+        } catch (Exception $e) {
+            \Log::error('R2 Presigned Upload URL error: ' . $e->getMessage(), [
+                'course_id' => $courseId,
+                'section_id' => $sectionId,
+                'file_name' => $originalFileName,
+                'file_size_bytes' => $fileSizeBytes,
+            ]);
+            
+            return [
+                'status' => false,
+                'path' => null,
+                'upload_url' => null,
+                'headers' => [],
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+    
+    /**
      * Build the storage path according to the directory structure
      * 
      * Path structure: Courses/{course_id}/{section_id}/

@@ -199,6 +199,8 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::post('/store', 'FileController@store');
         Route::post('/{id}/update', 'FileController@update');
         Route::get('/{id}/delete', 'FileController@destroy');
+        // Direct-to-R2 uploads: generate pre-signed URL for large course files
+        Route::post('/r2/presign', 'FileController@presignR2Upload');
     });
 
     Route::group(['prefix' => 'assignments'], function () {

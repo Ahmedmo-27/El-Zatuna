@@ -750,6 +750,16 @@
                     return;
                 }
                 $form.find('.js-file-upload-input .invalid-feedback').removeClass('d-block').text('');
+
+                // For new course files stored in R2, upload the file directly to R2 from the browser first,
+                // then submit only the metadata + R2 path to Laravel. This bypasses App Platform timeouts.
+                const action = $form.attr('data-action') || '';
+                const isPanelFileStore = action.indexOf('/panel/files/store') !== -1;
+
+                if (isPanelFileStore) {
+                    handleDirectR2UploadAndSubmit($form, $this, storage);
+                    return;
+                }
             }
         }
 
@@ -759,6 +769,190 @@
     // =========
     // Files
     // ======
+
+    function handleDirectR2UploadAndSubmit($form, $button, storage) {
+        try {
+            const $fileInput = $form.find('.js-ajax-upload-file-input');
+            const file = $fileInput.length && $fileInput[0].files && $fileInput[0].files[0] ? $fileInput[0].files[0] : null;
+
+            if (!file) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'File required', 'Please choose a file to upload before saving.');
+                }
+                return;
+            }
+
+            const maxSizeBytes = 2 * 1024 * 1024 * 1024; // 2GB
+            if (file.size > maxSizeBytes) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'File too large', 'Maximum supported size is 2GB.');
+                }
+                return;
+            }
+
+            const webinarId = $form.find('input[name="ajax[new][webinar_id]"]').val();
+            const chapterId = $form.find('input[name="ajax[new][chapter_id]"]').val() || null;
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
+
+            if (!webinarId) {
+                if (typeof showToast === 'function') {
+                    showToast('error', 'Missing course', 'Course ID is missing. Please refresh the page and try again.');
+                }
+                return;
+            }
+
+            const $progressContainer = $form.find('.progress').first();
+            const $progressBar = $progressContainer.length ? $progressContainer.find('.progress-bar') : null;
+
+            $button.addClass('loadingbar').prop('disabled', true);
+
+            // Step 1: ask Laravel for a pre-signed R2 upload URL
+            $.ajax({
+                url: '/panel/files/r2/presign',
+                type: 'POST',
+                data: {
+                    webinar_id: webinarId,
+                    chapter_id: chapterId,
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_mime: file.type || 'application/octet-stream',
+                    _token: token,
+                },
+                success: function (res) {
+                    if (!res || res.code !== 200 || !res.upload_url || !res.path) {
+                        $button.removeClass('loadingbar').prop('disabled', false);
+                        if (typeof showToast === 'function') {
+                            showToast('error', 'Upload error', res && res.msg ? res.msg : 'Could not prepare upload. Please try again.');
+                        }
+                        return;
+                    }
+
+                    const uploadUrl = res.upload_url;
+                    const r2Path = res.path;
+                    const headers = res.headers || {};
+
+                    if ($progressContainer.length && $progressBar && $progressBar.length) {
+                        $progressContainer.removeClass('d-none');
+                        $progressBar
+                            .css('width', '0%')
+                            .attr('aria-valuenow', 0)
+                            .removeClass('bg-danger')
+                            .addClass('bg-primary');
+                    }
+
+                    // Step 2: upload directly to R2 using XHR so we can track progress
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('PUT', uploadUrl, true);
+
+                    Object.keys(headers).forEach(function (key) {
+                        if (headers[key]) {
+                            xhr.setRequestHeader(key, headers[key]);
+                        }
+                    });
+
+                    xhr.upload.onprogress = function (e) {
+                        if ($progressContainer.length && $progressBar && $progressBar.length) {
+                            let percent = 0;
+                            if (e.lengthComputable && e.total > 0) {
+                                percent = Math.round((e.loaded / e.total) * 100);
+                            } else {
+                                percent = parseInt($progressBar.attr('aria-valuenow') || '0', 10) + 1;
+                            }
+                            if (percent > 99) percent = 99;
+                            if (percent < 1) percent = 1;
+                            $progressBar.css('width', percent + '%').attr('aria-valuenow', percent);
+                        }
+                    };
+
+                    xhr.onerror = function () {
+                        $button.removeClass('loadingbar').prop('disabled', false);
+                        if ($progressContainer.length && $progressBar && $progressBar.length) {
+                            $progressBar
+                                .addClass('bg-danger')
+                                .removeClass('bg-primary')
+                                .css('width', '100%')
+                                .attr('aria-valuenow', 100);
+                        }
+                        if (typeof showToast === 'function') {
+                            showToast('error', 'Upload error', 'Could not upload file to storage. Please check your connection and try again.');
+                        }
+                    };
+
+                    xhr.onload = function () {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            if ($progressContainer.length && $progressBar && $progressBar.length) {
+                                $progressBar.css('width', '100%').attr('aria-valuenow', 100);
+                            }
+
+                            // Step 3: clear the file input so Laravel doesn't receive the binary
+                            try {
+                                const emptyDataTransfer = new DataTransfer();
+                                $fileInput[0].files = emptyDataTransfer.files;
+                            } catch (e) {}
+
+                            // Step 4: add hidden fields so Laravel knows the R2 path and size
+                            $form.find('input[name="ajax[new][r2_path]"]').remove();
+                            $form.find('input[name="ajax[new][r2_uploaded]"]').remove();
+                            $form.find('input[name="ajax[new][r2_size_bytes]"]').remove();
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'ajax[new][r2_path]',
+                                value: r2Path,
+                            }).appendTo($form);
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'ajax[new][r2_uploaded]',
+                                value: '1',
+                            }).appendTo($form);
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'ajax[new][r2_size_bytes]',
+                                value: file.size,
+                            }).appendTo($form);
+
+                            // Step 5: submit metadata to Laravel as usual
+                            handleSendRequestItemForm($form, $button);
+                        } else {
+                            $button.removeClass('loadingbar').prop('disabled', false);
+                            if ($progressContainer.length && $progressBar && $progressBar.length) {
+                                $progressBar
+                                    .addClass('bg-danger')
+                                    .removeClass('bg-primary')
+                                    .css('width', '100%')
+                                    .attr('aria-valuenow', 100);
+                            }
+                            if (typeof showToast === 'function') {
+                                showToast('error', 'Upload error', 'Storage returned an error (' + xhr.status + '). Please try again.');
+                            }
+                        }
+                    };
+
+                    xhr.send(file);
+                },
+                error: function (err) {
+                    $button.removeClass('loadingbar').prop('disabled', false);
+                    if (typeof showToast === 'function') {
+                        let msg = 'Could not prepare upload. Please try again.';
+                        if (err && err.responseJSON && err.responseJSON.msg) {
+                            msg = err.responseJSON.msg;
+                        }
+                        showToast('error', 'Upload error', msg);
+                    }
+                }
+            });
+        } catch (error) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Direct R2 upload failed:', error);
+            }
+            if (typeof showToast === 'function') {
+                showToast('error', 'Upload error', 'Unexpected error while preparing upload. Please try again.');
+            }
+            $button.removeClass('loadingbar').prop('disabled', false);
+        }
+    }
 
     function handleShowFileInputsBySource($form, source, fileType) {
         // Default to 'upload' (stored as R2 in backend) if source not provided
