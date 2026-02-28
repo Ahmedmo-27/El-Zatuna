@@ -172,6 +172,7 @@ class RegisterController extends Controller
             return $this->stepOne($request);
 
         } elseif ($step == 2) {
+            // Step 2 (email verification) temporarily disabled - SMTP issue. Uncomment stepTwo body when fixed.
             return $this->stepTwo($request);
 
         } elseif ($step == 3) {
@@ -313,7 +314,8 @@ class RegisterController extends Controller
             ]);
         }
 
-        // Create user and send email verification
+        // STEP 2 BYPASS: Create user and go directly to step 3 (email verification disabled - SMTP issue). Restore block below when SMTP is fixed.
+        // Generate step 3 token and mark email as verified so account can activate after step 3
         $referralSettings = getReferralSettings();
         $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
@@ -328,54 +330,75 @@ class RegisterController extends Controller
             'created_at' => time()
         ]);
 
-        // Generate verification code for step 2 (email verification)
+        // Mark email as verified since we're skipping step 2 (restore when SMTP is fixed)
+        $user->update(['email_verified_at' => time()]);
+
+        // Generate token for step 3 (profile completion)
         $tokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
-            'step' => 2,
+            'step' => 3,
         ];
-        
-        $expiresAt = now()->addMinutes(60);
-        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60); // 60 minutes
 
-        // Send verification email with code
-        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+        $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
 
         // Return view for web requests, JSON for API
         if ($request->wantsJson()) {
-            return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
-                'message' => 'Please check your email for a 6-digit verification code.',
-                'expires_at' => $expiresAt->toIso8601String(),
+            return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
+                'verification_token' => $verificationToken,
+                'expires_at' => now()->addMinutes(60)->toIso8601String(),
             ]);
         }
 
-        // Web request - show step 2 view
+        // Web request - show step 3 view with token (skip step 2)
         $seoSettings = getSeoMetas('register');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
         $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
         $pageRobot = getPageRobot('register');
+        $referralSettings = getReferralSettings();
+        $universities = University::query()->with('faculties:id,name,university_id')->orderBy('name')->get();
+        $referralCode = Cookie::get('referral_code');
 
-        $data = [
+        $facultiesByUniversity = [];
+        foreach ($universities as $university) {
+            $facultiesByUniversity[$university->id] = $university->faculties->map(function($faculty) {
+                return [
+                    'id' => $faculty->id,
+                    'name' => $faculty->name,
+                ];
+            })->sortBy('name')->values()->toArray();
+        }
+
+        $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
+        $authTemplate = getThemeAuthenticationPagesStyleName();
+        return view("design_1.web.auth.{$authTemplate}.register.step3", [
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
-            'email' => $user->email,
-        ];
-
-        $authTemplate = getThemeAuthenticationPagesStyleName();
-        return view("design_1.web.auth.{$authTemplate}.register.step2", $data);
+            'verificationToken' => $verificationToken,
+            'verified' => false,
+            'isTeacher' => ($roleName == Role::$teacher),
+            'instructorCategories' => $instructorCategories,
+            'universities' => $universities,
+            'faculties' => collect(),
+            'facultiesByUniversity' => $facultiesByUniversity,
+            'referralSettings' => $referralSettings,
+            'referralCode' => $referralCode,
+        ]);
     }
 
+    /*
+    // ---------- STEP 2 (email verification) - COMMENTED OUT due to SMTP issue on droplet. Uncomment when SMTP is fixed. ----------
     private function stepTwo(Request $request)
     {
         $data = $request->all();
-        
+
         // Step 2: Verify email with verification code
         $rules = [
             'email' => 'required|email|exists:users,email',
             'verification_code' => 'required|string|size:6',
         ];
-        
+
         // Use different validation for web vs API
         if ($request->wantsJson()) {
             validateParam($data, $rules);
@@ -385,7 +408,7 @@ class RegisterController extends Controller
 
         // Verify the code
         $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
-        
+
         if (!$tokenData) {
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -401,7 +424,7 @@ class RegisterController extends Controller
 
         // Find user
         $user = User::where('email', $data['email'])->first();
-        
+
         if (!$user) {
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -431,7 +454,7 @@ class RegisterController extends Controller
             'email' => $user->email,
             'step' => 3,
         ];
-        
+
         $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
 
         // Store verification data in session for backward compatibility
@@ -463,6 +486,71 @@ class RegisterController extends Controller
         return redirect('/register/step/3?token=' . $verificationToken . '&verified=true')
             ->with('success', trans('auth.email_verified_successfully'));
     }
+    */
+
+    private function stepTwo(Request $request)
+    {
+        // Step 2 (email verification) temporarily disabled - SMTP issue on droplet. Uncomment the block above when SMTP is fixed.
+        if ($request->wantsJson()) {
+            return apiResponse2(0, 'step_2_disabled', 'Email verification (step 2) is temporarily disabled. Please complete registration from step 1.');
+        }
+        return redirect('/register/step/1')->withErrors(['email' => trans('auth.please_complete_verification_first')]);
+    }
+
+    /*
+    // ---------- ORIGINAL STEP 1 BLOCK THAT SHOWED STEP 2 (uncomment when SMTP is fixed and remove the STEP 2 BYPASS block in stepOne) ----------
+    // Create user and send email verification
+    $referralSettings = getReferralSettings();
+    $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
+
+    $user = User::create([
+        'role_name' => $roleName,
+        'role_id' => $roleId,
+        'full_name' => $data['full_name'],
+        'email' => $data['email'],
+        'status' => User::$pending,
+        'password' => Hash::make(Str::random(32)), // Temporary password, will be set in step 3
+        'affiliate' => $usersAffiliateStatus,
+        'created_at' => time()
+    ]);
+
+    // Generate verification code for step 2 (email verification)
+    $tokenData = [
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'step' => 2,
+    ];
+
+    $expiresAt = now()->addMinutes(60);
+    $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60); // 60 minutes
+
+    // Send verification email with code
+    $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+
+    // Return view for web requests, JSON for API
+    if ($request->wantsJson()) {
+        return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
+            'message' => 'Please check your email for a 6-digit verification code.',
+            'expires_at' => $expiresAt->toIso8601String(),
+        ]);
+    }
+
+    // Web request - show step 2 view
+    $seoSettings = getSeoMetas('register');
+    $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
+    $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
+    $pageRobot = getPageRobot('register');
+
+    $data = [
+        'pageTitle' => $pageTitle,
+        'pageDescription' => $pageDescription,
+        'pageRobot' => $pageRobot,
+        'email' => $user->email,
+    ];
+
+    $authTemplate = getThemeAuthenticationPagesStyleName();
+    return view("design_1.web.auth.{$authTemplate}.register.step2", $data);
+    */
 
     private function stepThree(Request $request)
     {
@@ -505,6 +593,11 @@ class RegisterController extends Controller
                 return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
             }
             return back()->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
+        }
+
+        // When step 2 was skipped (SMTP bypass), ensure email is marked verified on step 3 completion
+        if (empty($user->email_verified_at)) {
+            $user->update(['email_verified_at' => time()]);
         }
 
         $isTeacher = $user->role_name == Role::$teacher;
