@@ -359,6 +359,7 @@ class RegisterController extends Controller
         $user->update([
             'enable_registration_bonus' => $enableRegistrationBonus,
             'registration_bonus_amount' => $registrationBonusAmount,
+            'status' => User::$active, // Ensure status stays active
         ]);
 
         // Rewards

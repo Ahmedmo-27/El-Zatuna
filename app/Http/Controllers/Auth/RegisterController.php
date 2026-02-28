@@ -350,46 +350,13 @@ class RegisterController extends Controller
             ]);
         }
 
-        // Web request - show step 3 view with token (skip step 2)
-        $seoSettings = getSeoMetas('register');
-        $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
-        $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
-        $pageRobot = getPageRobot('register');
-        $referralSettings = getReferralSettings();
-        $universities = University::query()->with('faculties:id,name,university_id')->orderBy('name')->get();
-        $referralCode = Cookie::get('referral_code');
-
-        $facultiesByUniversity = [];
-        foreach ($universities as $university) {
-            $facultiesByUniversity[$university->id] = $university->faculties->map(function($faculty) {
-                return [
-                    'id' => $faculty->id,
-                    'name' => $faculty->name,
-                ];
-            })->sortBy('name')->values()->toArray();
-        }
-
-        $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
-        $authTemplate = getThemeAuthenticationPagesStyleName();
-        return view("design_1.web.auth.{$authTemplate}.register.step3", [
-            'pageTitle' => $pageTitle,
-            'pageDescription' => $pageDescription,
-            'pageRobot' => $pageRobot,
-            'verificationToken' => $verificationToken,
-            'verified' => false,
-            'isTeacher' => ($roleName == Role::$teacher),
-            'instructorCategories' => $instructorCategories,
-            'universities' => $universities,
-            'faculties' => collect(),
-            'facultiesByUniversity' => $facultiesByUniversity,
-            'referralSettings' => $referralSettings,
-            'referralCode' => $referralCode,
-        ]);
+        // Web request - redirect to step 3 with token so browser URL is /register/step/3 (prevents back() from sending user to step 1)
+        return redirect('/register/step/3?token=' . $verificationToken . '&verified=0');
     }
 
     /*
-    // ---------- STEP 2 (email verification) - COMMENTED OUT due to SMTP issue on droplet. Uncomment when SMTP is fixed. ----------
-    private function stepTwo(Request $request)
+    // ---------- STEP 2 (email verification) - COMMENTED OUT due to SMTP issue on droplet. Uncomment when SMTP is fixed and use this body instead of the redirect below. ----------
+    private function stepTwoOriginal(Request $request)
     {
         $data = $request->all();
 
@@ -560,24 +527,24 @@ class RegisterController extends Controller
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'invalid_token', 'Verification token is required');
             }
-            return back()->withErrors(['verification_token' => 'Verification token is required'])->withInput();
+            return redirect('/register/step/3')->withErrors(['verification_token' => 'Verification token is required'])->withInput();
         }
 
         // Verify the token
         $tokenData = RegistrationVerificationToken::verifyToken($data['verification_token']);
-        
+
         if (!$tokenData) {
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'invalid_token', 'Verification token is invalid or expired');
             }
-            return back()->withErrors(['verification_token' => 'Verification token is invalid or expired'])->withInput();
+            return redirect('/register/step/3?token=' . urlencode($data['verification_token']))->withErrors(['verification_token' => 'Verification token is invalid or expired'])->withInput();
         }
 
         if ($tokenData['step'] !== 3) {
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'invalid_step', 'This token is not valid for step 3');
             }
-            return back()->withErrors(['verification_token' => 'This token is not valid for step 3'])->withInput();
+            return redirect('/register/step/3?token=' . urlencode($data['verification_token']))->withErrors(['verification_token' => 'This token is not valid for step 3'])->withInput();
         }
 
         // Find user by user_id or email from token
@@ -592,7 +559,7 @@ class RegisterController extends Controller
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
             }
-            return back()->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
+            return redirect('/register/step/3?token=' . urlencode($data['verification_token'] ?? ''))->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
         }
 
         // When step 2 was skipped (SMTP bypass), ensure email is marked verified on step 3 completion
@@ -625,7 +592,11 @@ class RegisterController extends Controller
         if ($request->wantsJson()) {
             validateParam($data, $rules);
         } else {
-            $request->validate($rules);
+            $validator = Validator::make($data, $rules);
+            if ($validator->fails()) {
+                $tokenParam = !empty($data['verification_token']) ? '?token=' . urlencode($data['verification_token']) : '';
+                return redirect('/register/step/3' . $tokenParam)->withErrors($validator)->withInput();
+            }
         }
 
         // Update user profile
@@ -668,10 +639,11 @@ class RegisterController extends Controller
         if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
             $enableRegistrationBonus = true;
             $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-            
+
             $user->update([
                 'enable_registration_bonus' => $enableRegistrationBonus,
                 'registration_bonus_amount' => $registrationBonusAmount,
+                'status' => User::$active, // Ensure status stays active (in case of any overwrite)
             ]);
         }
 
@@ -683,7 +655,7 @@ class RegisterController extends Controller
         $registrationBonusAccounting = new RegistrationBonusAccounting();
         $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
 
-        // Trigger registered event
+        // Trigger registered event (listeners may send verification email; they do not set user status)
         event(new Registered($user));
 
         // Send notification
@@ -709,6 +681,12 @@ class RegisterController extends Controller
         }
 
         // Web request - login user and show welcome page
+        // Step 2 is bypassed (SMTP): step 2 never set status; only step 3 does. Refresh from DB in case
+        // any listener/code modified the user, then ensure status is active before login.
+        $user->refresh();
+        if ($user->status !== User::$active) {
+            $user->update(['status' => User::$active]);
+        }
         $this->guard()->login($user);
 
         $seoSettings = getSeoMetas('register');
