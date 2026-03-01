@@ -87,7 +87,7 @@ class ConvertCourseVideoToMp4 extends Command
                 '-movflags', '+faststart',
                 '-y',
                 $tempOutput,
-            ], timeout: 3600);
+            ], ['timeout' => 3600]);
 
             if (!$result->successful()) {
                 $this->error('FFmpeg failed.');
