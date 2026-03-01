@@ -76,7 +76,7 @@ class ConvertCourseVideoToMp4 extends Command
             $this->info('Downloaded. Converting with FFmpeg...');
 
             // FFmpeg: H.264 + AAC, faststart for web, yuv420p for compatibility
-            $result = Process::run([
+            $result = Process::timeout(3600)->run([
                 'ffmpeg',
                 '-i', $tempInput,
                 '-c:v', 'libx264',
@@ -87,7 +87,7 @@ class ConvertCourseVideoToMp4 extends Command
                 '-movflags', '+faststart',
                 '-y',
                 $tempOutput,
-            ], ['timeout' => 3600]);
+            ]);
 
             if (!$result->successful()) {
                 $this->error('FFmpeg failed.');
