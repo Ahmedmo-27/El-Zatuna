@@ -557,7 +557,9 @@ class WebinarController extends Controller
                         // R2 course videos (Courses/...) use Cloudflare Worker when STREAM_WORKER_BASE is set
                         $r2Path = $this->extractR2Path($file->file);
                         if (!empty($r2Path)) {
-                            $token = $this->makeStreamToken($r2Path, $file->id);
+                            // Prefer MP4 for playback when it exists (fixes black screen for MKV/AVI/WMV)
+                            $playPath = \App\Helpers\R2Helper::getPreferredPlaybackPath($r2Path);
+                            $token = $this->makeStreamToken($playPath, $file->id);
                             $workerBase = config('services.stream.worker_base');
                             if (!empty($workerBase)) {
                                 $path = rtrim($workerBase, '/') . '/v?t=' . urlencode($token);
@@ -572,11 +574,18 @@ class WebinarController extends Controller
                         }
                     }
 
+                    // Use MIME from actual playback path (may be MP4 when original was MKV)
+                    $playbackPath = $file->storage === 'r2' && $file->isVideo()
+                        ? \App\Helpers\R2Helper::getPreferredPlaybackPath($this->extractR2Path($file->file) ?? '')
+                        : $file->file;
+                    $mimeType = $file->isVideo() ? \App\Helpers\R2Helper::getMimeTypeFromPath($playbackPath ?: $file->file) : null;
+
                     return response()->json([
                         'code' => 200,
                         'storage' => $file->storage,
                         'path' => $path,
-                        'storageService' => $file->storage
+                        'storageService' => $file->storage,
+                        'mime_type' => $mimeType,
                     ], 200);
                 }
             }
@@ -706,6 +715,9 @@ class WebinarController extends Controller
                 ]);
                 abort(404, 'R2 video file path not found');
             }
+
+            // Prefer MP4 for playback when it exists (fixes black screen for MKV/AVI/WMV)
+            $r2Path = \App\Helpers\R2Helper::getPreferredPlaybackPath($r2Path);
 
             // Check if file exists in R2
             $r2Disk = Storage::disk('r2');

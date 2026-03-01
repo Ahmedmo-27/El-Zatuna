@@ -189,6 +189,63 @@ class R2Helper
     }
     
     /**
+     * For R2 course videos: return the path that should be used for browser playback.
+     * If the file is MKV/AVI/WMV and an MP4 version exists at the same path (e.g. same name .mp4), return that so the player gets MP4.
+     * Otherwise return the original path.
+     *
+     * @param string $r2Path R2 key (e.g. Courses/5/5/1772307093_Lecture IB GUC - Endocrine I.mkv)
+     * @return string Path to use for streaming (MP4 if exists for non-MP4 video, else original)
+     */
+    public static function getPreferredPlaybackPath(string $r2Path): string
+    {
+        $ext = strtolower(self::getFileExtension($r2Path));
+        $browserUnfriendly = ['mkv', 'avi', 'wmv', 'flv'];
+        if (!in_array($ext, $browserUnfriendly, true)) {
+            return $r2Path;
+        }
+        $dir = pathinfo($r2Path, PATHINFO_DIRNAME);
+        $base = pathinfo($r2Path, PATHINFO_FILENAME);
+        $mp4Path = $dir . '/' . $base . '.mp4';
+        try {
+            if (Storage::disk('r2')->exists($mp4Path)) {
+                return $mp4Path;
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return $r2Path;
+    }
+
+    /**
+     * Get MIME type from file path (for video and other types).
+     * Use when building video player <source type="..."> or Content-Type headers.
+     *
+     * @param string $path
+     * @return string
+     */
+    public static function getMimeTypeFromPath(string $path): string
+    {
+        $ext = self::getFileExtension($path);
+        $map = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            'mp4' => 'video/mp4',
+            'm4v' => 'video/x-m4v',
+            'webm' => 'video/webm',
+            'mov' => 'video/quicktime',
+            'mkv' => 'video/x-matroska',
+            'avi' => 'video/x-msvideo',
+            'wmv' => 'video/x-ms-wmv',
+            'flv' => 'video/x-flv',
+        ];
+        return $map[$ext] ?? 'application/octet-stream';
+    }
+    
+    /**
      * Determine file type from extension
      * 
      * @param string $extension
