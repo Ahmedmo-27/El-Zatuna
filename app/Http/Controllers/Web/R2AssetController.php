@@ -136,8 +136,13 @@ class R2AssetController extends Controller
             'webp' => 'image/webp',
             'svg' => 'image/svg+xml',
             'mp4' => 'video/mp4',
+            'm4v' => 'video/x-m4v',
             'webm' => 'video/webm',
             'mov' => 'video/quicktime',
+            'mkv' => 'video/x-matroska',
+            'avi' => 'video/x-msvideo',
+            'wmv' => 'video/x-ms-wmv',
+            'flv' => 'video/x-flv',
         ];
         return $map[$ext] ?? 'application/octet-stream';
     }

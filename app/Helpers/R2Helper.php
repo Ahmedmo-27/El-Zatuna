@@ -20,17 +20,29 @@ class R2Helper
             $path = ltrim($path, '/');
             $publicUrl = config('r2.public_url');
             if (!empty($publicUrl)) {
-                return rtrim($publicUrl, '/') . '/' . $path;
+                return rtrim($publicUrl, '/') . '/' . self::encodePathSegments($path);
             }
             // Private bucket or no public URL: use Laravel proxy for Course-Assets and Profile-Assets
             if (str_starts_with($path, 'Course-Assets/') || str_starts_with($path, 'Profile-Assets/')) {
-                return url('/r2-asset/' . $path);
+                return url('/r2-asset/' . self::encodePathSegments($path));
             }
             return Storage::disk('r2')->url($path);
         } catch (\Exception $e) {
             \Log::error('R2Helper getUrl error: ' . $e->getMessage());
             return null;
         }
+    }
+    
+    /**
+     * Encode each path segment for use in URLs (handles filenames with spaces and special chars).
+     *
+     * @param string $path Path with forward slashes (e.g. Course-Assets/123/Lecture IB GUC - Endocrine I.mkv)
+     * @return string Path with each segment rawurlencoded
+     */
+    public static function encodePathSegments(string $path): string
+    {
+        $segments = explode('/', $path);
+        return implode('/', array_map('rawurlencode', $segments));
     }
     
     /**

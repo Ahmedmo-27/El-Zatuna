@@ -116,7 +116,7 @@ class FileController extends Controller
 
         if ($data['storage'] == 'secure_host') {
             $rules['file_url'] = 'nullable';
-            $rules['file_upload'] = 'required|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm|max:2097152'; // 2GB max size
+            $rules['file_upload'] = 'required|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm,m4v|max:2097152'; // 2GB max size
 
             if ($data['secure_host_upload_type'] == "manual") {
                 $rules['file_upload'] = 'nullable';
@@ -548,7 +548,7 @@ class FileController extends Controller
 
                 if ($data['storage'] == 'secure_host') {
                     $rules['file_url'] = 'nullable';
-                    $rules['file_upload'] = ($fileTypeIsChanged ? 'required' : 'nullable') . '|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm|max:2097152'; // 2GB max size
+                    $rules['file_upload'] = ($fileTypeIsChanged ? 'required' : 'nullable') . '|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm,m4v|max:2097152'; // 2GB max size
 
                     if ($data['secure_host_upload_type'] == "manual") {
                         $rules['secure_host_file_path'] = 'required';
@@ -804,7 +804,7 @@ class FileController extends Controller
                     $rule .= '|mimes:mp3,wav,ogg,aac';
                     break;
                 case 'video':
-                    $rule .= '|mimes:mp4,avi,mkv,mov,wmv,flv,webm';
+                    $rule .= '|mimes:mp4,avi,mkv,mov,wmv,flv,webm,m4v';
                     break;
                 case 'image':
                     $rule .= '|mimes:jpg,jpeg,png,gif,bmp,webp,svg';
