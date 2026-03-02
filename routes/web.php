@@ -46,6 +46,11 @@ Route::get('/r2-asset/{path}', 'Web\R2AssetController@show')->where('path', '.*'
 Route::get('/mobile-app', 'Web\MobileAppController@index')->middleware(['share', 'impersonate'])->name('mobileAppRoute');
 Route::get('/maintenance', 'Web\MaintenanceController@index')->middleware(['share', 'impersonate'])->name('maintenanceRoute');
 Route::get('/restriction', 'Web\RestrictionController@index')->middleware(['share', 'impersonate'])->name('restrictionRoute');
+Route::get('/sitemaps/main.xml', 'Web\SitemapController@main')->middleware(['share', 'impersonate'])->name('sitemap.main');
+Route::get('/sitemaps/courses.xml', 'Web\SitemapController@courses')->middleware(['share', 'impersonate'])->name('sitemap.courses');
+Route::get('/sitemaps/blog.xml', 'Web\SitemapController@blog')->middleware(['share', 'impersonate'])->name('sitemap.blog');
+Route::get('/sitemaps/products.xml', 'Web\SitemapController@products')->middleware(['share', 'impersonate'])->name('sitemap.products');
+Route::get('/sitemaps/teachers.xml', 'Web\SitemapController@teachers')->middleware(['share', 'impersonate'])->name('sitemap.teachers');
 
 Route::group(['prefix' => 'cookie-security', 'middleware' => ['share', 'impersonate']], function () {
     Route::post('/all', 'Web\CookieSecurityController@setAll');
