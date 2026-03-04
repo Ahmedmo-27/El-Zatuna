@@ -130,7 +130,7 @@ class RegisterController extends Controller
             ]);
         }
 
-        // STEP 2 BYPASS: Create user and go directly to step 3 (email verification disabled - SMTP issue). Restore commented block below when SMTP is fixed.
+        // Create user and send email verification (step 2) via Brevo
         $referralSettings = getReferralSettings();
         $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
@@ -140,7 +140,7 @@ class RegisterController extends Controller
             'full_name' => $data['full_name'],
             'email' => $data['email'],
             'status' => User::$pending,
-            'password' => Hash::make(Str::random(32)), // Temporary password, will be set in step 3
+            'password' => Hash::make(Str::random(32)),
             'affiliate' => $usersAffiliateStatus,
             'created_at' => time()
         ]);
@@ -157,125 +157,56 @@ class RegisterController extends Controller
         $form = $this->getFormFieldsByType($request->get('account_type'));
         $this->storeFormFields($data, $user);
 
-        // Mark email as verified since we're skipping step 2 (restore when SMTP is fixed)
-        $user->update(['email_verified_at' => time()]);
-
-        // Generate token for step 3 (profile completion)
         $tokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
-            'step' => 3,
+            'step' => 2,
         ];
+        $expiresAt = now()->addMinutes(60);
+        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
 
-        $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
+        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
 
-        return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
-            'verification_token' => $verificationToken,
-            'expires_at' => now()->addMinutes(60)->toIso8601String(),
+        return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
+            'message' => 'Please check your email for a 6-digit verification code.',
+            'expires_at' => $expiresAt->toIso8601String(),
         ]);
     }
-
-    /*
-    // ---------- STEP 2 (email verification) - COMMENTED OUT due to SMTP issue. Uncomment when SMTP is fixed. ----------
-    // Create user and send email verification
-    $referralSettings = getReferralSettings();
-    $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
-
-    $user = User::create([
-        'role_name' => Role::$user,
-        'role_id' => Role::getUserRoleId(),
-        'full_name' => $data['full_name'],
-        'email' => $data['email'],
-        'status' => User::$pending,
-        'password' => Hash::make(Str::random(32)), // Temporary password, will be set in step 3
-        'affiliate' => $usersAffiliateStatus,
-        'created_at' => time()
-    ]);
-
-    if (!empty($data['certificate_additional'])) {
-        UserMeta::updateOrCreate([
-            'user_id' => $user->id,
-            'name' => 'certificate_additional'
-        ], [
-            'value' => $data['certificate_additional']
-        ]);
-    }
-
-    $form = $this->getFormFieldsByType($request->get('account_type'));
-    $this->storeFormFields($data, $user);
-
-    // Generate verification code for step 2 (email verification)
-    $tokenData = [
-        'user_id' => $user->id,
-        'email' => $user->email,
-        'step' => 2,
-    ];
-
-    $expiresAt = now()->addMinutes(60);
-    $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60); // 60 minutes
-
-    // Send verification email with code
-    $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
-
-    return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
-        'message' => 'Please check your email for a 6-digit verification code.',
-        'expires_at' => $expiresAt->toIso8601String(),
-    ]);
-    */
 
     private function stepTwo(Request $request)
     {
-        // Step 2 (email verification) temporarily disabled - SMTP issue on droplet. Uncomment the block above in stepOne and the implementation below when SMTP is fixed.
-        return apiResponse2(0, 'step_2_disabled', 'Email verification (step 2) is temporarily disabled. Please complete registration from step 1.');
-    }
-
-    /*
-    // ---------- ORIGINAL stepTwo implementation (uncomment when SMTP is fixed and remove the return above) ----------
-    private function stepTwoOriginal(Request $request)
-    {
         $data = $request->all();
 
-        // Step 2: Verify email with verification code
         $rules = [
             'email' => 'required|email|exists:users,email',
             'verification_code' => 'required|string|size:6',
         ];
-
         validateParam($data, $rules);
 
-        // Verify the code
         $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
 
         if (!$tokenData) {
             return apiResponse2(0, 'invalid_code', 'Verification code is invalid or expired. Please request a new code.');
         }
 
-        // Find user
         $user = User::where('email', $data['email'])->first();
 
         if (!$user) {
             return apiResponse2(0, 'user_not_found', 'User not found');
         }
 
-        // Mark code as used
         RegistrationVerificationToken::markCodeAsUsed($data['verification_code'], $data['email']);
 
-        // Mark email as verified
         if (empty($user->email_verified_at)) {
-            $user->update([
-                'email_verified_at' => time(),
-            ]);
+            $user->update(['email_verified_at' => time()]);
         }
 
-        // Generate new token for step 3 (profile completion)
         $newTokenData = [
             'user_id' => $user->id,
-            'username' => $user->username,
             'email' => $user->email,
             'step' => 3,
         ];
-
-        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
+        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
 
         return apiResponse2(1, 'email_verified', trans('api.auth.email_verified'), [
             'verification_token' => $verificationToken,
@@ -283,7 +214,6 @@ class RegisterController extends Controller
             'message' => 'Email verified successfully. Please complete your profile.'
         ]);
     }
-    */
 
     private function stepThree(Request $request)
     {
@@ -330,7 +260,7 @@ class RegisterController extends Controller
             return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
         }
 
-        // When step 2 was skipped (SMTP bypass), ensure email is marked verified on step 3 completion
+        // Ensure email is marked verified (fallback for older flows)
         if (empty($user->email_verified_at)) {
             $user->update(['email_verified_at' => time()]);
         }

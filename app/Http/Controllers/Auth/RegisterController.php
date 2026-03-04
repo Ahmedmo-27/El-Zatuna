@@ -83,7 +83,24 @@ class RegisterController extends Controller
 
     public function showStep(Request $request, $step)
     {
-        // Handle GET requests for specific steps
+        if ($step == 2) {
+            $email = session('registration_step_2_email');
+            if (empty($email)) {
+                return redirect('/register/step/1')->withErrors(['email' => trans('auth.please_complete_verification_first')]);
+            }
+            $seoSettings = getSeoMetas('register');
+            $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
+            $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
+            $pageRobot = getPageRobot('register');
+            $authTemplate = getThemeAuthenticationPagesStyleName();
+            return view("design_1.web.auth.{$authTemplate}.register.step2", [
+                'pageTitle' => $pageTitle,
+                'pageDescription' => $pageDescription,
+                'pageRobot' => $pageRobot,
+                'email' => $email,
+            ]);
+        }
+
         if ($step == 3) {
             // Prefer token from URL (more robust across devices), fallback to session
             $verificationToken = $request->query('token');
@@ -172,7 +189,6 @@ class RegisterController extends Controller
             return $this->stepOne($request);
 
         } elseif ($step == 2) {
-            // Step 2 (email verification) temporarily disabled - SMTP issue. Uncomment stepTwo body when fixed.
             return $this->stepTwo($request);
 
         } elseif ($step == 3) {
@@ -314,8 +330,7 @@ class RegisterController extends Controller
             ]);
         }
 
-        // STEP 2 BYPASS: Create user and go directly to step 3 (email verification disabled - SMTP issue). Restore block below when SMTP is fixed.
-        // Generate step 3 token and mark email as verified so account can activate after step 3
+        // Create user and send email verification (step 2) via Brevo
         $referralSettings = getReferralSettings();
         $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
@@ -330,50 +345,58 @@ class RegisterController extends Controller
             'created_at' => time()
         ]);
 
-        // Mark email as verified since we're skipping step 2 (restore when SMTP is fixed)
-        $user->update(['email_verified_at' => time()]);
-
-        // Generate token for step 3 (profile completion)
+        // Generate verification code for step 2 (email verification)
         $tokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
-            'step' => 3,
+            'step' => 2,
         ];
 
-        $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
+        $expiresAt = now()->addMinutes(60);
+        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
+
+        // Send verification email with code (via Brevo)
+        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
 
         // Return view for web requests, JSON for API
         if ($request->wantsJson()) {
-            return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
-                'verification_token' => $verificationToken,
-                'expires_at' => now()->addMinutes(60)->toIso8601String(),
+            return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
+                'message' => 'Please check your email for a 6-digit verification code.',
+                'expires_at' => $expiresAt->toIso8601String(),
             ]);
         }
 
-        // Web request - redirect to step 3 with token so browser URL is /register/step/3 (prevents back() from sending user to step 1)
-        return redirect('/register/step/3?token=' . $verificationToken . '&verified=0');
+        // Web request - show step 2 view
+        session(['registration_step_2_email' => $user->email]);
+        $seoSettings = getSeoMetas('register');
+        $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
+        $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
+        $pageRobot = getPageRobot('register');
+
+        $authTemplate = getThemeAuthenticationPagesStyleName();
+        return view("design_1.web.auth.{$authTemplate}.register.step2", [
+            'pageTitle' => $pageTitle,
+            'pageDescription' => $pageDescription,
+            'pageRobot' => $pageRobot,
+            'email' => $user->email,
+        ]);
     }
 
-    /*
-    // ---------- STEP 2 (email verification) - COMMENTED OUT due to SMTP issue on droplet. Uncomment when SMTP is fixed and use this body instead of the redirect below. ----------
-    private function stepTwoOriginal(Request $request)
+    private function stepTwo(Request $request)
     {
         $data = $request->all();
 
-        // Step 2: Verify email with verification code
         $rules = [
             'email' => 'required|email|exists:users,email',
             'verification_code' => 'required|string|size:6',
         ];
 
-        // Use different validation for web vs API
         if ($request->wantsJson()) {
             validateParam($data, $rules);
         } else {
             $request->validate($rules);
         }
 
-        // Verify the code
         $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
 
         if (!$tokenData) {
@@ -381,15 +404,12 @@ class RegisterController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => trans('auth.invalid_verification_code'),
-                    'errors' => [
-                        'verification_code' => [trans('auth.invalid_verification_code')]
-                    ]
+                    'errors' => ['verification_code' => [trans('auth.invalid_verification_code')]]
                 ], 422);
             }
             return back()->withErrors(['verification_code' => trans('auth.invalid_verification_code')])->withInput();
         }
 
-        // Find user
         $user = User::where('email', $data['email'])->first();
 
         if (!$user) {
@@ -397,34 +417,25 @@ class RegisterController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'User not found',
-                    'errors' => [
-                        'verification_code' => ['User not found']
-                    ]
+                    'errors' => ['verification_code' => ['User not found']]
                 ], 422);
             }
             return back()->withErrors(['verification_code' => 'User not found'])->withInput();
         }
 
-        // Mark code as used
         RegistrationVerificationToken::markCodeAsUsed($data['verification_code'], $data['email']);
 
-        // Mark email as verified
         if (empty($user->email_verified_at)) {
-            $user->update([
-                'email_verified_at' => time(),
-            ]);
+            $user->update(['email_verified_at' => time()]);
         }
 
-        // Generate new token for step 3 (profile completion)
         $newTokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
             'step' => 3,
         ];
+        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
 
-        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
-
-        // Store verification data in session for backward compatibility
         session([
             'registration_step_3_token' => $verificationToken,
             'registration_verified' => true,
@@ -440,7 +451,6 @@ class RegisterController extends Controller
             ]);
         }
 
-        // For AJAX requests, return JSON with success
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -449,75 +459,9 @@ class RegisterController extends Controller
             ]);
         }
 
-        // Redirect to step 3
         return redirect('/register/step/3?token=' . $verificationToken . '&verified=true')
             ->with('success', trans('auth.email_verified_successfully'));
     }
-    */
-
-    private function stepTwo(Request $request)
-    {
-        // Step 2 (email verification) temporarily disabled - SMTP issue on droplet. Uncomment the block above when SMTP is fixed.
-        if ($request->wantsJson()) {
-            return apiResponse2(0, 'step_2_disabled', 'Email verification (step 2) is temporarily disabled. Please complete registration from step 1.');
-        }
-        return redirect('/register/step/1')->withErrors(['email' => trans('auth.please_complete_verification_first')]);
-    }
-
-    /*
-    // ---------- ORIGINAL STEP 1 BLOCK THAT SHOWED STEP 2 (uncomment when SMTP is fixed and remove the STEP 2 BYPASS block in stepOne) ----------
-    // Create user and send email verification
-    $referralSettings = getReferralSettings();
-    $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
-
-    $user = User::create([
-        'role_name' => $roleName,
-        'role_id' => $roleId,
-        'full_name' => $data['full_name'],
-        'email' => $data['email'],
-        'status' => User::$pending,
-        'password' => Hash::make(Str::random(32)), // Temporary password, will be set in step 3
-        'affiliate' => $usersAffiliateStatus,
-        'created_at' => time()
-    ]);
-
-    // Generate verification code for step 2 (email verification)
-    $tokenData = [
-        'user_id' => $user->id,
-        'email' => $user->email,
-        'step' => 2,
-    ];
-
-    $expiresAt = now()->addMinutes(60);
-    $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60); // 60 minutes
-
-    // Send verification email with code
-    $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
-
-    // Return view for web requests, JSON for API
-    if ($request->wantsJson()) {
-        return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
-            'message' => 'Please check your email for a 6-digit verification code.',
-            'expires_at' => $expiresAt->toIso8601String(),
-        ]);
-    }
-
-    // Web request - show step 2 view
-    $seoSettings = getSeoMetas('register');
-    $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
-    $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
-    $pageRobot = getPageRobot('register');
-
-    $data = [
-        'pageTitle' => $pageTitle,
-        'pageDescription' => $pageDescription,
-        'pageRobot' => $pageRobot,
-        'email' => $user->email,
-    ];
-
-    $authTemplate = getThemeAuthenticationPagesStyleName();
-    return view("design_1.web.auth.{$authTemplate}.register.step2", $data);
-    */
 
     private function stepThree(Request $request)
     {
@@ -562,7 +506,7 @@ class RegisterController extends Controller
             return redirect('/register/step/3?token=' . urlencode($data['verification_token'] ?? ''))->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
         }
 
-        // When step 2 was skipped (SMTP bypass), ensure email is marked verified on step 3 completion
+        // Ensure email is marked verified (fallback for older flows)
         if (empty($user->email_verified_at)) {
             $user->update(['email_verified_at' => time()]);
         }
@@ -681,8 +625,6 @@ class RegisterController extends Controller
         }
 
         // Web request - login user and show welcome page
-        // Step 2 is bypassed (SMTP): step 2 never set status; only step 3 does. Refresh from DB in case
-        // any listener/code modified the user, then ensure status is active before login.
         $user->refresh();
         if ($user->status !== User::$active) {
             $user->update(['status' => User::$active]);

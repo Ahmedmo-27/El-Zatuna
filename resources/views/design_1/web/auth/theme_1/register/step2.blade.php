@@ -1,16 +1,6 @@
 @extends('design_1.web.auth.theme_1.layout')
 
 @section('page_content')
-    {{-- STEP 2 (email verification) temporarily disabled - SMTP issue on droplet. Uncomment the block below and re-enable in RegisterController when SMTP is fixed. --}}
-    <div class="mt-16">
-        <div class="pl-16">
-            <p class="text-gray-500">{{ trans('auth.email_verification') }} (Step 2) is temporarily disabled.</p>
-            <p class="mt-8">Please complete registration from the beginning.</p>
-            <a href="/register" class="btn btn-primary mt-16">{{ trans('auth.start_over') }}</a>
-        </div>
-    </div>
-
-    {{--
     <div class="mt-16">
         <div class="pl-16">
             <div class="font-16 font-weight-bold">{{ trans('auth.check_your_email') }} 📧</div>
@@ -87,9 +77,110 @@
             </div>
         </div>
     </div>
-    --}}
 @endsection
 
 @push('scripts_bottom')
-    {{-- Step 2 scripts commented out - restore when SMTP is fixed. See git history for full script. --}}
+    <script>
+        $(document).ready(function() {
+            $('.auth-verification-code-field').first().focus();
+
+            $('#verificationCodeForm').on('submit', function(e) {
+                e.preventDefault();
+                var code = '';
+                $('.auth-verification-code-field').each(function() {
+                    code += $(this).val();
+                });
+                if (code.length !== 6) {
+                    $('#verificationError').removeClass('d-none').text('{{ trans('auth.please_enter_all_6_digits') }}');
+                    return;
+                }
+                $('#verificationError').addClass('d-none');
+                var $btn = $('.js-submit-verification-form-btn');
+                $btn.addClass('loadingbar').prop('disabled', true);
+
+                $.ajax({
+                    url: '/register/step/2',
+                    method: 'POST',
+                    data: {
+                        _token: $('input[name="_token"]').val(),
+                        email: $('input[name="email"]').val(),
+                        verification_code: code
+                    },
+                    success: function(res) {
+                        if (res.redirect) {
+                            window.location.href = res.redirect;
+                        } else {
+                            window.location.href = '/register/step/3?token=' + (res.verification_token || '') + '&verified=true';
+                        }
+                    },
+                    error: function(xhr) {
+                        $btn.removeClass('loadingbar').prop('disabled', false);
+                        var msg = '{{ trans('auth.invalid_verification_code') }}';
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            var errs = xhr.responseJSON.errors.verification_code;
+                            if (errs && errs[0]) msg = errs[0];
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        $('#verificationError').removeClass('d-none').text(msg);
+                        $('.auth-verification-code-field').val('').first().focus();
+                    }
+                });
+            });
+
+            $('.auth-verification-code-field').on('input', function() {
+                var allFilled = true;
+                $('.auth-verification-code-field').each(function() {
+                    if ($(this).val() === '') allFilled = false;
+                });
+                if (allFilled) {
+                    setTimeout(function() { $('#verificationCodeForm').submit(); }, 300);
+                }
+            });
+
+            $('.auth-verification-code-field').first().on('paste', function(e) {
+                e.preventDefault();
+                var pasted = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                var digits = pasted.replace(/\D/g, '').substring(0, 6);
+                $('.auth-verification-code-field').each(function(i) {
+                    $(this).val(digits[i] || '');
+                });
+                if (digits.length === 6) {
+                    setTimeout(function() { $('#verificationCodeForm').submit(); }, 200);
+                }
+            });
+
+            $('.js-resend-code').on('click', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var email = $btn.data('email');
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: '/api/v1/auth/resend-verification',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ email: email }),
+                    headers: {
+                        'X-CSRF-TOKEN': ($('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val()),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    success: function() {
+                        if (typeof showToast === 'function') {
+                            showToast('success', '{{ trans('public.request_success') }}', '{{ trans('auth.code_sent_successfully') }}');
+                        }
+                        $('.auth-verification-code-field').val('').first().focus();
+                    },
+                    error: function() {
+                        if (typeof showToast === 'function') {
+                            showToast('error', '{{ trans('public.error') }}', '{{ trans('auth.failed_to_send_code') }}');
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
+                    }
+                });
+            });
+        });
+    </script>
 @endpush
