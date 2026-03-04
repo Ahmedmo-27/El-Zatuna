@@ -43,6 +43,8 @@ class InstructorsController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/instructors'),
+            'pageOgType' => 'website',
             'categories' => $categories,
         ];
         $data = array_merge($data, $getListData);
@@ -76,6 +78,8 @@ class InstructorsController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/organizations'),
+            'pageOgType' => 'website',
             'categories' => $categories,
         ];
         $data = array_merge($data, $getListData);

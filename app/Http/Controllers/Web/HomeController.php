@@ -65,6 +65,8 @@ class HomeController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/'),
+            'pageOgType' => 'website',
             'activeTheme' => $activeTheme,
             'homeLanding' => $homeLanding,
             'discountedCourses' => $discountedCourses,

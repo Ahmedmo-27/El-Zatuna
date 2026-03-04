@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -12,10 +11,19 @@ class ExampleTest extends TestCase
      *
      * @return void
      */
-    public function test_the_application_returns_a_successful_response()
+    public function test_sitemap_index_endpoint_is_accessible_and_lists_child_sitemaps()
     {
-        $response = $this->get('/');
+        config(['app.key' => 'base64:' . base64_encode(random_bytes(32))]);
+        $this->withoutMiddleware();
+
+        $response = $this->get('/sitemap.xml');
 
         $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/xml; charset=UTF-8');
+        $response->assertSee('/sitemaps/main.xml', false);
+        $response->assertSee('/sitemaps/courses.xml', false);
+        $response->assertSee('/sitemaps/blog.xml', false);
+        $response->assertSee('/sitemaps/products.xml', false);
+        $response->assertSee('/sitemaps/teachers.xml', false);
     }
 }

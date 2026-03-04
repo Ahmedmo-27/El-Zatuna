@@ -88,6 +88,8 @@ class ClassesController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/classes'),
+            'pageOgType' => 'website',
             'pageBasePath' => $request->getPathInfo(),
             'filterMaxPrice' => ($filterMaxPrice > 1000) ? $filterMaxPrice : 1000,
             'coursesRatingsCount' => $coursesRatingsCount,
