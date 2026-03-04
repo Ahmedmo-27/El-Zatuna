@@ -93,97 +93,102 @@ class SitemapController extends Controller
 
     public function courses()
     {
-        $urls = [];
-
         $courses = Webinar::query()
             ->where('status', Webinar::$active)
             ->where('private', false)
             ->select('slug', 'updated_at', 'created_at')
-            ->get();
+            ->orderBy('id')
+            ->cursor();
 
-        foreach ($courses as $course) {
-            $urls[] = [
+        return $this->streamSitemap($courses, function ($course) {
+            return [
                 'loc' => url('/course/' . $course->slug),
                 'lastmod' => $this->formatLastmod($course->updated_at ?? $course->created_at),
                 'changefreq' => 'weekly',
                 'priority' => '0.8',
             ];
-        }
-
-        return response()
-            ->view('sitemap.index', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
+        });
     }
 
     public function blog()
     {
-        $urls = [];
-
         $posts = Blog::query()
             ->where('status', 'publish')
             ->select('slug', 'updated_at', 'created_at')
-            ->get();
+            ->orderBy('id')
+            ->cursor();
 
-        foreach ($posts as $post) {
-            $urls[] = [
+        return $this->streamSitemap($posts, function ($post) {
+            return [
                 'loc' => url('/blog/' . $post->slug),
                 'lastmod' => $this->formatLastmod($post->updated_at ?? $post->created_at),
                 'changefreq' => 'weekly',
                 'priority' => '0.7',
             ];
-        }
-
-        return response()
-            ->view('sitemap.index', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
+        });
     }
 
     public function products()
     {
-        $urls = [];
-
         $products = Product::query()
             ->where('status', Product::$active)
             ->where('ordering', true)
             ->select('slug', 'updated_at', 'created_at')
-            ->get();
+            ->orderBy('id')
+            ->cursor();
 
-        foreach ($products as $product) {
-            $urls[] = [
+        return $this->streamSitemap($products, function ($product) {
+            return [
                 'loc' => url('/products/' . $product->slug),
                 'lastmod' => $this->formatLastmod($product->updated_at ?? $product->created_at),
                 'changefreq' => 'weekly',
                 'priority' => '0.7',
             ];
-        }
-
-        return response()
-            ->view('sitemap.index', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
+        });
     }
 
     public function teachers()
     {
-        $urls = [];
-
         $teachers = User::query()
             ->where('role_name', 'teacher')
             ->where('status', 'active')
             ->select('username', 'updated_at', 'created_at')
-            ->get();
+            ->orderBy('id')
+            ->cursor();
 
-        foreach ($teachers as $teacher) {
-            $urls[] = [
+        return $this->streamSitemap($teachers, function ($teacher) {
+            return [
                 'loc' => url('/users/' . $teacher->username . '/profile'),
                 'lastmod' => $this->formatLastmod($teacher->updated_at ?? $teacher->created_at),
                 'changefreq' => 'weekly',
                 'priority' => '0.6',
             ];
-        }
+        });
+    }
 
-        return response()
-            ->view('sitemap.index', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
+    private function streamSitemap(iterable $items, callable $mapItem)
+    {
+        return response()->stream(function () use ($items, $mapItem) {
+            echo '<?xml version="1.0" encoding="UTF-8"?>';
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+            foreach ($items as $item) {
+                $url = $mapItem($item);
+
+                echo '<url>';
+                echo '<loc>' . e($url['loc']) . '</loc>';
+
+                if (!empty($url['lastmod'])) {
+                    echo '<lastmod>' . e($url['lastmod']) . '</lastmod>';
+                }
+
+                echo '<changefreq>' . e($url['changefreq']) . '</changefreq>';
+                echo '<priority>' . e($url['priority']) . '</priority>';
+                echo '</url>';
+            }
+
+            echo '</urlset>';
+        }, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
     }
 
     private function formatLastmod($value): ?string

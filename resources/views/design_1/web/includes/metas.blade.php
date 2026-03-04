@@ -19,7 +19,15 @@
     $pageTitleValue = $pageTitle ?? $siteName;
     $metaDescription = !empty($pageDescription) ? $pageDescription : $siteName;
     $canonicalUrl = $pageCanonicalUrl ?? request()->url();
-    $pageRobotValue = $pageRobot ?? 'index, follow';
+    $isSensitiveRoute = request()->is('panel*')
+        || request()->is('admin*')
+        || request()->is('login')
+        || request()->is('register*')
+        || request()->is('forget-password')
+        || request()->is('reset-password*')
+        || request()->is('verification*');
+    $defaultRobotValue = $isSensitiveRoute ? 'noindex, nofollow' : 'index, follow';
+    $pageRobotValue = $pageRobot ?? $defaultRobotValue;
 
     if (empty($pageMetaImage)) {
         $pageMetaImage = !empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '/favicon.ico';
@@ -146,7 +154,7 @@
 
 @foreach($jsonLdSchemas as $jsonLdSchema)
     @if(!empty($jsonLdSchema))
-        <script type="application/ld+json">{!! json_encode($jsonLdSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+        <script type="application/ld+json">{{ json_encode($jsonLdSchema, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) }}</script>
     @endif
 @endforeach
 
