@@ -15,7 +15,9 @@ return [
     |--------------------------------------------------------------------------
      */
 
-    'use_package_routes' => false,
+    'use_package_routes' => true,
+    'url_prefix' => 'laravel-filemanager',
+    'middlewares' => ['web', 'auth'],
 
     /*
     |--------------------------------------------------------------------------
