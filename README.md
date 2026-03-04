@@ -245,6 +245,34 @@ El Zatuna undergoes rigorous testing to ensure reliability and stability. Each r
 
 ---
 
+## 🔎 SEO Implementation
+
+El Zatuna includes a complete SEO baseline for public pages:
+
+- Canonical URLs, Open Graph, and Twitter tags are generated from page data.
+- JSON-LD is included for `Organization`, `WebSite` (with `SearchAction`), breadcrumbs, and page-level entities like `Article`, `Course`, and `Product`.
+- Dynamic sitemap endpoint is available at `/sitemap.xml`.
+- `robots.txt` allows crawling and references the sitemap.
+
+### Blog SEO Strategy
+
+- **Keyword Clusters**: Publish content around one primary keyword + 2-4 supporting long-tail keywords per article.
+- **Search Intent Mapping**: Classify each post as informational, navigational, or transactional before writing.
+- **Article Structure**: Use one `H1`, descriptive `H2/H3` sections, FAQ blocks, and concise introductions.
+- **Internal Linking**: Add links to related courses, instructor pages, and older posts in every article.
+- **Rich Snippets**: Keep `Article` schema fields complete (headline, image, dates, author, publisher).
+- **Refresh Cycle**: Revisit top pages every 60-90 days to update stats, examples, and links.
+
+### Suggested Content Calendar (MVP)
+
+- 2 course-explainer posts per week
+- 1 skills/trends post per week
+- 1 student success story per week
+
+This cadence gives broad topical coverage while steadily improving crawl depth and authority.
+
+---
+
 
 ## 🤝 Support & Partnership
 

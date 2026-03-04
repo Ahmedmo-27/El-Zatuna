@@ -68,6 +68,8 @@ class BlogController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/blog'),
+            'pageOgType' => 'website',
             'blogCategories' => $blogCategories,
             'selectedCategory' => $selectedCategory,
             'selectedAuthor' => $selectedAuthor,
@@ -77,6 +79,25 @@ class BlogController extends Controller
         ];
 
         $data = array_merge($data, $getListData);
+
+        if (!empty($data['posts']) and count($data['posts'])) {
+            $listItems = [];
+            foreach ($data['posts'] as $index => $blogPost) {
+                $listItems[] = [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => url('/blog/' . $blogPost->slug),
+                    'name' => $blogPost->title,
+                ];
+            }
+
+            $data['pageSchema'] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'ItemList',
+                'name' => 'Blog Posts',
+                'itemListElement' => $listItems,
+            ];
+        }
 
         if (empty($selectedCategory)) {
             $data = array_merge($data, $this->getBlogFeaturedContents());
@@ -269,11 +290,31 @@ class BlogController extends Controller
                 'pageTitle' => $post->title,
                 'pageDescription' => $post->meta_description,
                 'pageMetaImage' => $post->image,
+                'pageCanonicalUrl' => url('/blog/' . $post->slug),
+                'pageOgType' => 'article',
                 'blogCategories' => $blogCategories,
                 'popularPosts' => $popularPosts,
                 'pageRobot' => $pageRobot,
                 'post' => $post,
                 'postComments' => $postComments,
+                'pageSchema' => [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'Article',
+                    'headline' => $post->title,
+                    'description' => $post->meta_description,
+                    'mainEntityOfPage' => url('/blog/' . $post->slug),
+                    'image' => url($post->image),
+                    'author' => [
+                        '@type' => 'Person',
+                        'name' => $post->author->full_name ?? $post->author->username ?? '',
+                    ],
+                    'publisher' => [
+                        '@type' => 'Organization',
+                        'name' => getGeneralSettings('site_name') ?? config('app.name'),
+                    ],
+                    'datePublished' => is_numeric($post->created_at ?? null) ? date('c', (int)$post->created_at) : date('c', strtotime((string)$post->created_at)),
+                    'dateModified' => is_numeric($post->updated_at ?? null) ? date('c', (int)$post->updated_at) : date('c', strtotime((string)$post->updated_at)),
+                ],
             ];
 
             return view('design_1.web.blog.show.index', $data);
