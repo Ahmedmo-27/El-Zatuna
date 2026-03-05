@@ -12,6 +12,7 @@ window.ElzatunaUI.initMobileMenu = function () {
 
     var focusableSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
     var previousFocusedElement = null;
+    var overlayHideTimeoutId = null;
 
     var getFocusableElements = function () {
         return Array.prototype.slice.call(panel.querySelectorAll(focusableSelectors));
@@ -65,6 +66,11 @@ window.ElzatunaUI.initMobileMenu = function () {
     var openMenu = function () {
         previousFocusedElement = document.activeElement;
 
+        if (overlayHideTimeoutId) {
+            clearTimeout(overlayHideTimeoutId);
+            overlayHideTimeoutId = null;
+        }
+
         overlay.classList.remove('hidden');
 
         requestAnimationFrame(function () {
@@ -85,6 +91,11 @@ window.ElzatunaUI.initMobileMenu = function () {
     };
 
     var closeMenu = function () {
+        if (overlayHideTimeoutId) {
+            clearTimeout(overlayHideTimeoutId);
+            overlayHideTimeoutId = null;
+        }
+
         overlay.classList.add('opacity-0');
         overlay.classList.remove('opacity-100');
         panel.classList.add('translate-x-full');
@@ -92,8 +103,9 @@ window.ElzatunaUI.initMobileMenu = function () {
 
         document.removeEventListener('keydown', handleKeydown);
 
-        setTimeout(function () {
+        overlayHideTimeoutId = setTimeout(function () {
             overlay.classList.add('hidden');
+            overlayHideTimeoutId = null;
         }, 300);
 
         if (previousFocusedElement && typeof previousFocusedElement.focus === 'function') {

@@ -10,7 +10,7 @@
         <x-dynamic-component :component="$icon" class="w-6 h-6"/>
     </div>
     <div>
-        <div class="font-semibold text-base leading-relaxed">{!! $title !!}</div>
+        <div class="font-semibold text-base leading-relaxed whitespace-pre-line">{{ $title }}</div>
         <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">{{ $description }}</p>
     </div>
 </div>

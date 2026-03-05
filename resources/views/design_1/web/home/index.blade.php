@@ -83,9 +83,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
-                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-tick-circle', 'title' => 'Courses Club<br>To Support Student', 'description' => 'Support student in each courses to boost understanding and track progress effectively.'])
-                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-star', 'title' => 'Explanation Practicing<br>Content', 'description' => 'Earn official certificates upon completion to showcase skills and add credibility.'])
-                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-element-4', 'title' => 'Courses Content<br>Specific To Your Uni', 'description' => 'Apply what you learn with real assignments that reinforce skills and deepen practical knowledge.', 'spanClass' => 'sm:col-span-2 sm:w-[calc(50%-14px)] sm:mx-auto'])
+                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-tick-circle', 'title' => "Courses Club\nTo Support Student", 'description' => 'Support student in each courses to boost understanding and track progress effectively.'])
+                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-star', 'title' => "Explanation Practicing\nContent", 'description' => 'Earn official certificates upon completion to showcase skills and add credibility.'])
+                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-element-4', 'title' => "Courses Content\nSpecific To Your Uni", 'description' => 'Apply what you learn with real assignments that reinforce skills and deepen practical knowledge.', 'spanClass' => 'sm:col-span-2 sm:w-[calc(50%-14px)] sm:mx-auto'])
                 </div>
             </div>
         </section>

@@ -28,9 +28,14 @@ window.ElzatunaUI.initPageLoader = function () {
     }
 
     window.addEventListener('load', hideLoader);
-    document.addEventListener('DOMContentLoaded', function () {
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(hideLoader, 150);
+        });
+    } else {
         setTimeout(hideLoader, 150);
-    });
+    }
 
     setTimeout(hideLoader, 4000);
 };
