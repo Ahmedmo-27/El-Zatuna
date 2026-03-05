@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/default/vendors/simplebar/simplebar.css">
     <link rel="stylesheet" href="/assets/design_1/css/app.min.css">
+    <link rel="stylesheet" href="/assets/design_1/css/web-layout-extras.css?v={{ @filemtime(public_path('assets/design_1/css/web-layout-extras.css')) }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -51,143 +52,6 @@
         {!! getThemeFontsSettings() !!}
 
         {!! getThemeColorsSettings() !!}
-
-        :root {
-            --font-sans: 'Poppins', 'Inter', 'Segoe UI', 'Arial', sans-serif;
-            --font-display: 'Playfair Display', 'Georgia', serif;
-        }
-
-        body, button, input, textarea, select {
-            font-family: var(--font-sans);
-        }
-
-        h1, h2, h3, h4, h5, h6, .font-display {
-            font-family: var(--font-display);
-        }
-
-        .home-page {
-            font-size: 20px;
-        }
-
-        @media (min-width: 1024px) {
-            .home-page {
-                font-size: 21px;
-            }
-        }
-
-        .home-page .text-xs {
-            font-size: 1.05rem;
-        }
-
-        .home-page .text-sm {
-            font-size: 1.2rem;
-        }
-
-        .home-page .text-base {
-            font-size: 1.35rem;
-        }
-
-        .home-page .text-lg {
-            font-size: 1.6rem;
-        }
-
-        .marquee-divider {
-            position: relative;
-            overflow: hidden;
-            border-top: 1px solid rgba(7, 41, 35, 0.15);
-            border-bottom: 1px solid rgba(7, 41, 35, 0.15);
-            background: rgba(200, 205, 6, 0.12);
-        }
-
-        .marquee-divider__track {
-            display: inline-flex;
-            align-items: center;
-            white-space: nowrap;
-            gap: 2rem;
-            padding: 1rem 0;
-            animation: marquee-scroll 18s linear infinite;
-        }
-
-        .marquee-divider__text {
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(7, 41, 35, 0.75);
-        }
-
-        @keyframes marquee-scroll {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-
-        .page-loader {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(250, 255, 224, 0.92);
-            backdrop-filter: blur(2px);
-            transition: opacity .25s ease, visibility .25s ease;
-        }
-
-        .js-enabled .page-loader {
-            display: flex;
-        }
-
-        .page-loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .page-loader__inner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 14px;
-            padding: 20px 24px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .74);
-            border: 1px solid rgba(236, 244, 184, .9);
-            box-shadow: 0 10px 36px rgba(7, 41, 35, 0.08);
-        }
-
-        .page-loader__logo {
-            width: 170px;
-            height: auto;
-            object-fit: contain;
-        }
-
-        .page-loader__box {
-            width: 56px;
-            height: 56px;
-            border-radius: 999px;
-            border: 4px solid rgba(7, 41, 35, .17);
-            border-top-color: #C8CD06;
-            animation: page-loader-spin .8s linear infinite;
-        }
-
-        .page-loader__text {
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: .02em;
-            color: rgba(7, 41, 35, .78);
-        }
-
-        @keyframes page-loader-spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
     </style>
 
 </head>
@@ -273,43 +137,28 @@
 <script type="text/javascript" src="/assets/design_1/js/app.min.js"></script>
 <script type="text/javascript" src="/assets/default/vendors/simplebar/simplebar.min.js"></script>
 <script defer src="/assets/design_1/js/parts/content_delete.min.js"></script>
+<script defer src="/assets/design_1/js/parts/web-layout-extras.js?v={{ @filemtime(public_path('assets/design_1/js/parts/web-layout-extras.js')) }}"></script>
+<script defer src="/assets/design_1/js/parts/mobile-menu.js?v={{ @filemtime(public_path('assets/design_1/js/parts/mobile-menu.js')) }}"></script>
 
 @if($showPageLoader)
     <script>
-        (function () {
-            var loaderHasBeenHidden = false;
-
-            var hideLoader = function () {
-                if (loaderHasBeenHidden) {
-                    return;
-                }
-
-                var loader = document.getElementById('pageLoader');
-
-                loaderHasBeenHidden = true;
-
-                if (loader) {
-                    loader.classList.add('hidden');
-
-                    setTimeout(function () {
-                        if (loader && loader.parentNode) {
-                            loader.parentNode.removeChild(loader);
-                        }
-                    }, 260);
-                }
-            };
-
-            if (document.readyState === 'complete') {
-                hideLoader();
+        window.addEventListener('DOMContentLoaded', function () {
+            if (window.ElzatunaUI && typeof window.ElzatunaUI.initPageLoader === 'function') {
+                window.ElzatunaUI.initPageLoader();
             }
 
-            window.addEventListener('load', hideLoader);
-            document.addEventListener('DOMContentLoaded', function () {
-                setTimeout(hideLoader, 150);
-            });
-
-            setTimeout(hideLoader, 4000);
-        })();
+            if (window.ElzatunaUI && typeof window.ElzatunaUI.initMobileMenu === 'function') {
+                window.ElzatunaUI.initMobileMenu();
+            }
+        });
+    </script>
+@else
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            if (window.ElzatunaUI && typeof window.ElzatunaUI.initMobileMenu === 'function') {
+                window.ElzatunaUI.initMobileMenu();
+            }
+        });
     </script>
 @endif
 
