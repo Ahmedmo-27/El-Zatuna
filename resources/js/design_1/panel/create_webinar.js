@@ -1216,17 +1216,6 @@
 
     });
 
-    // Admin-only: show/hide price field when accessibility (free/paid) changes
-    $('body').on('change', '.file-form input[name*="[accessibility]"]', function () {
-        const $form = $(this).closest('.file-form');
-        const $priceGroup = $form.find('.js-file-price-input');
-        if ($(this).val() === 'paid') {
-            $priceGroup.removeClass('d-none');
-        } else {
-            $priceGroup.addClass('d-none');
-        }
-    });
-
     $('body').on('click', '.js-assignment-attachments-add-btn', function (e) {
         e.preventDefault();
         const $container = $(this).closest('.js-assignment-attachments').find(".js-assignment-attachments-items");

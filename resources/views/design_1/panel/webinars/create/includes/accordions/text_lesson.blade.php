@@ -78,25 +78,7 @@
                 <div class="invalid-feedback"></div>
             </div>
 
-            @php $isAdminUser = auth()->check() && auth()->user()->isAdmin(); @endphp
-            @if($isAdminUser)
-                <div class="form-group">
-                    <label class="form-group-label">{{ trans('public.accessibility') }}</label>
-                    <div class="d-flex align-items-center js-ajax-accessibility">
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" id="accessibilityFreeText_{{ !empty($textLesson) ? $textLesson->id : 'record' }}" value="free" class="custom-control-input" {{ (empty($textLesson) or $textLesson->accessibility == 'free') ? 'checked' : '' }}>
-                            <label class="custom-control-label cursor-pointer pl-0" for="accessibilityFreeText_{{ !empty($textLesson) ? $textLesson->id : 'record' }}">{{ trans('public.free') }}</label>
-                        </div>
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" id="accessibilityPaidText_{{ !empty($textLesson) ? $textLesson->id : 'record' }}" value="paid" class="custom-control-input" {{ (!empty($textLesson) and $textLesson->accessibility == 'paid') ? 'checked' : '' }}>
-                            <label class="custom-control-label cursor-pointer pl-0" for="accessibilityPaidText_{{ !empty($textLesson) ? $textLesson->id : 'record' }}">{{ trans('public.paid') }}</label>
-                        </div>
-                    </div>
-                    <div class="invalid-feedback"></div>
-                </div>
-            @else
-                <input type="hidden" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" value="free">
-            @endif
+            <input type="hidden" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" value="free">
 
             <div class="form-group ">
                 <label class="form-group-label">{{ trans('public.image') }}</label>
