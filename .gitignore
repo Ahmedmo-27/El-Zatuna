@@ -1,7 +1,6 @@
 /node_modules
 /public/hot
 /public/storage
-/public/sitemap.xml
 /public/debug_paytabs.log
 !/public/store/.htaccess
 /storage/*.key
