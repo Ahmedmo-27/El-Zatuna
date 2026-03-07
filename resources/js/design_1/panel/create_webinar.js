@@ -740,9 +740,14 @@
         if ($form.hasClass('file-form')) {
             const storage = $form.find('.js-file-storage').val() || $form.find('select[name*="[storage]"]').val() || 'upload';
             if (storage === 'r2' || storage === 'upload') {
+                const action = $form.attr('data-action') || '';
+                const isPanelFileStore = action.indexOf('/panel/files/store') !== -1;
                 const $fileInput = $form.find('.js-ajax-upload-file-input');
                 const hasFile = $fileInput.length && $fileInput[0].files && $fileInput[0].files.length > 0;
-                if (!hasFile) {
+                // Only require a new file when creating a new course file.
+                // When updating an existing section with an already uploaded video/file,
+                // allow saving metadata changes without forcing a re-upload.
+                if (isPanelFileStore && !hasFile) {
                     showUploadErrorForForm($form, 'File required', 'Please choose a file to upload before saving.');
                     return;
                 }
@@ -750,9 +755,6 @@
 
                 // For new course files stored in R2, upload the file directly to R2 from the browser first,
                 // then submit only the metadata + R2 path to Laravel. This bypasses App Platform timeouts.
-                const action = $form.attr('data-action') || '';
-                const isPanelFileStore = action.indexOf('/panel/files/store') !== -1;
-
                 if (isPanelFileStore) {
                     handleDirectR2UploadAndSubmit($form, $this, storage);
                     return;
@@ -1212,6 +1214,17 @@
             $fileName.removeClass('d-none');
         }
 
+    });
+
+    // Admin-only: show/hide price field when accessibility (free/paid) changes
+    $('body').on('change', '.file-form input[name*="[accessibility]"]', function () {
+        const $form = $(this).closest('.file-form');
+        const $priceGroup = $form.find('.js-file-price-input');
+        if ($(this).val() === 'paid') {
+            $priceGroup.removeClass('d-none');
+        } else {
+            $priceGroup.addClass('d-none');
+        }
     });
 
     $('body').on('click', '.js-assignment-attachments-add-btn', function (e) {

@@ -188,13 +188,21 @@
                     </div>
 
                     {{-- Selected File Display --}}
-                    <div class="js-selected-file-display d-none mt-12 p-12 bg-gray-50 rounded-8">
+                    <div class="js-selected-file-display {{ (!empty($file) and !empty($file->file)) ? '' : 'd-none' }} mt-12 p-12 bg-gray-50 rounded-8">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center flex-1">
                                 <x-iconsax-lin-document class="icons text-primary mr-8" width="20px" height="20px" aria-hidden="true"/>
                                 <div class="flex-1">
-                                    <p class="font-14 font-weight-bold text-dark mb-2 js-selected-file-name"></p>
-                                    <p class="font-12 text-gray-500 mb-0 js-selected-file-size"></p>
+                                    <p class="font-14 font-weight-bold text-dark mb-2 js-selected-file-name">
+                                        @if(!empty($file) and !empty($file->file))
+                                            {{ getFileNameByPath($file->file) }}
+                                        @endif
+                                    </p>
+                                    <p class="font-12 text-gray-500 mb-0 js-selected-file-size">
+                                        @if(!empty($file) and !empty($file->volume))
+                                            {{ round($file->volume) }} {{ trans('update.mb') }}
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
                             <button type="button" 
@@ -237,6 +245,32 @@
                         </div>
                     </div>
                 </div>
+
+                @php $isAdminUser = auth()->check() && auth()->user()->isAdmin(); @endphp
+                @if($isAdminUser)
+                    <div class="form-group">
+                        <label class="form-group-label">{{ trans('public.accessibility') }}</label>
+                        <div class="d-flex align-items-center js-ajax-accessibility">
+                            <div class="custom-control custom-radio mr-12">
+                                <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" id="accessibilityFree_{{ !empty($file) ? $file->id : 'record' }}" value="free" class="custom-control-input" {{ (empty($file) or $file->accessibility == 'free') ? 'checked' : '' }}>
+                                <label class="custom-control-label cursor-pointer pl-0" for="accessibilityFree_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.free') }}</label>
+                            </div>
+                            <div class="custom-control custom-radio mr-12">
+                                <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" id="accessibilityPaid_{{ !empty($file) ? $file->id : 'record' }}" value="paid" class="custom-control-input" {{ (!empty($file) and $file->accessibility == 'paid') ? 'checked' : '' }}>
+                                <label class="custom-control-label cursor-pointer pl-0" for="accessibilityPaid_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.paid') }}</label>
+                            </div>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="form-group js-file-price-input {{ (!empty($file) and $file->accessibility == 'paid') ? '' : 'd-none' }}">
+                        <label class="form-group-label">{{ trans('public.price') }}</label>
+                        <input type="number" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][price]" value="{{ (!empty($file)) ? $file->price : 0 }}" class="js-ajax-price form-control" min="0" step="0.01" placeholder="0"/>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                @else
+                    <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" value="free">
+                    <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][price]" value="0">
+                @endif
 
                 <div class="form-group">
                     <label class="form-group-label">{{ trans('public.description') }}</label>
