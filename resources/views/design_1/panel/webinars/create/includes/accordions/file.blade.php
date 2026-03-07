@@ -113,30 +113,39 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="font-14 text-gray-500 bg-white">{{ trans('public.accessibility') }}</label>
+                @php
+                    $isAdminUser = auth()->check() && auth()->user()->isAdmin();
+                @endphp
 
-                    <div class="d-flex align-items-center js-ajax-accessibility mt-12">
+                @if($isAdminUser)
+                    <div class="form-group">
+                        <label class="font-14 text-gray-500 bg-white">{{ trans('public.accessibility') }}</label>
 
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" id="accessibilityRadio1_{{ !empty($file) ? $file->id : 'record' }}" value="free" class="custom-control-input" @if(empty($file) or (!empty($file) and $file->accessibility == 'free')) checked="checked" @endif>
-                            <label class="custom-control__label cursor-pointer pl-0" for="accessibilityRadio1_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.free') }}</label>
+                        <div class="d-flex align-items-center js-ajax-accessibility mt-12">
+
+                            <div class="custom-control custom-radio mr-12">
+                                <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" id="accessibilityRadio1_{{ !empty($file) ? $file->id : 'record' }}" value="free" class="custom-control-input" @if(empty($file) or (!empty($file) and $file->accessibility == 'free')) checked="checked" @endif>
+                                <label class="custom-control__label cursor-pointer pl-0" for="accessibilityRadio1_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.free') }}</label>
+                            </div>
+
+                            <div class="custom-control custom-radio mr-12">
+                                <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" id="accessibilityRadio2_{{ !empty($file) ? $file->id : 'record' }}" value="paid" class="custom-control-input" @if(empty($file) or (!empty($file) and $file->accessibility == 'paid')) checked="checked" @endif>
+                                <label class="custom-control__label cursor-pointer pl-0" for="accessibilityRadio2_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.paid') }}</label>
+                            </div>
                         </div>
 
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" id="accessibilityRadio2_{{ !empty($file) ? $file->id : 'record' }}" value="paid" class="custom-control-input" @if(empty($file) or (!empty($file) and $file->accessibility == 'paid')) checked="checked" @endif>
-                            <label class="custom-control__label cursor-pointer pl-0" for="accessibilityRadio2_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.paid') }}</label>
-                        </div>
+                        <div class="invalid-feedback"></div>
                     </div>
 
-                    <div class="invalid-feedback"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-group-label">{{ trans('public.price') }}</label>
-                    <input type="number" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][price]" class="js-ajax-price form-control" value="{{ !empty($file) ? $file->price : '' }}" placeholder="{{ trans('update.enter_amount') }}" min="0" step="0.01"/>
-                    <div class="invalid-feedback"></div>
-                </div>
+                    <div class="form-group">
+                        <label class="form-group-label">{{ trans('public.price') }}</label>
+                        <input type="number" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][price]" class="js-ajax-price form-control" value="{{ !empty($file) ? $file->price : '' }}" placeholder="{{ trans('update.enter_amount') }}" min="0" step="0.01"/>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                @else
+                    <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" value="free">
+                    <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][price]" value="0">
+                @endif
 
                 <div class="js-secure-host-upload-type-field form-group {{ (!empty($file) and $file->storage == "secure_host") ? '' : 'd-none' }}">
                     <label class="font-14 text-gray-500 bg-white">{{ trans('update.upload_type') }}</label>
