@@ -21,10 +21,9 @@ class TextLessonsController extends Controller
         $data = $request->get('ajax')['new'];
         $imageFileUpload = $request->file('ajax.new.image');
 
-        // Only admins can change lesson accessibility; default to free for panel users.
-        if (!$user->isAdmin()) {
-            $data['accessibility'] = 'free';
-        }
+        // In the instructor panel, text lessons are always free.
+        // Default accessibility here so the frontend doesn't need to send this field.
+        $data['accessibility'] = 'free';
 
         $validator = Validator::make($data, [
             'webinar_id' => 'required',
@@ -114,10 +113,9 @@ class TextLessonsController extends Controller
         $data = $request->get('ajax')[$id];
         $imageFileUpload = $request->file("ajax.{$id}.image");
 
-        // Only admins can change lesson accessibility; default to free for panel users.
-        if (!$user->isAdmin()) {
-            $data['accessibility'] = 'free';
-        }
+        // In the instructor panel, text lessons are always free.
+        // Default accessibility here so the frontend doesn't need to send this field.
+        $data['accessibility'] = 'free';
 
         $validator = Validator::make($data, [
             'webinar_id' => 'required',

@@ -87,12 +87,10 @@ class FileController extends Controller
             $data['volume'] = !empty($data['volume']) ? $data['volume'] : 0;
         }
 
-        // Only admins can set per-file accessibility/price on course content.
-        // For all panel users, default to free content with zero price.
-        if (!$user->isAdmin()) {
-            $data['accessibility'] = 'free';
-            $data['price'] = 0;
-        }
+        // In the instructor panel, course content files are always free.
+        // Default accessibility/price here so the frontend doesn't need to send these fields.
+        $data['accessibility'] = 'free';
+        $data['price'] = 0;
 
         $rules = [
             'webinar_id' => 'required',
@@ -527,11 +525,10 @@ class FileController extends Controller
                     $data['volume'] = !empty($data['volume']) ? $data['volume'] : 0;
                 }
 
-                // Non-admin panel users cannot set per-file accessibility/price.
-                if (!$user->isAdmin()) {
-                    $data['accessibility'] = 'free';
-                    $data['price'] = 0;
-                }
+                // In the instructor panel, course content files are always free.
+                // Default accessibility/price here so the frontend doesn't need to send these fields.
+                $data['accessibility'] = 'free';
+                $data['price'] = 0;
 
                 $fileTypeIsChanged = !!(empty($data['file_type']) or $data['file_type'] != $file->file_type);
 

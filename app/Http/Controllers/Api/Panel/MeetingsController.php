@@ -161,7 +161,7 @@ class MeetingsController extends Controller
             }
         }
 
-        return apiResponse(1, 'created', 'ddd');
+        return apiResponse2(1, 'created', 'This time reserved successfully.');
 
 
     }

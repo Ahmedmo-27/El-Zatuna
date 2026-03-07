@@ -28,10 +28,11 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
 
     Route::get('/', function () {
         return response()->json([
-            'code' => 200,
-            'message' => 'LMS API v1',
-            'version' => 'v1',
+            'success' => true,
             'status' => 'stable',
+            'message' => 'LMS API v1',
+            'code' => 200,
+            'version' => 'v1',
             'documentation' => url('/api/v1/docs'),
             'migration_guide' => url('/api/v1/docs/migration'),
         ]);
@@ -60,8 +61,10 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
     // API Documentation endpoint
     Route::get('/docs', function () {
         return response()->json([
-            'version' => 'v1',
+            'success' => true,
             'status' => 'stable',
+            'message' => 'API documentation index',
+            'version' => 'v1',
             'features' => [
                 'rate_limiting' => '300 requests per minute',
                 'websocket' => 'Available via /broadcasting endpoints',
@@ -78,6 +81,9 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
     
     Route::get('/docs/websocket', function () {
         return response()->json([
+            'success' => true,
+            'status' => 'stable',
+            'message' => 'WebSocket documentation',
             'title' => 'WebSocket Documentation',
             'connection_endpoint' => url('/broadcasting/auth'),
             'available_channels' => [
@@ -105,6 +111,9 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
     // Migration guide endpoint
     Route::get('/docs/migration', function () {
         return response()->json([
+            'success' => true,
+            'status' => 'stable',
+            'message' => 'API migration guide',
             'title' => 'API Migration Guide',
             'from_version' => 'development',
             'to_version' => 'v1',
@@ -133,10 +142,11 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
 Route::group(['prefix' => 'v2', 'middleware' => 'api.version:v2'], function () {
     Route::get('/', function () {
         return response()->json([
-            'code' => 200,
+            'success' => true,
+            'status' => 'coming_soon',
             'message' => 'API v2',
+            'code' => 200,
             'version' => 'v2',
-            'status' => 'Coming soon',
             'planned_features' => [
                 'Standardized terminology (course instead of webinar)',
                 'Enhanced pagination support',
@@ -148,10 +158,12 @@ Route::group(['prefix' => 'v2', 'middleware' => 'api.version:v2'], function () {
 
     Route::get('/docs/migration', function () {
         return response()->json([
+            'success' => true,
+            'status' => 'planning',
+            'message' => 'API v2 migration guide',
             'title' => 'API v2 Migration Guide',
             'from_version' => 'v1',
             'to_version' => 'v2',
-            'status' => 'Planning phase',
             'planned_changes' => [
                 'webinar → course terminology',
                 'Enhanced pagination across all list endpoints',

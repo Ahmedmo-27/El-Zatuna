@@ -10,7 +10,12 @@ Route::group(['middleware' => 'api.auth'], function () {
     });
 
     Route::get('/csrf-token', function () {
-        return response()->json(['csrf_token' => csrf_token()]);
+        return response()->json([
+            'success' => true,
+            'status' => 'retrieved',
+            'message' => 'CSRF token retrieved.',
+            'csrf_token' => csrf_token(),
+        ]);
     })->middleware("web");
 
     Route::group(['prefix' => '/comments'], function () {
