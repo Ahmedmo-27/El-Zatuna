@@ -140,23 +140,76 @@
                 </div>
 
                 <div class="form-group js-file-upload-input {{ (empty($file) or (in_array($file->storage, ['upload', 'r2']) or ($file->storage == 'secure_host' and $file->secure_host_upload_type == 'direct'))) ? '' : 'd-none' }}">
+                    @php
+                        $hasExistingFile = !empty($file) && !empty($file->file);
+                        $isVideoType = $hasExistingFile && in_array($file->file_type ?? '', ['video', 'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm', 'm4v']);
+                    @endphp
                     <label class="form-group-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}">
-                        {{ trans('update.choose_file') }}
+                        @if($hasExistingFile)
+                            {{ trans('update.choose_file') }} <span class="font-12 font-weight-normal text-gray-500">({{ trans('public.optional') }})</span>
+                        @else
+                            {{ trans('update.choose_file') }}
+                        @endif
                         <span class="sr-only">Drag and drop or click to upload</span>
                     </label>
 
+                    {{-- Current / uploaded file display (same as after first upload) --}}
+                    <div class="js-selected-file-display {{ $hasExistingFile ? '' : 'd-none' }} mt-12 p-12 rounded-8 border border-gray-200 bg-gray-50">
+                        <p class="js-existing-file-hint font-12 text-gray-500 mb-8 {{ $hasExistingFile ? '' : 'd-none' }}">
+                            @if($hasExistingFile)
+                                {{ trans('update.section_has_video_hint') }}
+                            @endif
+                        </p>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center flex-1">
+                                @if($isVideoType)
+                                    <x-iconsax-bul-video-play class="icons text-primary mr-8" width="24px" height="24px" aria-hidden="true"/>
+                                @else
+                                    <x-iconsax-lin-document class="icons text-primary mr-8" width="20px" height="20px" aria-hidden="true"/>
+                                @endif
+                                <div class="flex-1">
+                                    <p class="font-14 font-weight-bold text-dark mb-2 js-selected-file-name">
+                                        @if($hasExistingFile)
+                                            {{ getFileNameByPath($file->file) }}
+                                        @endif
+                                    </p>
+                                    <p class="font-12 text-gray-500 mb-0 js-selected-file-size">
+                                        @if($hasExistingFile && !empty($file->volume))
+                                            {{ round($file->volume) }} {{ trans('update.mb') }}
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" 
+                                    class="js-remove-file btn btn-sm btn-transparent text-danger p-4" 
+                                    aria-label="{{ $hasExistingFile ? 'Replace file' : 'Remove file' }}">
+                                <x-iconsax-lin-trash class="icons" width="18px" height="18px" aria-hidden="true"/>
+                                @if($hasExistingFile)
+                                    <span class="font-12 ml-4 d-none d-md-inline">{{ trans('update.replace_video') }}</span>
+                                @endif
+                            </button>
+                        </div>
+                    </div>
+
                     {{-- Drag and Drop Zone --}}
-                    <div class="js-file-drag-drop-zone file-drag-drop-zone text-center" 
+                    <div class="js-file-drag-drop-zone file-drag-drop-zone text-center {{ $hasExistingFile ? 'mt-16' : '' }}" 
                          role="region" 
                          aria-label="File upload area"
                          tabindex="0"
-                         data-file-input-id="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}">
+                         data-file-input-id="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}"
+                         data-has-existing-file="{{ $hasExistingFile ? '1' : '0' }}">
                         <div class="js-drag-drop-content">
                             <div style="margin-bottom: 12px;">
                                 <x-iconsax-lin-export class="icons text-gray-400" width="48px" height="48px" aria-hidden="true"/>
                             </div>
                             <p class="font-14 text-gray-600" style="margin-bottom: 4px;">
-                                <span class="js-drag-drop-text">Drag and drop files here</span>
+                                <span class="js-drag-drop-text">
+                                    @if($hasExistingFile)
+                                        {{ trans('update.replace_video_optional') }}
+                                    @else
+                                        Drag and drop files here
+                                    @endif
+                                </span>
                                 <span class="sr-only">or</span>
                             </p>
                             <p class="font-12 text-gray-500" style="margin-bottom: 0;">
@@ -183,34 +236,8 @@
                                id="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}"
                                aria-label="{{ trans('update.choose_file') }}"
                                aria-describedby="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}">
-                        <span class="custom-file-text">{{ (!empty($file) and !empty($file->file)) ? getFileNameByPath($file->file) : '' }}</span>
+                        <span class="custom-file-text">{{ $hasExistingFile ? getFileNameByPath($file->file) : '' }}</span>
                         <label class="custom-file-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('update.browse') }}</label>
-                    </div>
-
-                    {{-- Selected File Display --}}
-                    <div class="js-selected-file-display {{ (!empty($file) and !empty($file->file)) ? '' : 'd-none' }} mt-12 p-12 bg-gray-50 rounded-8">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center flex-1">
-                                <x-iconsax-lin-document class="icons text-primary mr-8" width="20px" height="20px" aria-hidden="true"/>
-                                <div class="flex-1">
-                                    <p class="font-14 font-weight-bold text-dark mb-2 js-selected-file-name">
-                                        @if(!empty($file) and !empty($file->file))
-                                            {{ getFileNameByPath($file->file) }}
-                                        @endif
-                                    </p>
-                                    <p class="font-12 text-gray-500 mb-0 js-selected-file-size">
-                                        @if(!empty($file) and !empty($file->volume))
-                                            {{ round($file->volume) }} {{ trans('update.mb') }}
-                                        @endif
-                                    </p>
-                                </div>
-                            </div>
-                            <button type="button" 
-                                    class="js-remove-file btn btn-sm btn-transparent text-danger p-4" 
-                                    aria-label="Remove file">
-                                <x-iconsax-lin-trash class="icons" width="18px" height="18px" aria-hidden="true"/>
-                            </button>
-                        </div>
                     </div>
 
                     <div id="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}" class="font-12 text-gray-500 mt-8">

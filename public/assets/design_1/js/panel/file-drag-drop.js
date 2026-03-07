@@ -209,6 +209,7 @@
             this.$fileName.text(fileName);
             this.$fileSize.text(fileSize);
             this.$selectedFileDisplay.removeClass('d-none');
+            this.$selectedFileDisplay.find('.js-existing-file-hint').addClass('d-none');
             
             // Update custom file label
             const $customLabel = this.$fileInput.closest('.custom-file').find('.custom-file-label');
