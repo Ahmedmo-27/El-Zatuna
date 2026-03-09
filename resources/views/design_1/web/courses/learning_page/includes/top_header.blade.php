@@ -1,15 +1,15 @@
 <div class="learning-page__top-header d-flex align-items-center justify-content-between w-100 bg-white py-16 pl-32 pr-24">
-    <div class="">
+    <div class="learning-page__top-header-left">
         <a href="{{ $course->getUrl() }}" class="font-16 font-weight-bold text-dark d-flex mb-4">
             <span class="">{{ $course->title }}</span>
         </a>
 
-        <div class="d-none d-lg-flex">
+        <div class="learning-page__breadcrumb d-none d-lg-flex">
             @include('design_1.panel.includes.breadcrumb')
         </div>
     </div>
 
-    <div class="d-flex align-items-center gap-16">
+    <div class="learning-page__top-actions d-flex align-items-center gap-16">
 
         {{-- Course Tools --}}
         <div class="d-none d-lg-block">
@@ -23,11 +23,17 @@
             $hasNotification = (!empty($course->noticeboards_count) and $course->noticeboards_count > 0);
         @endphp
 
-        <div class="position-relative d-flex-center size-48 rounded-circle {{ (!empty($hasNotification)) ? 'bg-primary-20 cursor-pointer js-show-noticeboards' : 'bg-gray-100' }}"
+        <div class="learning-page__notice-btn position-relative d-flex align-items-center {{ (!empty($hasNotification)) ? 'has-notification cursor-pointer js-show-noticeboards' : 'is-empty' }}"
              data-path="{{ $course->getNoticeboardsPageUrl() }}"
+             data-tippy-content="{{ trans('update.send_notice') }}"
         >
-            <div class="d-flex-center size-32 rounded-circle {{ (!empty($hasNotification)) ? 'bg-primary' : 'bg-gray-200' }}">
+            <div class="learning-page__notice-icon d-flex-center rounded-circle {{ (!empty($hasNotification)) ? 'bg-primary' : 'bg-gray-200' }}">
                 <x-iconsax-bul-notification-bing class="icons {{ (!empty($hasNotification)) ? 'text-white' : 'text-gray-500' }}" width="16px" height="16px"/>
+            </div>
+
+            <div class="learning-page__notice-content d-none d-lg-block ml-10">
+                <div class="font-12 font-weight-bold text-dark">{{ trans('update.send_notice') }}</div>
+                <div class="font-12 text-gray-500">{{ $course->noticeboards_count ?? 0 }} {{ trans('public.messages') }}</div>
             </div>
 
             @if($hasNotification)

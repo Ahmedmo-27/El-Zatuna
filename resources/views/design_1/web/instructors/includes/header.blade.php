@@ -2,8 +2,8 @@
     <div class="instructors-lists-header__mask"></div>
     <div class="position-relative d-flex align-items-start bg-[#072923] rounded-32 z-index-2">
         <div class="d-flex flex-column p-32">
-            <div class="d-flex-center size-64 rounded-12 bg-[#FAFFE0]">
-                <x-iconsax-bol-teacher class="icons text-[#072923]" width="32px" height="32px"/>
+            <div class="d-flex-center size-72 rounded-16 bg-[#FAFFE0]">
+                <x-iconsax-bol-teacher class="icons text-[#072923]" width="90px" height="90px"/>
             </div>
 
             <div class="d-flex align-items-center mt-16 text-[#FAFFE0]/70">

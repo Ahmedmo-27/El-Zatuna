@@ -61,33 +61,9 @@
 
             <div class="mt-16 bg-[#BDEA42] rounded-[28px] px-8 py-10 md:px-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                    <div class="flex items-center justify-center gap-4">
-                        <div class="h-12 w-12 rounded-full bg-[#FAFFE0] flex items-center justify-center text-xl">
-                            <x-iconsax-lin-briefcase class="w-6 h-6 text-[#072923]"/>
-                        </div>
-                        <div>
-                            <div class="text-3xl font-semibold">257</div>
-                            <div class="text-xs text-[#072923]/70">Skillful Instructor</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-center gap-4">
-                        <div class="h-12 w-12 rounded-full bg-[#FAFFE0] flex items-center justify-center text-xl">
-                            <x-iconsax-lin-book class="w-6 h-6 text-[#072923]"/>
-                        </div>
-                        <div>
-                            <div class="text-3xl font-semibold">29</div>
-                            <div class="text-xs text-[#072923]/70">Professional Courses</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-center gap-4">
-                        <div class="h-12 w-12 rounded-full bg-[#FAFFE0] flex items-center justify-center text-xl">
-                            <x-iconsax-lin-building-3 class="w-6 h-6 text-[#072923]"/>
-                        </div>
-                        <div>
-                            <div class="text-3xl font-semibold">6</div>
-                            <div class="text-xs text-[#072923]/70">Official Organizations</div>
-                        </div>
-                    </div>
+                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-briefcase', 'value' => '257', 'label' => 'Skillful Instructor'])
+                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-book', 'value' => '29', 'label' => 'Professional Courses'])
+                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-building-3', 'value' => '6', 'label' => 'Official Organizations'])
                 </div>
             </div>
         </section>
@@ -107,33 +83,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-7">
-                    <div class="bg-[#072923] text-[#FAFFE0] rounded-[24px] p-9 h-[220px] flex flex-col gap-5">
-                        <div class="h-10 w-10 rounded-full bg-[#FAFFE0] text-[#072923] flex items-center justify-center self-end">
-                             <x-iconsax-lin-tick-circle class="w-6 h-6"/>
-                        </div>
-                        <div>
-                            <div class="font-semibold text-base leading-relaxed">Courses Club<br>To Support Student</div>
-                            <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">Support student in each courses to boost understanding and track progress effectively.</p>
-                        </div>
-                    </div>
-                    <div class="bg-[#072923] text-[#FAFFE0] rounded-[24px] p-9 h-[220px] flex flex-col gap-5">
-                        <div class="h-10 w-10 rounded-full bg-[#FAFFE0] text-[#072923] flex items-center justify-center self-end">
-                             <x-iconsax-lin-star class="w-6 h-6"/>
-                        </div>
-                        <div>
-                            <div class="font-semibold text-base leading-relaxed">Explanation Practicing<br>Content</div>
-                            <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">Earn official certificates upon completion to showcase skills and add credibility.</p>
-                        </div>
-                    </div>
-                    <div class="sm:col-span-2 sm:w-[calc(50%-14px)] sm:mx-auto bg-[#072923] text-[#FAFFE0] rounded-[24px] p-9 h-[220px] flex flex-col gap-5">
-                        <div class="h-10 w-10 rounded-full bg-[#FAFFE0] text-[#072923] flex items-center justify-center self-end">
-                             <x-iconsax-lin-element-4 class="w-6 h-6"/>
-                        </div>
-                        <div>
-                            <div class="font-semibold text-base leading-relaxed">Courses Content<br>Specific To Your Uni</div>
-                            <p class="mt-4 text-sm text-[#FAFFE0]/75 leading-relaxed">Apply what you learn with real assignments that reinforce skills and deepen practical knowledge.</p>
-                        </div>
-                    </div>
+                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-tick-circle', 'title' => "Courses Club\nTo Support Student", 'description' => 'Support student in each courses to boost understanding and track progress effectively.'])
+                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-star', 'title' => "Explanation Practicing\nContent", 'description' => 'Earn official certificates upon completion to showcase skills and add credibility.'])
+                    @include('design_1.web.components.home.feature_card', ['icon' => 'iconsax-lin-element-4', 'title' => "Courses Content\nSpecific To Your Uni", 'description' => 'Apply what you learn with real assignments that reinforce skills and deepen practical knowledge.', 'spanClass' => 'sm:col-span-2 sm:w-[calc(50%-14px)] sm:mx-auto'])
                 </div>
             </div>
         </section>
@@ -155,15 +107,12 @@
             <p class="text-base md:text-lg text-[#072923]/70 leading-relaxed mb-14">Stay ahead with fresh courses launching soon, designed to expand your skills and knowledge further.</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-9">
                 @foreach(($upcomingCourses ?? collect()) as $upcomingCourse)
-                    <a href="/upcoming_courses/{{ $upcomingCourse->slug }}" class="block rounded-[24px] bg-[#072923] overflow-hidden">
-                        <div class="h-[200px] w-full">
-                            <img loading="lazy" src="{{ $upcomingCourse->getImageCover() ?? $upcomingCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0' }}" alt="{{ $upcomingCourse->title }}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="p-6 text-[#FAFFE0]">
-                            <div class="font-semibold text-base leading-relaxed">{{ $upcomingCourse->title }}</div>
-                            <div class="mt-1 text-sm text-[#FAFFE0]/70">{{ $upcomingCourse->teacher->full_name ?? 'Instructor' }}</div>
-                        </div>
-                    </a>
+                    @include('design_1.web.components.home.course_card_dark', [
+                        'href' => '/upcoming_courses/' . $upcomingCourse->slug,
+                        'image' => $upcomingCourse->getImageCover() ?? $upcomingCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0',
+                        'title' => $upcomingCourse->title,
+                        'subtitle' => $upcomingCourse->teacher->full_name ?? 'Instructor',
+                    ])
                 @endforeach
             </div>
             <a href="/upcoming_courses" class="mt-20 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
@@ -186,15 +135,12 @@
 
                 <div class="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
                     @foreach(($discountedCards ?? collect()) as $course)
-                        <a href="{{ is_object($course) ? $course->getUrl() : '/classes' }}" class="block rounded-[24px] bg-[#FAFFE0] overflow-hidden">
-                            <div class="h-[220px] w-full">
-                                <img loading="lazy" src="{{ is_object($course) ? ($course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923') : 'https://placehold.co/600x400/FAFFE0/072923' }}" alt="{{ is_object($course) ? $course->title : 'Discounted course' }}" class="w-full h-full object-cover">
-                            </div>
-                            <div class="p-7 text-[#072923]">
-                                <div class="font-semibold text-base">{{ is_object($course) ? $course->title : 'Discounted course' }}</div>
-                                <div class="mt-3 text-xs text-[#072923]/70">{{ is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor' }}</div>
-                            </div>
-                        </a>
+                        @include('design_1.web.components.home.course_card_light', [
+                            'href' => is_object($course) ? $course->getUrl() : '/classes',
+                            'image' => is_object($course) ? ($course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923') : 'https://placehold.co/600x400/FAFFE0/072923',
+                            'title' => is_object($course) ? $course->title : 'Discounted course',
+                            'subtitle' => is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor',
+                        ])
                     @endforeach
                 </div>
                 <p class="mt-20 md:mt-24 pt-2 pb-4 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
@@ -207,15 +153,14 @@
             <p class="mt-2 text-sm text-[#072923]/70">Access top‑quality free courses anytime, expand your skills, and learn without spending a single dollar.</p>
             <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 @foreach(($freeCourses ?? collect()) as $freeCourse)
-                    <a href="{{ $freeCourse->getUrl() }}" class="block rounded-[24px] bg-[#072923] overflow-hidden">
-                        <div class="h-[220px] w-full">
-                            <img loading="lazy" src="{{ $freeCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0' }}" alt="{{ $freeCourse->title }}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="p-4 text-[#FAFFE0]">
-                            <div class="font-semibold text-base">{{ $freeCourse->title }}</div>
-                            <div class="text-xs text-[#FAFFE0]/70">{{ $freeCourse->teacher->full_name ?? 'Instructor' }}</div>
-                        </div>
-                    </a>
+                    @include('design_1.web.components.home.course_card_dark', [
+                        'href' => $freeCourse->getUrl(),
+                        'image' => $freeCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0',
+                        'title' => $freeCourse->title,
+                        'subtitle' => $freeCourse->teacher->full_name ?? 'Instructor',
+                        'height' => 'h-[220px]',
+                        'bodyPadding' => 'p-4',
+                    ])
                 @endforeach
             </div>
         </section>

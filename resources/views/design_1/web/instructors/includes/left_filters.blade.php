@@ -17,8 +17,8 @@
 
             <div id="leftFiltersSkills" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
                 <div class="form-group mb-0 mt-24 ">
-                    <label class="form-group-label text-[#FAFFE0]">{{ trans('update.skill_category') }}</label>
-                    <select class="js-skills-select form-control select2">
+                    <label class="form-group-label text-[#FAFFE0]">Course Category</label>
+                    <select class="js-skills-select form-control select2" data-minimum-results-for-search="Infinity">
                         <option value="">{{ trans('update.select_a_category') }}</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}">{{ $category->title }}</option>
@@ -46,18 +46,15 @@
 
             <div id="leftFiltersRatings" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
                 @foreach([5,4,3,2,1] as $rateNum)
-                    <div class="d-flex align-items-center justify-content-between {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="custom-control-input">
-                            <label class="custom-control__label cursor-pointer pl-0 text-[#FAFFE0]" for="rating_{{ $rateNum }}">
+                    <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
+                        <input type="checkbox" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="custom-control-input js-instructors-rating-filter" {{ (string) request()->get('rating') === (string) $rateNum ? 'checked' : '' }}>
+                        <label class="custom-control__label d-flex align-items-center cursor-pointer text-[#FAFFE0]" for="rating_{{ $rateNum }}">
                                 @include('design_1.web.components.rate', [
                                      'rate' => $rateNum,
                                      'rateCount' => false,
                                      'rateClassName' => ''
                                  ])
-                            </label>
-                        </div>
-
+                        </label>
                     </div>
                 @endforeach
             </div>
@@ -127,7 +124,7 @@
             <div id="leftFiltersOrganization" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
                 <div class="form-group mb-0 mt-24">
                     <label class="form-group-label text-[#FAFFE0]">{{ trans('update.instructor_organization') }}</label>
-                    <select name="organizations[]" class="form-control select2">
+                    <select name="organizations[]" class="form-control select2" data-minimum-results-for-search="Infinity">
                         <option value=""></option>
                     </select>
                 </div>

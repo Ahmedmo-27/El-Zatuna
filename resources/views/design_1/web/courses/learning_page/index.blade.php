@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ getDesign1StylePath("learning_page_noticeboards") }}">
     <link rel="stylesheet" href="{{ getDesign1StylePath("learning_page") }}">
     <link rel="stylesheet" href="/assets/design_1/css/panel-elzatuna.css">
+    <link rel="stylesheet" href="/assets/design_1/css/course-pages-elzatuna.css">
 @endpush
 
 @section('content')
