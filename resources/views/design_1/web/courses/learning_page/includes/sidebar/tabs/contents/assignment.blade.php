@@ -34,9 +34,14 @@
             @endif
         </div>
 
-        <div class="ml-8">
-            <span class=" d-block font-weight-bold font-14 text-dark">{{ truncate($assignment->title, 27) }}</span>
-            <span class=" d-block font-12 text-gray-500 mt-4">{{ trans('update.assignment') }}</span>
+        <div class="learning-page-item-details ml-8">
+            <span class="d-block font-weight-bold font-14 text-dark">{{ truncate($assignment->title, 27) }}</span>
+            <div class="learning-page-item-meta d-flex flex-wrap align-items-center gap-8 mt-4">
+                <span class="learning-page-item-meta__chip d-inline-flex align-items-center gap-4">
+                    <x-iconsax-lin-clipboard-text class="icons" width="14px" height="14px"/>
+                    <span>{{ trans('update.assignment') }}</span>
+                </span>
+            </div>
         </div>
     </div>
 
