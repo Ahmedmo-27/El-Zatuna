@@ -41,9 +41,29 @@
             line-height: 1.4;
         }
 
+        &,
+        &:visited,
+        &:hover {
+            text-decoration: none;
+        }
+
         &:hover {
             background-color: rgba(15, 23, 42, 0.03);
             transform: translateY(-2px);
+        }
+
+        &.is-locked {
+            opacity: 0.7;
+
+            &:hover {
+                transform: none;
+                background-color: transparent;
+            }
+
+            .create-course-progress-step__icon {
+                box-shadow: none;
+                filter: saturate(0.8);
+            }
         }
 
         &.active {
@@ -66,6 +86,50 @@
             .create-course-progress-step__title {
                 color: var(--dark);
             }
+        }
+    }
+}
+
+.create-course-bottom-nav {
+    gap: 16px;
+}
+
+.create-course-nav-btn {
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 56px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    border: 1px solid #E5EDB0;
+    background: linear-gradient(180deg, #FAFFE0 0%, #ECF4B8 100%);
+    box-shadow: 0 10px 24px rgba(7, 41, 35, 0.08);
+    transition: all 0.2s ease;
+
+    &__icon,
+    &__icon * {
+        color: var(--primary) !important;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(7, 41, 35, 0.12);
+    }
+
+    &--disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+
+        &:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .create-course-nav-btn__icon,
+        .create-course-nav-btn__icon * {
+            color: var(--gray-500) !important;
         }
     }
 }
@@ -136,5 +200,9 @@
         width: 100%;
         max-width: 280px;
         margin: 0 auto;
+    }
+
+    .create-course-bottom-nav {
+        margin-bottom: 16px;
     }
 }

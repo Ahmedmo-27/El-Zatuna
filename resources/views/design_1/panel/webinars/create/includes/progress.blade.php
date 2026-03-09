@@ -68,18 +68,33 @@
     @foreach($progressSteps as $key => $progressStep)
         @php
             $isActiveStep = ($currentStep == $key);
+            $isLockedStep = empty($webinar) && $key > 1;
+            $isPreviousStep = !empty($webinar) && $key < $currentStep;
         @endphp
 
-        <div class="js-get-next-step create-course-progress-step {{ $isActiveStep ? 'active d-flex' : 'd-none d-lg-flex' }} flex-column align-items-center text-center cursor-pointer" data-step="{{ $key }}" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" @if(!$isActiveStep) data-tippy-content="{{ trans('public.' . $progressStep['name']) }}" @endif>
-            <div class="create-course-progress-step__icon d-flex-center rounded-circle">
-                @svg("iconsax-lin-{$progressStep['icon']}", ['height' => 34, 'width' => 34, 'class' => 'create-course-progress-step__icon-svg'])
-            </div>
+        @if($isPreviousStep)
+            <a href="/panel/courses/{{ $webinar->id }}/step/{{ $key }}" class="create-course-progress-step {{ $isActiveStep ? 'active d-flex' : 'd-none d-lg-flex' }} flex-column align-items-center text-center text-decoration-none cursor-pointer" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" data-tippy-content="{{ trans('public.' . $progressStep['name']) }}">
+                <div class="create-course-progress-step__icon d-flex-center rounded-circle">
+                    @svg("iconsax-lin-{$progressStep['icon']}", ['height' => 34, 'width' => 34, 'class' => 'create-course-progress-step__icon-svg'])
+                </div>
 
-            <div class="create-course-progress-step__content mt-12">
-                <p class="create-course-progress-step__number font-12 mb-0">{{ trans('webinars.progress_step', ['step' => $key,'count' => $stepCount]) }}</p>
-                <h6 class="create-course-progress-step__title font-14 font-weight-bold mt-4 mb-0">{{ trans('public.' . $progressStep['name']) }}</h6>
+                <div class="create-course-progress-step__content mt-12">
+                    <p class="create-course-progress-step__number font-12 mb-0">{{ trans('webinars.progress_step', ['step' => $key,'count' => $stepCount]) }}</p>
+                    <h6 class="create-course-progress-step__title font-14 font-weight-bold mt-4 mb-0">{{ trans('public.' . $progressStep['name']) }}</h6>
+                </div>
+            </a>
+        @else
+            <div class="{{ !$isLockedStep ? 'js-get-next-step' : '' }} create-course-progress-step {{ $isActiveStep ? 'active d-flex' : 'd-none d-lg-flex' }} {{ $isLockedStep ? 'is-locked' : '' }} flex-column align-items-center text-center {{ !$isLockedStep ? 'cursor-pointer' : '' }}" data-step="{{ $key }}" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" @if(!$isActiveStep and !$isLockedStep) data-tippy-content="{{ trans('public.' . $progressStep['name']) }}" @endif @if($isLockedStep) data-tippy-content="Save the first step first to unlock the rest." @endif>
+                <div class="create-course-progress-step__icon d-flex-center rounded-circle">
+                    @svg("iconsax-lin-{$progressStep['icon']}", ['height' => 34, 'width' => 34, 'class' => 'create-course-progress-step__icon-svg'])
+                </div>
+
+                <div class="create-course-progress-step__content mt-12">
+                    <p class="create-course-progress-step__number font-12 mb-0">{{ trans('webinars.progress_step', ['step' => $key,'count' => $stepCount]) }}</p>
+                    <h6 class="create-course-progress-step__title font-14 font-weight-bold mt-4 mb-0">{{ trans('public.' . $progressStep['name']) }}</h6>
+                </div>
             </div>
-        </div>
+        @endif
     @endforeach
 
 </div>
