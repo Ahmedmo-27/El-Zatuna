@@ -25,7 +25,7 @@
                     <x-iconsax-lin-book class="w-5 h-5"/> Subjects/Courses
                 </a>
                 <a href="/instructors" class="{{ $navLinkClass }} {{ $isInstructorsPage ? $navActiveClass : $navInactiveClass }}" aria-current="{{ $isInstructorsPage ? 'page' : 'false' }}">
-                    <x-iconsax-lin-briefcase class="w-5 h-5"/> Instructors
+                    <x-iconsax-bol-teacher class="w-5 h-5"/> Instructors
                 </a>
                 <a href="/about" class="{{ $navLinkClass }} {{ $isAboutPage ? $navActiveClass : $navInactiveClass }}" aria-current="{{ $isAboutPage ? 'page' : 'false' }}">
                     <x-iconsax-lin-info-circle class="w-5 h-5"/> About
@@ -81,7 +81,7 @@
                 <x-iconsax-lin-book class="w-5 h-5"/> Subjects/Courses
             </a>
             <a href="/instructors" class="{{ $isInstructorsPage ? 'text-[#C8CD06] bg-[#ECF4B8]/60' : 'hover:text-[#C8CD06] hover:bg-[#ECF4B8]/60' }} transition-colors duration-200 flex items-center gap-3 px-4 py-2.5 rounded-xl" aria-current="{{ $isInstructorsPage ? 'page' : 'false' }}">
-                <x-iconsax-lin-briefcase class="w-5 h-5"/> Instructors
+                <x-iconsax-bol-teacher class="w-5 h-5"/> Instructors
             </a>
             <a href="/about" class="{{ $isAboutPage ? 'text-[#C8CD06] bg-[#ECF4B8]/60' : 'hover:text-[#C8CD06] hover:bg-[#ECF4B8]/60' }} transition-colors duration-200 flex items-center gap-3 px-4 py-2.5 rounded-xl" aria-current="{{ $isAboutPage ? 'page' : 'false' }}">
                 <x-iconsax-lin-info-circle class="w-5 h-5"/> About
