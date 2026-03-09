@@ -37,7 +37,6 @@
                         </div>
 
                         <h1 class="font-24 font-weight-bold mt-12 text-[#FAFFE0]">{{ $pageTitle }}</h1>
-                        <div class="font-12 text-[#FAFFE0]/70 mt-8">{{ trans('update.all_thing_about') }}</div>
                     </div>
 
                     @if(!empty($pageOverlayImage))
