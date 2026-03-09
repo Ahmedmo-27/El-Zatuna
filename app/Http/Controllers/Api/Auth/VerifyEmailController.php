@@ -97,8 +97,10 @@ class VerifyEmailController extends Controller
             'registration_user_id' => $user->id,
         ]);
 
-        // Redirect to clean URL
-        return redirect('/register/step/3')
+        // Redirect to clean URL that includes the verification token (works across devices)
+        $redirectUrl = '/register/step/3?token=' . $verificationToken . '&verified=true';
+
+        return redirect($redirectUrl)
             ->with('success', trans('auth.email_verified_successfully'));
     }
 

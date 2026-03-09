@@ -16,6 +16,8 @@ return [
      */
 
     'use_package_routes' => true,
+    'url_prefix' => 'laravel-filemanager',
+    'middlewares' => ['web', 'auth'],
 
     /*
     |--------------------------------------------------------------------------
@@ -74,6 +76,9 @@ return [
                 'video/mp4', // 'mp4'
                 'video/x-matroska', // 'mkv'
                 'video/x-msvideo', // 'avi'
+                'video/quicktime', // 'mov'
+                'video/webm', // 'webm'
+                'video/x-m4v', // 'm4v'
                 'audio/mpeg', // 'mp3'
                 'font/woff', // 'woff'
                 'font/woff2', // 'woff2'
@@ -106,6 +111,9 @@ return [
                 'video/mp4', // 'mp4'
                 'video/x-matroska', // 'mkv'
                 'video/x-msvideo', // 'avi'
+                'video/quicktime', // 'mov'
+                'video/webm', // 'webm'
+                'video/x-m4v', // 'm4v'
                 'audio/mpeg', // 'mp3'
                 'font/woff', // 'woff'
                 'font/woff2', // 'woff2'

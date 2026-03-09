@@ -238,13 +238,15 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/{id}/delete', 'CartManagerController@destroy');
         });
     });
-
+    
+    // Subject search/create (used by registration step 3 and become-instructor; no auth required)
+    Route::group(['prefix' => 'become-instructor'], function () {
+        Route::get('/search-subjects', 'BecomeInstructorController@searchSubjects');
+        Route::post('/create-subject', 'BecomeInstructorController@createSubject');
+    });
+    
     Route::group(['middleware' => 'web.auth'], function () {
-
-        Route::group(['prefix' => 'laravel-filemanager'], function () {
-            \UniSharp\LaravelFilemanager\Lfm::routes();
-        });
-
+        
         Route::group(['prefix' => 'reviews'], function () {
             Route::post('/store', 'WebinarReviewController@store');
             Route::post('/store-reply-comment', 'WebinarReviewController@storeReplyComment');
@@ -287,8 +289,6 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/packages', 'BecomeInstructorController@packages')->name('becomeInstructorPackages');
             Route::get('/packages/{id}/checkHasInstallment', 'BecomeInstructorController@checkPackageHasInstallment');
             Route::get('/packages/{id}/installments', 'BecomeInstructorController@getInstallmentsByRegistrationPackage');
-            Route::get('/search-subjects', 'BecomeInstructorController@searchSubjects');
-            Route::post('/create-subject', 'BecomeInstructorController@createSubject');
             Route::post('/store', 'BecomeInstructorController@store');
             Route::post('/form-fields', 'BecomeInstructorController@getFormFieldsByUserType');
         });

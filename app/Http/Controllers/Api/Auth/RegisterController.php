@@ -18,6 +18,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class RegisterController extends Controller
@@ -129,7 +130,7 @@ class RegisterController extends Controller
             ]);
         }
 
-        // Create user and send email verification
+        // Create user and send email verification (step 2) via Brevo
         $referralSettings = getReferralSettings();
         $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
@@ -139,7 +140,7 @@ class RegisterController extends Controller
             'full_name' => $data['full_name'],
             'email' => $data['email'],
             'status' => User::$pending,
-            'password' => Hash::make(Str::random(32)), // Temporary password, will be set in step 3
+            'password' => Hash::make(Str::random(32)),
             'affiliate' => $usersAffiliateStatus,
             'created_at' => time()
         ]);
@@ -156,17 +157,14 @@ class RegisterController extends Controller
         $form = $this->getFormFieldsByType($request->get('account_type'));
         $this->storeFormFields($data, $user);
 
-        // Generate verification code for step 2 (email verification)
         $tokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
             'step' => 2,
         ];
-        
         $expiresAt = now()->addMinutes(60);
-        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60); // 60 minutes
+        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
 
-        // Send verification email with code
         $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
 
         return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
@@ -178,48 +176,37 @@ class RegisterController extends Controller
     private function stepTwo(Request $request)
     {
         $data = $request->all();
-        
-        // Step 2: Verify email with verification code
+
         $rules = [
             'email' => 'required|email|exists:users,email',
             'verification_code' => 'required|string|size:6',
         ];
-        
         validateParam($data, $rules);
 
-        // Verify the code
         $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
-        
+
         if (!$tokenData) {
             return apiResponse2(0, 'invalid_code', 'Verification code is invalid or expired. Please request a new code.');
         }
 
-        // Find user
         $user = User::where('email', $data['email'])->first();
-        
+
         if (!$user) {
             return apiResponse2(0, 'user_not_found', 'User not found');
         }
 
-        // Mark code as used
         RegistrationVerificationToken::markCodeAsUsed($data['verification_code'], $data['email']);
 
-        // Mark email as verified
         if (empty($user->email_verified_at)) {
-            $user->update([
-                'email_verified_at' => time(),
-            ]);
+            $user->update(['email_verified_at' => time()]);
         }
 
-        // Generate new token for step 3 (profile completion)
         $newTokenData = [
             'user_id' => $user->id,
-            'username' => $user->username,
             'email' => $user->email,
             'step' => 3,
         ];
-        
-        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
+        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
 
         return apiResponse2(1, 'email_verified', trans('api.auth.email_verified'), [
             'verification_token' => $verificationToken,
@@ -273,6 +260,11 @@ class RegisterController extends Controller
             return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
         }
 
+        // Ensure email is marked verified (fallback for older flows)
+        if (empty($user->email_verified_at)) {
+            $user->update(['email_verified_at' => time()]);
+        }
+
         // Update user profile with username, password, university, and faculty
         $user->update([
             'username' => $data['username'],
@@ -297,6 +289,7 @@ class RegisterController extends Controller
         $user->update([
             'enable_registration_bonus' => $enableRegistrationBonus,
             'registration_bonus_amount' => $registrationBonusAmount,
+            'status' => User::$active, // Ensure status stays active
         ]);
 
         // Rewards

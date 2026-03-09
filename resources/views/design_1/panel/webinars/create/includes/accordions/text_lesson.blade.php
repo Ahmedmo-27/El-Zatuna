@@ -78,6 +78,8 @@
                 <div class="invalid-feedback"></div>
             </div>
 
+            <input type="hidden" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" value="free">
+
             <div class="form-group ">
                 <label class="form-group-label">{{ trans('public.image') }}</label>
 
@@ -92,25 +94,6 @@
                 @if(!empty($textLesson) and !empty($textLesson->image))
                     <a href="{{ $textLesson->image }}" target="_blank" class="font-12 text-primary mt-8">{{ trans('update.preview') }}</a>
                 @endif
-            </div>
-
-            <div class="form-group">
-                <label class="font-14 text-gray-500 bg-white">{{ trans('public.accessibility') }}</label>
-
-                <div class="d-flex align-items-center js-ajax-accessibility mt-12">
-
-                    <div class="custom-control custom-radio mr-12">
-                        <input type="radio" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" id="accessibilityRadio1_{{ !empty($textLesson) ? $textLesson->id : 'record' }}" value="free" class="custom-control-input" @if(empty($textLesson) or (!empty($textLesson) and $textLesson->accessibility == 'free')) checked="checked" @endif>
-                        <label class="custom-control__label cursor-pointer pl-0" for="accessibilityRadio1_{{ !empty($textLesson) ? $textLesson->id : 'record' }}">{{ trans('public.free') }}</label>
-                    </div>
-
-                    <div class="custom-control custom-radio mr-12">
-                        <input type="radio" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][accessibility]" id="accessibilityRadio2_{{ !empty($textLesson) ? $textLesson->id : 'record' }}" value="paid" class="custom-control-input" @if(empty($textLesson) or (!empty($textLesson) and $textLesson->accessibility == 'paid')) checked="checked" @endif>
-                        <label class="custom-control__label cursor-pointer pl-0" for="accessibilityRadio2_{{ !empty($textLesson) ? $textLesson->id : 'record' }}">{{ trans('public.paid') }}</label>
-                    </div>
-                </div>
-
-                <div class="invalid-feedback"></div>
             </div>
 
             <div class="form-group ">

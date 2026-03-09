@@ -24,7 +24,6 @@
                 </p>
                 <p class="font-weight-bold mb-24">{{ $email ?? 'your email address' }}</p>
 
-                <!-- Verification Code Input -->
                 <form id="verificationCodeForm" class="mb-24">
                     @csrf
                     <input type="hidden" name="email" value="{{ $email }}">
@@ -78,175 +77,107 @@
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('scripts_bottom')
     <script>
         $(document).ready(function() {
-            // Auto-focus first input
             $('.auth-verification-code-field').first().focus();
 
-            // Handle verification code input
-            $('.auth-verification-code-field').on('input', function() {
-                const $this = $(this);
-                const value = $this.val();
-                
-                // Only allow numbers
-                if (!/^\d*$/.test(value)) {
-                    $this.val('');
-                    return;
-                }
-                
-                // Move to next field if value entered
-                if (value.length === 1) {
-                    $this.next('.auth-verification-code-field').focus();
-                }
-                
-                // Auto-submit if all fields filled
-                checkAutoSubmit();
-            });
-
-            // Handle backspace
-            $('.auth-verification-code-field').on('keydown', function(e) {
-                const $this = $(this);
-                
-                if (e.key === 'Backspace' && $this.val() === '') {
-                    $this.prev('.auth-verification-code-field').focus();
-                }
-            });
-
-            // Handle paste
-            $('.auth-verification-code-field').first().on('paste', function(e) {
-                e.preventDefault();
-                const pastedData = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
-                const digits = pastedData.replace(/\D/g, '').substring(0, 6);
-                
-                $('.auth-verification-code-field').each(function(index) {
-                    $(this).val(digits[index] || '');
-                });
-                
-                if (digits.length === 6) {
-                    checkAutoSubmit();
-                }
-            });
-
-            // Check if all fields filled and auto-submit
-            function checkAutoSubmit() {
-                let allFilled = true;
-                $('.auth-verification-code-field').each(function() {
-                    if ($(this).val() === '') {
-                        allFilled = false;
-                        return false;
-                    }
-                });
-                
-                if (allFilled) {
-                    // Small delay to show the last digit entered
-                    setTimeout(function() {
-                        $('#verificationCodeForm').submit();
-                    }, 300);
-                }
-            }
-
-            // Handle form submission
             $('#verificationCodeForm').on('submit', function(e) {
                 e.preventDefault();
-                
-                const $form = $(this);
-                const $btn = $('.js-submit-verification-form-btn');
-                const $errorDiv = $('#verificationError');
-                const email = $form.find('input[name="email"]').val();
-                
-                // Get code from inputs
-                let code = '';
+                var code = '';
                 $('.auth-verification-code-field').each(function() {
                     code += $(this).val();
                 });
-                
                 if (code.length !== 6) {
-                    $errorDiv.removeClass('d-none').text('{{ trans('auth.please_enter_all_6_digits') }}');
+                    $('#verificationError').removeClass('d-none').text('{{ trans('auth.please_enter_all_6_digits') }}');
                     return;
                 }
-                
-                $errorDiv.addClass('d-none');
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-8"></span>{{ trans('auth.verifying') }}...');
-                
+                $('#verificationError').addClass('d-none');
+                var $btn = $('.js-submit-verification-form-btn');
+                $btn.addClass('loadingbar').prop('disabled', true);
+
                 $.ajax({
                     url: '/register/step/2',
                     method: 'POST',
                     data: {
-                        _token: $form.find('input[name="_token"]').val(),
-                        email: email,
+                        _token: $('input[name="_token"]').val(),
+                        email: $('input[name="email"]').val(),
                         verification_code: code
                     },
-                    success: function(response) {
-                        // Check if response has redirect URL
-                        if (response.redirect) {
-                            window.location.href = response.redirect;
-                        } else if (response.success) {
-                            // Fallback redirect to step 3
-                            window.location.href = '/register/step/3';
+                    success: function(res) {
+                        if (res.redirect) {
+                            window.location.href = res.redirect;
                         } else {
-                            // Unexpected response format
-                            window.location.href = '/register/step/3';
+                            window.location.href = '/register/step/3?token=' + (res.verification_token || '') + '&verified=true';
                         }
                     },
                     error: function(xhr) {
-                        const message = xhr.responseJSON?.message || xhr.responseJSON?.errors?.verification_code?.[0] || '{{ trans('auth.invalid_verification_code') }}';
-                        $errorDiv.removeClass('d-none').text(message);
-                        $btn.prop('disabled', false).html('{{ trans('auth.verify_email') }}');
-                        
-                        // Clear all fields
+                        $btn.removeClass('loadingbar').prop('disabled', false);
+                        var msg = '{{ trans('auth.invalid_verification_code') }}';
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            var errs = xhr.responseJSON.errors.verification_code;
+                            if (errs && errs[0]) msg = errs[0];
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        $('#verificationError').removeClass('d-none').text(msg);
                         $('.auth-verification-code-field').val('').first().focus();
                     }
                 });
             });
 
-            // Handle resend code button
-            $('.js-resend-code').on('click', function() {
-                const btn = $(this);
-                const email = btn.data('email');
-                
-                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-8"></span>{{ trans('auth.sending') }}...');
+            $('.auth-verification-code-field').on('input', function() {
+                var allFilled = true;
+                $('.auth-verification-code-field').each(function() {
+                    if ($(this).val() === '') allFilled = false;
+                });
+                if (allFilled) {
+                    setTimeout(function() { $('#verificationCodeForm').submit(); }, 300);
+                }
+            });
 
+            $('.auth-verification-code-field').first().on('paste', function(e) {
+                e.preventDefault();
+                var pasted = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                var digits = pasted.replace(/\D/g, '').substring(0, 6);
+                $('.auth-verification-code-field').each(function(i) {
+                    $(this).val(digits[i] || '');
+                });
+                if (digits.length === 6) {
+                    setTimeout(function() { $('#verificationCodeForm').submit(); }, 200);
+                }
+            });
+
+            $('.js-resend-code').on('click', function(e) {
+                e.preventDefault();
+                var $btn = $(this);
+                var email = $btn.data('email');
+                $btn.prop('disabled', true);
                 $.ajax({
                     url: '/api/v1/auth/resend-verification',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({ email: email }),
-                    success: function(response) {
-                        btn.removeClass('btn-outline-primary').addClass('btn-success');
-                        btn.html(`
-                            <svg class="size-20 mr-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            {{ trans('auth.code_sent_successfully') }}
-                        `);
-                        
-                        // Clear code fields
-                        $('.auth-verification-code-field').val('').first().focus();
-                        
-                        setTimeout(function() {
-                            btn.prop('disabled', false);
-                            btn.removeClass('btn-success').addClass('btn-outline-primary');
-                            btn.html(`
-                                <svg class="size-20 mr-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                </svg>
-                                {{ trans('auth.resend_verification_code') }}
-                            `);
-                        }, 3000);
+                    headers: {
+                        'X-CSRF-TOKEN': ($('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val()),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    error: function(xhr) {
-                        const message = xhr.responseJSON?.message || '{{ trans('auth.failed_to_send_code') }}';
-                        btn.prop('disabled', false).html(`
-                            <svg class="size-20 mr-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                            </svg>
-                            {{ trans('auth.resend_verification_code') }}
-                        `);
-                        alert(message);
+                    success: function() {
+                        if (typeof showToast === 'function') {
+                            showToast('success', '{{ trans('public.request_success') }}', '{{ trans('auth.code_sent_successfully') }}');
+                        }
+                        $('.auth-verification-code-field').val('').first().focus();
+                    },
+                    error: function() {
+                        if (typeof showToast === 'function') {
+                            showToast('error', '{{ trans('public.error') }}', '{{ trans('auth.failed_to_send_code') }}');
+                        }
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false);
                     }
                 });
             });

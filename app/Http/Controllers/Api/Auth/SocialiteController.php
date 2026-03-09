@@ -234,6 +234,11 @@ class SocialiteController extends Controller
 
     private function checkLoginDeviceLimit($user)
     {
+        // Teachers are allowed unlimited active login sessions
+        if ($user->isTeacher()) {
+            return 'ok';
+        }
+
         // Check if user has a custom allowed_devices value
         $limitCount = !empty($user->allowed_devices) ? $user->allowed_devices : 1;
 

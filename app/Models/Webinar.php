@@ -65,7 +65,23 @@ class Webinar extends Model implements TranslatableContract
                         })
                         ->where(function ($query) use ($table, $user) {
                             $query->whereNull("{$table}.faculty_id")
-                                ->orWhere("{$table}.faculty_id", $user->faculty_id);
+                                ->orWhere("{$table}.faculty_id", $user->faculty_id)
+                                ->orWhere(function ($q) use ($table, $user) {
+                                    $q->whereNull("{$table}.university_id")
+                                        ->whereNotNull("{$table}.faculty_id");
+                                    if (!empty($user->faculty_id)) {
+                                        $userFacultyName = \App\Models\Faculty::where('id', $user->faculty_id)->value('name');
+                                        if ($userFacultyName !== null && $userFacultyName !== '') {
+                                            $q->whereIn("{$table}.faculty_id", function ($sub) use ($userFacultyName) {
+                                                $sub->select('id')->from('faculties')->where('name', $userFacultyName);
+                                            });
+                                        } else {
+                                            $q->whereRaw('1 = 0');
+                                        }
+                                    } else {
+                                        $q->whereRaw('1 = 0');
+                                    }
+                                });
                         });
                     });
             }

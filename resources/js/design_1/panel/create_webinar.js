@@ -155,6 +155,133 @@
         handleCategoryFilters(path);
     });
 
+    // Panel category input (same UX as occupations: search + add) – single selection, triggers #categories change for filters
+    function initPanelCategoryInput() {
+        const $wrapper = $('.js-panel-category-wrapper');
+        if (!$wrapper.length) return;
+
+        const $input = $wrapper.find('.js-panel-category-input');
+        const $dropdown = $wrapper.find('.js-panel-category-dropdown');
+        const $results = $wrapper.find('.js-panel-category-results');
+        const $addNew = $wrapper.find('.js-panel-category-add-new');
+        const $addNewTerm = $wrapper.find('.js-panel-category-add-new-term');
+        const $tagContainer = $wrapper.find('.js-panel-category-tag');
+        const $hidden = $wrapper.find('.js-panel-category-hidden');
+        const $loading = $wrapper.find('.js-panel-category-loading');
+        const $error = $wrapper.find('.js-panel-category-error');
+
+        let selected = null;
+        let searchTimeout = null;
+        let hideDropdownTimeout = null;
+
+        function setLoading(isLoading) {
+            if (isLoading) $loading.removeClass('d-none');
+            else $loading.addClass('d-none');
+        }
+        function showError(msg) {
+            if (!msg) { $error.addClass('d-none').text(''); return; }
+            $error.removeClass('d-none').text(msg);
+        }
+        function syncHidden() {
+            const id = selected ? selected.id : '';
+            $hidden.val(id);
+            if ($hidden.attr('id') === 'categories') $hidden.trigger('change');
+        }
+        function renderTag() {
+            $tagContainer.empty();
+            if (selected) {
+                const textEsc = $('<div>').text(selected.text).html();
+                const $tag = $('<span class="badge bg-[#F5F9E8] text-[#072923] px-3 py-1 rounded-8 d-inline-flex align-items-center gap-1">' +
+                    '<span>' + textEsc + '</span>' +
+                    '<button type="button" class="js-panel-category-remove btn btn-link p-0 text-[#072923]/60 hover:text-danger" style="font-size: 14px; line-height: 1;" data-id="' + selected.id + '">&times;</button></span>');
+                $tagContainer.append($tag);
+            }
+        }
+        function setSelected(item) {
+            selected = item;
+            renderTag();
+            syncHidden();
+        }
+
+        function doSearch(q) {
+            showError('');
+            if (q && q.length) setLoading(true);
+            $addNewTerm.text(q || 'type above first');
+            $addNew.removeClass('d-none');
+            $.get('/become-instructor/search-subjects', { q: q || '' })
+                .done(function (data) {
+                    const results = data.results || [];
+                    $results.empty();
+                    if (!results.length) {
+                        if (q) $results.append($('<div class="p-2 text-[#072923]/50">No matching categories. Use "Add new category" below to add "' + $('<div>').text(q).html() + '".</div>'));
+                        else $results.append($('<div class="p-2 text-[#072923]/50">No categories found.</div>'));
+                    } else {
+                        results.forEach(function (item) {
+                            const textEsc = $('<div>').text(item.text).html();
+                            $results.append($('<div class="js-panel-category-row p-2 rounded-8 cursor-pointer hover:bg-[#F5F9E8]/50" style="min-height: 44px; display: flex; align-items: center;" data-id="' + item.id + '">' + textEsc + '</div>'));
+                        });
+                    }
+                })
+                .fail(function () { showError('Could not load categories. Please try again.'); })
+                .always(function () { if (q && q.length) setLoading(false); });
+        }
+        function showDropdown() { $dropdown.removeClass('d-none'); }
+        function hideDropdown() {
+            if (hideDropdownTimeout) clearTimeout(hideDropdownTimeout);
+            hideDropdownTimeout = setTimeout(function () { hideDropdownTimeout = null; $dropdown.addClass('d-none'); }, 280);
+        }
+        function cancelHide() { if (hideDropdownTimeout) { clearTimeout(hideDropdownTimeout); hideDropdownTimeout = null; } }
+
+        $dropdown.on('mousedown touchstart', function (e) { e.preventDefault(); cancelHide(); });
+        $input.on('focus', function () {
+            cancelHide();
+            if ($dropdown.hasClass('d-none')) { showDropdown(); doSearch($.trim($input.val())); }
+        });
+        $input.on('input', function () {
+            const q = $.trim($input.val());
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () { doSearch(q); showDropdown(); }, 200);
+        });
+        $input.on('blur', function () { hideDropdown(); });
+
+        $results.on('click', '.js-panel-category-row', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            const text = $(this).text().trim();
+            setSelected({ id: id, text: text });
+            $input.val('');
+            cancelHide();
+            hideDropdown();
+        });
+        $addNew.on('click', function (e) {
+            e.preventDefault();
+            const term = $.trim($input.val()) || $.trim($addNewTerm.text());
+            if (!term || term === 'type above first') return;
+            showError('');
+            setLoading(true);
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
+            $.post('/become-instructor/create-subject', { title: term, _token: token })
+                .done(function (data) { setSelected({ id: data.id, text: data.text || term }); $input.val(''); doSearch(''); showDropdown(); })
+                .fail(function () { showError('Could not create category. Please try again.'); })
+                .always(function () { setLoading(false); });
+        });
+        $tagContainer.on('click', '.js-panel-category-remove', function (e) {
+            e.preventDefault();
+            setSelected(null);
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.js-panel-category-wrapper').length) hideDropdown();
+        });
+
+        try {
+            const initial = $wrapper.data('initial') || [];
+            if (Array.isArray(initial) && initial.length) setSelected(initial[0]);
+        } catch (err) {}
+        syncHidden();
+    }
+    $(document).ready(function () { initPanelCategoryInput(); });
+
 
     // Options
 
@@ -613,16 +740,25 @@
         if ($form.hasClass('file-form')) {
             const storage = $form.find('.js-file-storage').val() || $form.find('select[name*="[storage]"]').val() || 'upload';
             if (storage === 'r2' || storage === 'upload') {
+                const action = $form.attr('data-action') || '';
+                const isPanelFileStore = action.indexOf('/panel/files/store') !== -1;
                 const $fileInput = $form.find('.js-ajax-upload-file-input');
                 const hasFile = $fileInput.length && $fileInput[0].files && $fileInput[0].files.length > 0;
-                if (!hasFile) {
-                    if (typeof showToast === 'function') {
-                        showToast('error', 'File required', 'Please choose a file to upload before saving.');
-                    }
-                    $form.find('.js-file-upload-input .invalid-feedback').text('Please choose a file to upload.').addClass('d-block');
+                // Only require a new file when creating a new course file.
+                // When updating an existing section with an already uploaded video/file,
+                // allow saving metadata changes without forcing a re-upload.
+                if (isPanelFileStore && !hasFile) {
+                    showUploadErrorForForm($form, 'File required', 'Please choose a file to upload before saving.');
                     return;
                 }
                 $form.find('.js-file-upload-input .invalid-feedback').removeClass('d-block').text('');
+
+                // For new course files stored in R2, upload the file directly to R2 from the browser first,
+                // then submit only the metadata + R2 path to Laravel. This bypasses App Platform timeouts.
+                if (isPanelFileStore) {
+                    handleDirectR2UploadAndSubmit($form, $this, storage);
+                    return;
+                }
             }
         }
 
@@ -632,6 +768,221 @@
     // =========
     // Files
     // ======
+
+    function showUploadErrorForForm($form, title, message, options) {
+        const opts = options || {};
+        const $errorTarget = $form.find('.js-file-upload-input .invalid-feedback').first();
+
+        if (typeof showToast === 'function' && !opts.silentToast) {
+            showToast('error', title, message);
+        } else if (!opts.silentAlert) {
+            alert(title + ': ' + message);
+        }
+
+        if ($errorTarget.length) {
+            $errorTarget.text(message).addClass('d-block');
+        }
+    }
+
+    function handleDirectR2UploadAndSubmit($form, $button, storage) {
+        try {
+            const $fileInput = $form.find('.js-ajax-upload-file-input');
+            const file = $fileInput.length && $fileInput[0].files && $fileInput[0].files[0] ? $fileInput[0].files[0] : null;
+
+            if (!file) {
+                showUploadErrorForForm($form, 'File required', 'Please choose a file to upload before saving.');
+                return;
+            }
+
+            const maxSizeBytes = 2 * 1024 * 1024 * 1024; // 2GB
+            if (file.size > maxSizeBytes) {
+                showUploadErrorForForm($form, 'File too large', 'Maximum supported size is 2GB.');
+                return;
+            }
+
+            const webinarId = $form.find('input[name="ajax[new][webinar_id]"]').val();
+            const chapterId = $form.find('input[name="ajax[new][chapter_id]"]').val() || null;
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
+
+            if (!webinarId) {
+                showUploadErrorForForm($form, 'Missing course', 'Course ID is missing. Please refresh the page and try again.');
+                return;
+            }
+
+            const $progressContainer = $form.find('.progress').first();
+            const $progressBar = $progressContainer.length ? $progressContainer.find('.progress-bar') : null;
+
+            $button.addClass('loadingbar').prop('disabled', true);
+
+            // Step 1: ask Laravel for a pre-signed R2 upload URL
+            $.ajax({
+                url: '/panel/files/r2/presign',
+                type: 'POST',
+                data: {
+                    webinar_id: webinarId,
+                    chapter_id: chapterId,
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_mime: file.type || 'application/octet-stream',
+                    _token: token,
+                },
+                success: function (res) {
+                    if (!res || res.code !== 200 || !res.upload_url || !res.path) {
+                        $button.removeClass('loadingbar').prop('disabled', false);
+                        showUploadErrorForForm($form, 'Upload error', (res && res.msg) ? res.msg : 'Could not prepare upload. Please try again.');
+                        return;
+                    }
+
+                    const uploadUrl = res.upload_url;
+                    const r2Path = res.path;
+                    const headers = res.headers || {};
+
+                    if ($progressContainer.length && $progressBar && $progressBar.length) {
+                        $progressContainer.removeClass('d-none');
+                        $progressBar
+                            .css('width', '0%')
+                            .attr('aria-valuenow', 0)
+                            .removeClass('bg-danger')
+                            .addClass('bg-primary');
+                    }
+
+                    // Step 2: upload directly to R2 using XHR so we can track progress
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('PUT', uploadUrl, true);
+
+                    Object.keys(headers).forEach(function (key) {
+                        if (headers[key]) {
+                            xhr.setRequestHeader(key, headers[key]);
+                        }
+                    });
+
+                    xhr.upload.onprogress = function (e) {
+                        if ($progressContainer.length && $progressBar && $progressBar.length) {
+                            let percent = 0;
+                            if (e.lengthComputable && e.total > 0) {
+                                percent = Math.round((e.loaded / e.total) * 100);
+                            } else {
+                                percent = parseInt($progressBar.attr('aria-valuenow') || '0', 10) + 1;
+                            }
+                            if (percent > 99) percent = 99;
+                            if (percent < 1) percent = 1;
+                            $progressBar.css('width', percent + '%').attr('aria-valuenow', percent);
+                        }
+                    };
+
+                    xhr.onerror = function () {
+                        $button.removeClass('loadingbar').prop('disabled', false);
+                        if ($progressContainer.length && $progressBar && $progressBar.length) {
+                            $progressBar
+                                .addClass('bg-danger')
+                                .removeClass('bg-primary')
+                                .css('width', '100%')
+                                .attr('aria-valuenow', 100);
+                        }
+                        showUploadErrorForForm($form, 'Upload error', 'Could not upload file to storage. Please check your connection and try again.');
+                    };
+
+                    xhr.ontimeout = function () {
+                        $button.removeClass('loadingbar').prop('disabled', false);
+                        if ($progressContainer.length && $progressBar && $progressBar.length) {
+                            $progressBar
+                                .addClass('bg-danger')
+                                .removeClass('bg-primary')
+                                .css('width', '100%')
+                                .attr('aria-valuenow', 100);
+                        }
+                        showUploadErrorForForm($form, 'Upload timeout', 'The upload took too long and was stopped. Please try again with a stable connection.');
+                    };
+
+                    xhr.onabort = function () {
+                        $button.removeClass('loadingbar').prop('disabled', false);
+                        showUploadErrorForForm($form, 'Upload cancelled', 'The upload was cancelled before completion. Please try again if this was not intentional.');
+                    };
+
+                    xhr.onload = function () {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            if ($progressContainer.length && $progressBar && $progressBar.length) {
+                                $progressBar.css('width', '100%').attr('aria-valuenow', 100);
+                            }
+
+                            // Step 3: clear the file input so Laravel doesn't receive the binary
+                            try {
+                                const emptyDataTransfer = new DataTransfer();
+                                $fileInput[0].files = emptyDataTransfer.files;
+                            } catch (e) {}
+
+                            // Step 4: add hidden fields so Laravel knows the R2 path and size
+                            $form.find('input[name="ajax[new][r2_path]"]').remove();
+                            $form.find('input[name="ajax[new][r2_uploaded]"]').remove();
+                            $form.find('input[name="ajax[new][r2_size_bytes]"]').remove();
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'ajax[new][r2_path]',
+                                value: r2Path,
+                            }).appendTo($form);
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'ajax[new][r2_uploaded]',
+                                value: '1',
+                            }).appendTo($form);
+
+                            $('<input>', {
+                                type: 'hidden',
+                                name: 'ajax[new][r2_size_bytes]',
+                                value: file.size,
+                            }).appendTo($form);
+
+                            // Step 5: submit metadata to Laravel as usual
+                            handleSendRequestItemForm($form, $button);
+                        } else {
+                            $button.removeClass('loadingbar').prop('disabled', false);
+                            if ($progressContainer.length && $progressBar && $progressBar.length) {
+                                $progressBar
+                                    .addClass('bg-danger')
+                                    .removeClass('bg-primary')
+                                    .css('width', '100%')
+                                    .attr('aria-valuenow', 100);
+                            }
+                            let humanStatus = xhr.status;
+                            if (xhr.status === 403) {
+                                humanStatus = '403 Forbidden';
+                            } else if (xhr.status === 413) {
+                                humanStatus = '413 Payload Too Large';
+                            } else if (xhr.status === 500) {
+                                humanStatus = '500 Server Error';
+                            }
+                            showUploadErrorForForm($form, 'Upload error', 'Storage returned an error (' + humanStatus + '). Please try again.');
+                        }
+                    };
+
+                    xhr.send(file);
+                },
+                error: function (err) {
+                    $button.removeClass('loadingbar').prop('disabled', false);
+                    let msg = 'Could not prepare upload. Please try again.';
+                    if (err && err.responseJSON) {
+                        if (err.responseJSON.msg) {
+                            msg = err.responseJSON.msg;
+                        } else if (err.responseJSON.errors) {
+                            const firstKey = Object.keys(err.responseJSON.errors)[0];
+                            if (firstKey && err.responseJSON.errors[firstKey] && err.responseJSON.errors[firstKey][0]) {
+                                msg = err.responseJSON.errors[firstKey][0];
+                            }
+                        }
+                    }
+                    showUploadErrorForForm($form, 'Upload error', msg);
+                }
+            });
+        } catch (error) {
+            if (typeof console !== 'undefined' && console.error) {
+                console.error('Direct R2 upload failed:', error);
+            }
+            showUploadErrorForForm($form, 'Upload error', 'Unexpected error while preparing upload. Please try again.');
+            $button.removeClass('loadingbar').prop('disabled', false);
+        }
+    }
 
     function handleShowFileInputsBySource($form, source, fileType) {
         // Default to 'upload' (stored as R2 in backend) if source not provided

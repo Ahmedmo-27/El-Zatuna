@@ -471,6 +471,7 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['admin.auth', 'admin.loca
         Route::post('/', 'CategoryController@store')->name('admin.categories.store');
         Route::post('/store', 'CategoryController@store');
         Route::get('/search', 'CategoryController@search')->name('admin.categories.search');
+        Route::post('/quick-store', 'CategoryController@quickStore')->name('admin.categories.quickStore');
         Route::get('/{id}/edit', 'CategoryController@edit')->name('admin.categories.edit');
         Route::post('/{id}/update', 'CategoryController@update')->name('admin.categories.update');
         Route::delete('/{id}/delete', 'CategoryController@destroy')->name('admin.categories.delete');

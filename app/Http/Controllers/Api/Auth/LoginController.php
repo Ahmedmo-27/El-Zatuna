@@ -102,7 +102,7 @@ class LoginController extends Controller
             return apiResponse2(0, 'inactive_account', trans('auth.inactive_account'));
         }
         
-        // Check device limit BEFORE device registration
+        // Check device/session limit BEFORE device registration (non-teacher roles only)
         $checkLoginDeviceLimit = $this->checkLoginDeviceLimit($user);
         if ($checkLoginDeviceLimit != "ok") {
             \auth('api')->logout();
@@ -133,7 +133,12 @@ class LoginController extends Controller
             // Device NOT registered - check if user has reached the registered devices limit
             $registeredDevicesCount = \App\Models\UserRegisteredDevice::where('user_id', $user->id)->count();
             $allowedDevices = $user->allowed_devices ?? getGeneralSettings('login_device_limit') ?? 1;
-            
+
+            // Teachers (role "teacher") are allowed unlimited registered devices
+            if ($user->isTeacher()) {
+                $allowedDevices = PHP_INT_MAX;
+            }
+
             if ($registeredDevicesCount >= $allowedDevices) {
                 // User has reached max registered devices limit - BLOCK login
                 \auth('api')->logout();
@@ -231,6 +236,11 @@ class LoginController extends Controller
     }
     private function checkLoginDeviceLimit($user)
     {
+        // Teachers are allowed unlimited active login sessions
+        if ($user->isTeacher()) {
+            return 'ok';
+        }
+
         // Check if user has a custom allowed_devices value
         $limitCount = !empty($user->allowed_devices) ? $user->allowed_devices : 1;
 

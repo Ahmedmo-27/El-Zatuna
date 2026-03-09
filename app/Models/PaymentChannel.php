@@ -16,7 +16,7 @@ class PaymentChannel extends Model
         'Mollie', 'Ngenius', 'Payfort', 'Payhere', 'Payku', 'Paylink', 'Paypal',
         'Paysera', 'Paystack', 'Paytm', 'Payu', 'Razorpay', 'Robokassa', 'Sslcommerz',
         'Stripe', 'Toyyibpay', 'Voguepay', 'Zarinpal', 'JazzCash', 'IPay88',
-        'Redsys', 'Xendit', 'Paytabs', 'Paymob', 'Cintepay', 'TapPayment', 'Paytr', 'Telebirr', 'Chapa', 'Clickpay'
+        'Redsys', 'Xendit', 'Paytabs', 'Paymob', 'Cintepay', 'TapPayment', 'Paytr', 'Telebirr', 'Chapa', 'Clickpay', 'Geidea'
     ];
 
     static $gatewayIgnoreRedirect = [

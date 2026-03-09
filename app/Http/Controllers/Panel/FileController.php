@@ -29,6 +29,9 @@ class FileController extends Controller
 
         $data = $request->get('ajax')['new'] ?? [];
         $fileUpload = $request->file('ajax.new.file_upload');
+        $r2UploadedPath = $data['r2_path'] ?? null;
+        $r2UploadedFlag = !empty($data['r2_uploaded']);
+        $r2SizeBytes = isset($data['r2_size_bytes']) ? (int)$data['r2_size_bytes'] : null;
 
         \Log::info('FileController::store request', [
             'has_file' => !empty($fileUpload),
@@ -48,7 +51,7 @@ class FileController extends Controller
 
         // Require file when storage is upload or r2 - fail early with clear message
         if (in_array($data['storage'], ['upload', 'r2'])) {
-            if (empty($fileUpload) || !$fileUpload->isValid()) {
+            if (!$r2UploadedFlag && (empty($fileUpload) || !$fileUpload->isValid())) {
                 $message = empty($fileUpload)
                     ? 'Please choose a file to upload.'
                     : 'File upload failed. Please try again.';
@@ -58,8 +61,14 @@ class FileController extends Controller
                     'errors' => ['file_upload' => [$message]],
                 ], 422);
             }
-            // Validate file size (2GB max) before proceeding
-            if ($fileUpload->getSize() > 2 * 1024 * 1024 * 1024) {
+            // Validate file size (2GB max) before proceeding (direct upload or server upload)
+            $sizeToCheck = null;
+            if ($r2UploadedFlag && $r2SizeBytes !== null) {
+                $sizeToCheck = $r2SizeBytes;
+            } elseif (!empty($fileUpload)) {
+                $sizeToCheck = $fileUpload->getSize();
+            }
+            if ($sizeToCheck !== null && $sizeToCheck > 2 * 1024 * 1024 * 1024) {
                 $message = 'File is too large. Maximum size is 2GB.';
                 return response()->json([
                     'code' => 422,
@@ -76,6 +85,15 @@ class FileController extends Controller
         if (in_array($data['storage'], $sourceDefaultFileTypeAndVolume)) {
             $data['file_type'] = 'video';
             $data['volume'] = !empty($data['volume']) ? $data['volume'] : 0;
+        }
+
+        // Only admins can set per-file accessibility/price in the panel. Others get free / 0.
+        if (!$user->isAdmin()) {
+            $data['accessibility'] = 'free';
+            $data['price'] = 0;
+        } else {
+            $data['accessibility'] = $data['accessibility'] ?? 'free';
+            $data['price'] = isset($data['price']) ? (float) $data['price'] : 0;
         }
 
         $rules = [
@@ -99,12 +117,15 @@ class FileController extends Controller
 
         if (in_array($data['storage'], ['upload', 'r2'])) {
             $rules['file_url'] = 'nullable';
-            $rules['file_upload'] = $this->handleUploadAndS3FileValidationByType($data['file_type'] ?? null);
+            // When file is uploaded directly to R2 from browser, skip file_upload validation here
+            if (!$r2UploadedFlag) {
+                $rules['file_upload'] = $this->handleUploadAndS3FileValidationByType($data['file_type'] ?? null);
+            }
         }
 
         if ($data['storage'] == 'secure_host') {
             $rules['file_url'] = 'nullable';
-            $rules['file_upload'] = 'required|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm|max:2097152'; // 2GB max size
+            $rules['file_upload'] = 'required|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm,m4v|max:2097152'; // 2GB max size
 
             if ($data['secure_host_upload_type'] == "manual") {
                 $rules['file_upload'] = 'nullable';
@@ -182,7 +203,6 @@ class FileController extends Controller
                     $data['storage'] = 'r2';
                 }
                 if ($data['storage'] == 'r2') {
-                    $data['volume'] = convertToMB($fileUpload->getSize());
                     $sectionId = $data['chapter_id'] ?? null;
                     // Validate that chapter belongs to this webinar if provided
                     if ($sectionId && !$webinar->chapters()->where('id', $sectionId)->exists()) {
@@ -191,18 +211,36 @@ class FileController extends Controller
                             'msg' => trans('update.invalid_chapter_for_course')
                         ], 422);
                     }
-                    \Log::info('FileController::store calling uploadFileToR2', [
-                        'webinar_id' => $webinar->id,
-                        'section_id' => $sectionId,
-                        'file_name' => $fileUpload->getClientOriginalName(),
-                        'file_size' => $fileUpload->getSize(),
-                    ]);
-                    $result = $this->uploadFileToR2($fileUpload, $webinar->id, $sectionId);
-                    \Log::info('FileController::store uploadFileToR2 result', [
-                        'status' => $result['status'] ?? null,
-                        'path' => $result['path'] ?? null,
-                        'error' => $result['error'] ?? null,
-                    ]);
+
+                    if ($r2UploadedFlag && $r2UploadedPath) {
+                        // File was already uploaded directly to R2 from the browser
+                        $data['volume'] = convertToMB($r2SizeBytes ?? 0);
+                        $result = [
+                            'status' => true,
+                            'path' => $r2UploadedPath,
+                        ];
+                        \Log::info('FileController::store using existing R2 uploaded file', [
+                            'webinar_id' => $webinar->id,
+                            'section_id' => $sectionId,
+                            'path' => $r2UploadedPath,
+                            'file_size' => $r2SizeBytes,
+                        ]);
+                    } else {
+                        // Classic flow: Laravel uploads the file to R2
+                        $data['volume'] = convertToMB($fileUpload->getSize());
+                        \Log::info('FileController::store calling uploadFileToR2', [
+                            'webinar_id' => $webinar->id,
+                            'section_id' => $sectionId,
+                            'file_name' => $fileUpload->getClientOriginalName(),
+                            'file_size' => $fileUpload->getSize(),
+                        ]);
+                        $result = $this->uploadFileToR2($fileUpload, $webinar->id, $sectionId);
+                        \Log::info('FileController::store uploadFileToR2 result', [
+                            'status' => $result['status'] ?? null,
+                            'path' => $result['path'] ?? null,
+                            'error' => $result['error'] ?? null,
+                        ]);
+                    }
                 } else {
                     if ($data['secure_host_upload_type'] == "direct") {
                         $data['volume'] = convertToMB($fileUpload->getSize());
@@ -368,6 +406,63 @@ class FileController extends Controller
 
         return $storageExtractPath . '/' . $fileName;
     }
+    
+    /**
+     * Generate a pre-signed R2 upload URL for direct browser uploads.
+     * Used to bypass App Platform request timeouts for large course files.
+     */
+    public function presignR2Upload(Request $request)
+    {
+        $user = auth()->user();
+        
+        $validated = $request->validate([
+            'webinar_id' => 'required|integer|exists:webinars,id',
+            'chapter_id' => 'nullable|integer',
+            'file_name' => 'required|string|max:255',
+            'file_size' => 'required|integer|min:1|max:2147483648', // 2GB
+            'file_mime' => 'nullable|string|max:255',
+        ]);
+        
+        $webinar = Webinar::find($validated['webinar_id']);
+        if (empty($webinar) || !$webinar->canAccess($user)) {
+            return response()->json([
+                'code' => 403,
+                'msg' => trans('public.forbidden'),
+            ], 403);
+        }
+        
+        $sectionId = $validated['chapter_id'] ?? null;
+        if ($sectionId && !$webinar->chapters()->where('id', $sectionId)->exists()) {
+            return response()->json([
+                'code' => 422,
+                'msg' => trans('update.invalid_chapter_for_course'),
+            ], 422);
+        }
+        
+        $service = new R2StorageService();
+        $result = $service->createPresignedUploadUrl(
+            $webinar->id,
+            $sectionId,
+            $validated['file_name'],
+            (int) $validated['file_size'],
+            $validated['file_mime'] ?? null
+        );
+        
+        if (!$result['status']) {
+            return response()->json([
+                'code' => 500,
+                'msg' => $result['error'] ?? trans('update.file_upload_failed'),
+            ], 500);
+        }
+        
+        return response()->json([
+            'code' => 200,
+            'upload_url' => $result['upload_url'],
+            'path' => $result['path'],
+            'headers' => $result['headers'] ?? [],
+            'max_size_bytes' => 2 * 1024 * 1024 * 1024,
+        ]);
+    }
 
     public function update(Request $request, $id)
     {
@@ -434,6 +529,15 @@ class FileController extends Controller
                     $data['volume'] = !empty($data['volume']) ? $data['volume'] : 0;
                 }
 
+                // Only admins can set per-file accessibility/price in the panel. Others get free / 0.
+                if (!$user->isAdmin()) {
+                    $data['accessibility'] = 'free';
+                    $data['price'] = 0;
+                } else {
+                    $data['accessibility'] = $data['accessibility'] ?? 'free';
+                    $data['price'] = isset($data['price']) ? (float) $data['price'] : 0;
+                }
+
                 $fileTypeIsChanged = !!(empty($data['file_type']) or $data['file_type'] != $file->file_type);
 
                 $rules = [
@@ -462,7 +566,7 @@ class FileController extends Controller
 
                 if ($data['storage'] == 'secure_host') {
                     $rules['file_url'] = 'nullable';
-                    $rules['file_upload'] = ($fileTypeIsChanged ? 'required' : 'nullable') . '|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm|max:2097152'; // 2GB max size
+                    $rules['file_upload'] = ($fileTypeIsChanged ? 'required' : 'nullable') . '|file|mimes:mp4,avi,mkv,mov,wmv,flv,webm,m4v|max:2097152'; // 2GB max size
 
                     if ($data['secure_host_upload_type'] == "manual") {
                         $rules['secure_host_file_path'] = 'required';
@@ -718,7 +822,7 @@ class FileController extends Controller
                     $rule .= '|mimes:mp3,wav,ogg,aac';
                     break;
                 case 'video':
-                    $rule .= '|mimes:mp4,avi,mkv,mov,wmv,flv,webm';
+                    $rule .= '|mimes:mp4,avi,mkv,mov,wmv,flv,webm,m4v';
                     break;
                 case 'image':
                     $rule .= '|mimes:jpg,jpeg,png,gif,bmp,webp,svg';

@@ -425,15 +425,25 @@ class BecomeInstructorController extends Controller
 
     /**
      * Search subjects/categories by title (for become-instructor occupations select).
+     * When q is empty, returns all subjects (up to 150) for initial display.
      */
     public function searchSubjects(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
+        $locale = mb_strtolower(app()->getLocale());
+
         if ($q === '') {
-            return response()->json(['results' => []]);
+            $categories = Category::query()
+                ->orderBy('order')
+                ->orderBy('id')
+                ->limit(150)
+                ->get();
+            $results = $categories->map(function ($cat) {
+                return ['id' => $cat->id, 'text' => $cat->title];
+            })->values()->toArray();
+            return response()->json(['results' => $results]);
         }
 
-        $locale = mb_strtolower(app()->getLocale());
         $categoryIds = CategoryTranslation::where('locale', $locale)
             ->where('title', 'like', '%' . $q . '%')
             ->pluck('category_id')

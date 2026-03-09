@@ -769,7 +769,8 @@
         });
 
         const uploadFiles = $form.find('.js-ajax-upload-file-input');
-
+        let totalUploadBytes = 0;
+       
         if (uploadFiles.length) {
             for (const uploadFileEl of uploadFiles) {
                 const uploadFile = $(uploadFileEl);
@@ -778,10 +779,12 @@
                 if (uploadFile.length && file) {
                     const name = uploadFile.attr('data-upload-name') || uploadFile.attr('name') || 'upload_file';
                     formData.append(name, file);
+                    if (typeof file.size === 'number') {
+                        totalUploadBytes += file.size;
+                    }
                 }
             }
         }
-
 
         const images = $form.find('.js-create-property-images');
         for (const image of images) {
@@ -792,6 +795,12 @@
             }
         }
 
+        // Upload progress bar (for panel course file uploads to R2)
+        const hasFileUploads = uploadFiles.length > 0;
+        const isPanelFileRequest = typeof action === 'string' && action.indexOf('/panel/files/') !== -1;
+        const $progressContainer = (hasFileUploads && isPanelFileRequest) ? $form.find('.progress').first() : null;
+        const $progressBar = ($progressContainer && $progressContainer.length) ? $progressContainer.find('.progress-bar') : null;
+
         $.ajax({
             url: action,
             type: 'POST',
@@ -799,8 +808,51 @@
             processData: false,
             contentType: false,
             cache: false,
+            xhr: function () {
+                const xhr = $.ajaxSettings.xhr();
+
+                if (xhr.upload && $progressContainer && $progressBar && $progressBar.length) {
+                    $progressContainer.removeClass('d-none');
+                    $progressBar
+                        .css('width', '0%')
+                        .attr('aria-valuenow', 0);
+
+                    xhr.upload.addEventListener('progress', function (e) {
+                        let percent = 0;
+
+                        if (e.lengthComputable && e.total > 0) {
+                            percent = Math.round((e.loaded / e.total) * 100);
+                        } else if (totalUploadBytes > 0) {
+                            // Fallback: use known file size to approximate progress
+                            percent = Math.round((e.loaded / totalUploadBytes) * 100);
+                        } else {
+                            // As a last resort, show a minimal indeterminate-style bump
+                            percent = parseInt($progressBar.attr('aria-valuenow') || '0', 10) + 1;
+                        }
+
+                        // Keep a little room for server-side processing; complete to 100% on success
+                        if (percent > 99) {
+                            percent = 99;
+                        } else if (percent < 1) {
+                            percent = 1;
+                        }
+
+                        $progressBar
+                            .css('width', percent + '%')
+                            .attr('aria-valuenow', percent);
+                    }, false);
+                }
+
+                return xhr;
+            },
             success: function (result) {
                 if (result && result.code === 200) {
+                    if ($progressContainer && $progressBar && $progressBar.length) {
+                        $progressBar
+                            .css('width', '100%')
+                            .attr('aria-valuenow', 100);
+                    }
+
                     // Panel file upload: only treat as success when file was actually stored (must have path)
                     const isPanelFileUpload = typeof action === 'string' && action.indexOf('/panel/files/') !== -1;
                     const hasStoredFile = result.path && (result.path + '').length > 0;
@@ -839,6 +891,23 @@
             },
             error: function (err) {
                 $this.removeClass('loadingbar').prop('disabled', false);
+                
+                if ($progressContainer && $progressBar && $progressBar.length) {
+                    $progressBar
+                        .addClass('bg-danger')
+                        .removeClass('bg-primary')
+                        .css('width', '100%')
+                        .attr('aria-valuenow', 100);
+
+                    setTimeout(function () {
+                        $progressContainer.addClass('d-none');
+                        $progressBar
+                            .removeClass('bg-danger')
+                            .addClass('bg-primary')
+                            .css('width', '0%')
+                            .attr('aria-valuenow', 0);
+                    }, 1500);
+                }
                 
                 // Safely parse response JSON - handle cases where response might be HTML or invalid JSON
                 var errors = {};

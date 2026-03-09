@@ -33,8 +33,10 @@ $screen-sm-max: ($screen-md-min - 1);
 $screen-md-max: ($screen-lg-min - 1);
 $screen-lg-max: 1600px;
 
+@use "sass:map";
+
 $app-screens: ();
-$app-screens: map-merge(
+$app-screens: map.merge(
         (
             "screen-xs-max" : $screen-xs-max,
             "screen-sm-max" : $screen-sm-max,

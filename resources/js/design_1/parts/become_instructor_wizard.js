@@ -48,9 +48,32 @@
         const $addNewTerm = $wrapper.find('.js-add-new-term');
         const $tags = $wrapper.find('.js-occupations-tags');
         const $hiddenContainer = $wrapper.find('.js-occupations-hidden-container');
+        const $loading = $wrapper.find('.js-occupations-loading');
+        const $error = $wrapper.find('.js-occupations-error');
 
         let selected = [];
         let searchTimeout = null;
+        let hideDropdownTimeout = null;
+        let lastSelectedAt = 0;
+        let lastAddNewAt = 0;
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                $loading.removeClass('d-none');
+                $addNew.addClass('disabled');
+            } else {
+                $loading.addClass('d-none');
+                $addNew.removeClass('disabled');
+            }
+        }
+
+        function showError(message) {
+            if (!message) {
+                $error.addClass('d-none').text('');
+                return;
+            }
+            $error.removeClass('d-none').text(message);
+        }
 
         function syncHiddenInputs() {
             $hiddenContainer.empty();
@@ -86,29 +109,36 @@
         }
 
         function doSearch(q) {
-            if (!q || q.length < 1) {
-                $results.empty();
-                $addNewTerm.text('');
-                $addNew.toggleClass('d-none', true);
-                return;
-            }
-            $addNewTerm.text(q);
+            showError('');
+            if (q && q.length > 0) setLoading(true);
+            $addNewTerm.text(q || 'type above first');
             $addNew.removeClass('d-none');
-            $.get('/become-instructor/search-subjects', { q: q }, function (data) {
-                const results = data.results || [];
-                $results.empty();
-                if (results.length === 0) {
-                    $results.append(
-                        $('<div class="p-2 text-[#072923]/50">No matching subjects. Use "Add different subject" below to add "' + $('<div>').text(q).html() + '".</div>')
-                    );
-                } else {
-                    results.forEach(function (item) {
-                        const textEsc = $('<div>').text(item.text).html();
-                        const $row = $('<div class="js-result-row p-2 rounded-8 cursor-pointer hover:bg-[#F5F9E8]/50" data-id="' + item.id + '">' + textEsc + '</div>');
-                        $results.append($row);
-                    });
-                }
-            });
+            $.get('/become-instructor/search-subjects', { q: q || '' })
+                .done(function (data) {
+                    const results = data.results || [];
+                    $results.empty();
+                    if (results.length === 0) {
+                        if (q) {
+                            $results.append(
+                                $('<div class="p-2 text-[#072923]/50">No matching subjects. Use "Add different subject" below to add "' + $('<div>').text(q).html() + '".</div>')
+                            );
+                        } else {
+                            $results.append($('<div class="p-2 text-[#072923]/50">No subjects found.</div>'));
+                        }
+                    } else {
+                        results.forEach(function (item) {
+                            const textEsc = $('<div>').text(item.text).html();
+                            const $row = $('<div class="js-result-row p-2 rounded-8 cursor-pointer hover:bg-[#F5F9E8]/50" style="min-height: 44px; display: flex; align-items: center;" data-id="' + item.id + '">' + textEsc + '</div>');
+                            $results.append($row);
+                        });
+                    }
+                })
+                .fail(function () {
+                    showError('Could not load subjects. Please check your connection and try again.');
+                })
+                .always(function () {
+                    if (q && q.length > 0) setLoading(false);
+                });
         }
 
         function showDropdown() {
@@ -116,20 +146,32 @@
         }
 
         function hideDropdown() {
-            setTimeout(function () { $dropdown.addClass('d-none'); }, 150);
+            if (hideDropdownTimeout) clearTimeout(hideDropdownTimeout);
+            hideDropdownTimeout = setTimeout(function () {
+                hideDropdownTimeout = null;
+                $dropdown.addClass('d-none');
+            }, 280);
         }
 
-        $input.on('focus', function () {
-            const q = $.trim($input.val());
-            $addNewTerm.text(q || 'type above first');
-            if (q) {
-                doSearch(q);
-            } else {
-                $results.empty();
-                $results.append($('<div class="p-2 text-[#072923]/50">Type to search existing subjects.</div>'));
-                $addNew.removeClass('d-none');
+        function cancelHideDropdown() {
+            if (hideDropdownTimeout) {
+                clearTimeout(hideDropdownTimeout);
+                hideDropdownTimeout = null;
             }
-            showDropdown();
+        }
+
+        $dropdown.on('mousedown touchstart', function (e) {
+            e.preventDefault();
+            cancelHideDropdown();
+        });
+
+        $input.on('focus', function () {
+            cancelHideDropdown();
+            const q = $.trim($input.val());
+            if ($dropdown.hasClass('d-none')) {
+                showDropdown();
+                doSearch(q);
+            }
         });
 
         $input.on('input', function () {
@@ -137,7 +179,7 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(function () {
                 doSearch(q);
-                if (q) showDropdown();
+                showDropdown();
             }, 200);
         });
 
@@ -145,29 +187,66 @@
             hideDropdown();
         });
 
-        $results.on('click', '.js-result-row', function () {
-            const id = $(this).data('id');
-            const text = $(this).text().trim();
+        function selectResultRow($row) {
+            var id = $row.data('id');
+            var text = $row.text().trim();
+            if (!id && text === '') return;
+            if (Date.now() - lastSelectedAt < 400) return;
+            lastSelectedAt = Date.now();
+            setLoading(true);
             addSelected({ id: id, text: text });
             $input.val('');
-            hideDropdown();
-            $input.focus();
+            cancelHideDropdown();
+            setTimeout(function () {
+                setLoading(false);
+                $input.focus();
+                showDropdown();
+                doSearch('');
+            }, 250);
+        }
+
+        $results.on('click', '.js-result-row', function (e) {
+            e.preventDefault();
+            selectResultRow($(this));
         });
 
-        $addNew.on('click', function () {
+        $results.on('touchend', '.js-result-row', function (e) {
+            e.preventDefault();
+            selectResultRow($(this));
+        });
+
+        function handleAddNewSubject() {
+            if (Date.now() - lastAddNewAt < 400) return;
             const term = $.trim($input.val()) || $.trim($addNewTerm.text());
             if (!term || term === 'type above first') return;
-            const token = $('meta[name="csrf-token"]').attr('content') || $('#becomeInstructorForm input[name="_token"]').val();
+            lastAddNewAt = Date.now();
+            showError('');
+            setLoading(true);
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
             $.post('/become-instructor/create-subject', { title: term, _token: token }, function (data) {
                 addSelected({ id: data.id, text: data.text || term });
                 $input.val('');
-                hideDropdown();
                 $input.focus();
+                showDropdown();
+                doSearch('');
             }).fail(function () {
                 addSelected({ id: term, text: term });
+                showError('Subject was added locally, but we could not save it on the server. Please try again later.');
                 $input.val('');
-                hideDropdown();
+                $input.focus();
+                showDropdown();
+                doSearch('');
+            }).always(function () {
+                setLoading(false);
             });
+        }
+
+        $addNew.on('click', function (e) {
+            e.preventDefault();
+            handleAddNewSubject();
+        }).on('touchend', function (e) {
+            e.preventDefault();
+            handleAddNewSubject();
         });
 
         $tags.on('click', '.js-remove-tag', function (e) {
@@ -176,9 +255,29 @@
         });
 
         $wrapper.on('click', function (e) {
-            if ($(e.target).closest('.js-occupations-input, .js-occupations-dropdown').length) return;
-            hideDropdown();
+            if ($(e.target).closest('.js-occupations-input').length || $(e.target).closest('.js-occupations-dropdown').length) return;
+            if ($(e.target).closest('.js-occupations-tags').length) {
+                hideDropdown();
+                return;
+            }
+            $input.focus();
         });
+
+        // Close when clicking anywhere outside the occupations component
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.js-occupations-wrapper').length) {
+                hideDropdown();
+            }
+        });
+
+        var $tabPane = $wrapper.closest('.tab-pane');
+        if ($tabPane.length && $tabPane.attr('id')) {
+            var tabId = $tabPane.attr('id');
+            $(document).on('shown.bs.tab', 'a[href="#' + tabId + '"], a[data-bs-target="#' + tabId + '"], [data-toggle="tab"][href="#' + tabId + '"]', function () {
+                var $w = $('#' + tabId).find('.js-occupations-wrapper');
+                if ($w.length) $w.find('.js-occupations-input').trigger('focus');
+            });
+        }
 
         // Initial selected from server
         try {

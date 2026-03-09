@@ -234,8 +234,6 @@ class AddCartController extends Controller
             }
         }
 
-        return response()->json([
-            'code' => 200
-        ], 200);
+        return apiResponse2(1, 'deleted', trans('api.public.deleted'));
     }
 }

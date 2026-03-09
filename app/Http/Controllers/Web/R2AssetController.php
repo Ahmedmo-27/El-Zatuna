@@ -127,18 +127,6 @@ class R2AssetController extends Controller
 
     private function getMimeFromPath(string $path): string
     {
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $map = [
-            'jpg' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'gif' => 'image/gif',
-            'webp' => 'image/webp',
-            'svg' => 'image/svg+xml',
-            'mp4' => 'video/mp4',
-            'webm' => 'video/webm',
-            'mov' => 'video/quicktime',
-        ];
-        return $map[$ext] ?? 'application/octet-stream';
+        return \App\Helpers\R2Helper::getMimeTypeFromPath($path);
     }
 }
