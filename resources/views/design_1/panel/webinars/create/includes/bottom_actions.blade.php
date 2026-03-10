@@ -1,15 +1,21 @@
 <div class="position-fixed position-bottom-0 position-left-0 position-right-0 z-index-3 bg-white soft-shadow-2">
     <div class="container d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between py-16">
 
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center create-course-bottom-nav">
             {{-- Previous --}}
-            <a href="{{ (!empty($webinar) and $currentStep > 1) ? ("/panel/courses/{$webinar->id}/step/" . ($currentStep - 1)) : '#!' }}" class="d-flex-center size-48 rounded-circle bg-gray-100">
-                @svg("iconsax-lin-arrow-left", ['height' => 16, 'width' => 16, 'class' => (!empty($webinar) and $currentStep > 1) ? 'text-primary' : 'text-gray-500'])
-            </a>
+            @if(!empty($webinar) and $currentStep > 1)
+                <a href="/panel/courses/{{ $webinar->id }}/step/{{ $currentStep - 1 }}" class="create-course-nav-btn create-course-nav-btn--prev text-decoration-none">
+                    @svg("iconsax-lin-arrow-left", ['height' => 20, 'width' => 20, 'class' => 'create-course-nav-btn__icon'])
+                </a>
+            @else
+                <span class="create-course-nav-btn create-course-nav-btn--disabled">
+                    @svg("iconsax-lin-arrow-left", ['height' => 20, 'width' => 20, 'class' => 'create-course-nav-btn__icon'])
+                </span>
+            @endif
 
             {{-- Next --}}
-            <div id="getNextStep" class="d-flex-center size-48 rounded-circle bg-gray-100 ml-16 cursor-pointer">
-                @svg("iconsax-lin-arrow-right", ['height' => 16, 'width' => 16, 'class' => ($currentStep < $stepCount) ? 'text-primary' : 'text-gray-500'])
+            <div id="getNextStep" class="create-course-nav-btn {{ ($currentStep < $stepCount) ? 'cursor-pointer' : 'create-course-nav-btn--disabled' }} ml-16">
+                @svg("iconsax-lin-arrow-right", ['height' => 20, 'width' => 20, 'class' => 'create-course-nav-btn__icon'])
             </div>
 
         </div>

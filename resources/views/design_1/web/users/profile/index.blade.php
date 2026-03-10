@@ -95,20 +95,24 @@
                                     </div>
                                 @endif
 
+                                {{-- Temporarily hidden until Articles is used again.
                                 <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'posts') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#articlesTab">
                                     <x-iconsax-lin-note-2 class="icons" width="16px" height="16px"/>
                                     <span class="ml-4">{{ trans('update.articles') }}</span>
                                 </div>
+                                --}}
 
                                 <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'forum') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#forumTab">
                                     <x-iconsax-lin-messages class="icons" width="16px" height="16px"/>
                                     <span class="ml-4">{{ trans('update.forum') }}</span>
                                 </div>
 
+                                {{-- Temporarily hidden until Badges is used again.
                                 <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'badges') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#badgesTab">
                                     <x-iconsax-lin-medal class="icons" width="16px" height="16px"/>
                                     <span class="ml-4">{{ trans('site.badges') }}</span>
                                 </div>
+                                --}}
 
                                 <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'appointments') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#reserveMeetingTab">
                                     <x-iconsax-lin-calendar-2 class="icons" width="16px" height="16px"/>
@@ -136,17 +140,21 @@
                                     @include('design_1.web.users.profile.tabs.products')
                                 </div>
 
+                                {{-- Temporarily hidden until Articles is used again.
                                 <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'posts') ? 'active' : ''  }}" id="articlesTab">
                                     @include('design_1.web.users.profile.tabs.articles')
                                 </div>
+                                --}}
 
                                 <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'forum') ? 'active' : ''  }}" id="forumTab">
                                     @include('design_1.web.users.profile.tabs.forum')
                                 </div>
 
+                                {{-- Temporarily hidden until Badges is used again.
                                 <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'badges') ? 'active' : ''  }}" id="badgesTab">
                                     @include('design_1.web.users.profile.tabs.badges')
                                 </div>
+                                --}}
 
                                 <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'appointments') ? 'active' : ''  }}" id="reserveMeetingTab">
                                     @include('design_1.web.users.profile.tabs.reserveMeeting.index')

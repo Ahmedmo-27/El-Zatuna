@@ -1,0 +1,98 @@
+.courses-lists-header__icon-box {
+  overflow: hidden;
+  box-shadow: 0 14px 32px rgba(7, 41, 35, 0.16);
+}
+
+.courses-lists-header__icon,
+.courses-lists-header__icon * {
+  width: 84px !important;
+  height: 84px !important;
+  color: #072923 !important;
+}
+
+.courses-rating-filter__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.courses-rating-filter {
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 1px solid rgba(250, 255, 224, 0.14);
+  border-radius: 16px;
+  background: rgba(250, 255, 224, 0.05);
+  transition: all 0.2s ease;
+}
+
+.courses-rating-filter:hover {
+  background: rgba(250, 255, 224, 0.09);
+  border-color: rgba(250, 255, 224, 0.24);
+}
+
+.courses-rating-filter__left {
+  min-width: 0;
+}
+
+.courses-rating-filter__checkbox {
+  position: relative;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid rgba(250, 255, 224, 0.55);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.courses-rating-filter__checkbox::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: #c8cd06;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.2s ease;
+}
+
+.courses-rating-filter__stars {
+  display: inline-flex;
+  align-items: center;
+}
+
+.courses-rating-filter__stars .icons,
+.courses-rating-filter__stars .icons * {
+  color: #facc15 !important;
+}
+
+.courses-rating-filter__stars .text-gray-400,
+.courses-rating-filter__stars .text-gray-400 * {
+  color: rgba(250, 255, 224, 0.28) !important;
+}
+
+.courses-rating-filter__count {
+  color: rgba(250, 255, 224, 0.72);
+}
+
+.courses-rating-filter__input:checked + .courses-rating-filter {
+  background: rgba(200, 205, 6, 0.14);
+  border-color: rgba(200, 205, 6, 0.55);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
+}
+
+.courses-rating-filter__input:checked + .courses-rating-filter .courses-rating-filter__checkbox {
+  border-color: #c8cd06;
+  background: rgba(200, 205, 6, 0.12);
+}
+
+.courses-rating-filter__input:checked + .courses-rating-filter .courses-rating-filter__checkbox::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.courses-rating-filter__input:checked + .courses-rating-filter .courses-rating-filter__count {
+  color: #faffe0;
+}

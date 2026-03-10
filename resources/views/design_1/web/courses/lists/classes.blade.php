@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="/assets/vendors/wrunner-html-range-slider-with-2-handles/css/wrunner-default-theme.css">
     <link rel="stylesheet" href="/assets/default/vendors/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="{{ getDesign1StylePath("courses_lists") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/course-list-elzatuna.css">
 @endpush
 
 @section("content")
@@ -26,8 +27,8 @@
                 <div class="courses-lists-header__mask"></div>
                 <div class="position-relative d-flex align-items-start bg-[#072923] rounded-32 z-index-2">
                     <div class="d-flex flex-column p-32">
-                        <div class="d-flex-center size-64 rounded-12 bg-[#FAFFE0]">
-                            <x-iconsax-bul-video-play class="icons text-[#072923]" width="32px" height="32px"/>
+                        <div class="d-flex-center size-72 rounded-16 bg-[#FAFFE0] courses-lists-header__icon-box">
+                            <x-iconsax-bul-video-play class="icons text-[#072923] courses-lists-header__icon" width="84px" height="84px"/>
                         </div>
 
                         <div class="d-flex align-items-center mt-16 text-[#FAFFE0]/70">
@@ -37,7 +38,6 @@
                         </div>
 
                         <h1 class="font-24 font-weight-bold mt-12 text-[#FAFFE0]">{{ $pageTitle }}</h1>
-                        <div class="font-12 text-[#FAFFE0]/70 mt-8">{{ trans('update.all_thing_about') }}</div>
                     </div>
 
                     @if(!empty($pageOverlayImage))

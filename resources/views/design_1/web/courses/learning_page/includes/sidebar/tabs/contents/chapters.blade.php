@@ -9,7 +9,14 @@
                         </div>
                         <div class="ml-8">
                             <div class="font-14 font-weight-bold">{{ $chapter->title }}</div>
-                            <div class="d-flex align-items-center mt-4 font-12 text-gray-500">{{ $chapter->getTopicsCount(true) }} {{ trans('public.parts') }}</div>
+                            <div class="d-flex align-items-center flex-wrap gap-8 mt-4 font-12 text-gray-500">
+                                <span>{{ $chapter->getTopicsCount(true) }} {{ trans('public.parts') }}</span>
+                                <span class="sidebar-item-dot-separator rounded-circle bg-gray-300"></span>
+                                <span class="d-flex align-items-center gap-4">
+                                    <x-iconsax-lin-clock-1 class="icons text-gray-400" width="14px" height="14px"/>
+                                    <span>{{ convertMinutesToHourAndMinute($chapter->getDuration()) }}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 

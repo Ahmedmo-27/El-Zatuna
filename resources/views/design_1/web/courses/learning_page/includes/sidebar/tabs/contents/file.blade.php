@@ -8,6 +8,15 @@
     $hasSequenceContentError = (!empty($checkSequenceContent) and $sequenceContentHasError);
 @endphp
 
+@php
+    $fileMetaValue = null;
+
+    if (!empty($file->isVideo()) and method_exists($file, 'getFileDuration')) {
+        $fileMetaValue = $file->getFileDuration();
+    } elseif (!empty($file->volume) and $file->volume !== '0 bytes') {
+        $fileMetaValue = $file->getVolume();
+    }
+@endphp
 
 <div class="sidebar-content-item d-flex align-items-center justify-content-between mb-12 p-12 rounded-16 cursor-pointer js-content-tab-item {{ $hasSequenceContentError ? 'js-sequence-content-error-modal' : '' }}"
      data-type="{{ $type }}"
@@ -30,9 +39,21 @@
             @endif
         </div>
 
-        <div class="ml-8">
-            <span class=" d-block font-weight-bold font-14 text-dark">{{ truncate($file->title, 27) }}</span>
-            <span class=" d-block font-12 text-gray-500 mt-4">{{ trans('update.file_type_' . $file->file_type) }}</span>
+        <div class="learning-page-item-details ml-8">
+            <span class="d-block font-weight-bold font-14 text-dark">{{ truncate($file->title, 27) }}</span>
+            <div class="learning-page-item-meta d-flex flex-wrap align-items-center gap-8 mt-4">
+                <span class="learning-page-item-meta__chip d-inline-flex align-items-center gap-4">
+                    @svg("iconsax-lin-{$fileIcon}", ['height' => 14, 'width' => 14, 'class' => 'icons'])
+                    <span>{{ trans('update.file_type_' . $file->file_type) }}</span>
+                </span>
+
+                @if(!empty($fileMetaValue))
+                    <span class="learning-page-item-meta__chip d-inline-flex align-items-center gap-4">
+                        <x-iconsax-lin-clock-1 class="icons" width="14px" height="14px"/>
+                        <span>{{ $fileMetaValue }}</span>
+                    </span>
+                @endif
+            </div>
         </div>
     </div>
 
