@@ -4,39 +4,10 @@
 
 <div class="bg-white rounded-16 p-16 mt-32">
 
-    {{-- course_type --}}
-    <div class="form-group mb-0">
-        <h3 class="font-14 font-weight-bold position-relative d-inline-flex is-required">{{ trans('panel.course_type') }}</h3>
-    </div>
+    {{-- Course type is fixed to "course" in the new flow --}}
+    <input type="hidden" name="type" value="{{ !empty($webinar) ? $webinar->type : 'course' }}">
 
-    <div class="d-grid grid-columns-auto grid-lg-columns-3 gap-24 mt-16">
-        @php
-            $coursetypes = [
-                'webinar' => 'video',
-                'course' => 'video-circle',
-                'text_lesson' => 'book',
-            ];
-        @endphp
-        @foreach($coursetypes as $coursetype => $coursetypeIcon)
-            <div class="create-webinar-course-types custom-input-button position-relative">
-                <input type="radio" class="" name="type" id="course_type_{{ $coursetype }}" value="{{ $coursetype }}" {{ (!empty($webinar) and $webinar->type == $coursetype) ? 'checked' : '' }}>
-                <label for="course_type_{{ $coursetype }}" class="position-relative d-flex-center flex-column p-16 p-lg-32 rounded-16 border-gray-200 text-center bg-white">
-                    <div class="create-webinar-course-types__icon-box d-flex-center size-64 rounded-16">
-                        @svg("iconsax-bul-{$coursetypeIcon}", ['height' => 32, 'width' => 32, 'class' => ''])
-                    </div>
-
-                    <div class="mt-12 font-14 font-weight-bold">{{ trans("webinars.{$coursetype}") }}</div>
-                    <p class="mt-4 font-12 text-gray-500">{{ trans("update.create_{$coursetype}_hint") }}</p>
-                </label>
-            </div>
-        @endforeach
-
-        @error('type')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <h3 class="font-14 font-weight-bold mt-24 mb-16">{{ trans('public.basic_information') }}</h3>
+    <h3 class="font-14 font-weight-bold mt-0 mb-16">{{ trans('public.basic_information') }}</h3>
 
 
     @include('design_1.panel.includes.locale.locale_select',[

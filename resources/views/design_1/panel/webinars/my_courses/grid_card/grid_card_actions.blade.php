@@ -23,14 +23,14 @@
             @if($course->isWebinar())
                 @can('panel_webinars_create')
                     <li class="actions-dropdown__dropdown-menu-item">
-                        <a href="/panel/courses/{{ $course->id }}/step/4" class="">{{ trans('public.sessions') }}</a>
+                        <a href="/panel/courses/{{ $course->id }}/step/3" class="">{{ trans('public.sessions') }}</a>
                     </li>
                 @endcan
             @endif
 
             @can('panel_webinars_create')
                 <li class="actions-dropdown__dropdown-menu-item">
-                    <a href="/panel/courses/{{ $course->id }}/step/4" class="">{{ trans('public.files') }}</a>
+                    <a href="/panel/courses/{{ $course->id }}/step/3" class="">{{ trans('public.files') }}</a>
                 </li>
             @endcan
 

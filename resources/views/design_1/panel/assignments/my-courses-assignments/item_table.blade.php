@@ -95,7 +95,7 @@
                     @endcan
 
                     <li class="actions-dropdown__dropdown-menu-item">
-                        <a href="/panel/courses/{{ $assignment->webinar_id }}/step/4" target="_blank" class="">{{ trans('public.edit') }}</a>
+                        <a href="/panel/courses/{{ $assignment->webinar_id }}/step/3" target="_blank" class="">{{ trans('public.edit') }}</a>
                     </li>
 
                     <li class="actions-dropdown__dropdown-menu-item">

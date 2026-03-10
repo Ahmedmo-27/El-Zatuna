@@ -19,7 +19,14 @@
             @include('design_1.panel.webinars.create.includes.progress')
 
             {{-- Steps Inputs --}}
-            @include("design_1.panel.webinars.create.steps.step_{$currentStep}")
+            @php
+                // Map the visible step 4 (message to reviewer) to the existing step_7 blade.
+                $templateStep = $currentStep;
+                if ($currentStep == 4) {
+                    $templateStep = 7;
+                }
+            @endphp
+            @include("design_1.panel.webinars.create.steps.step_{$templateStep}")
         </div>
 
 

@@ -1,5 +1,8 @@
 @php
     // Step 3 (pricing) removed: course price is set by admin when reviewing the course
+    // Steps 4, 5, 6 (prerequisites, FAQ, quiz & certificate) are disabled in the new flow.
+    // Course creation now focuses on:
+    // 1) basic information, 2) extra information, 3) content, and optionally 4) message to reviewer.
     $progressSteps = [
         1 => [
             'name' => 'basic_information',
@@ -15,26 +18,11 @@
             'name' => 'content',
             'icon' => 'document-cloud'
         ],
-
-        4 => [
-            'name' => 'prerequisites',
-            'icon' => 'archive-tick'
-        ],
-
-        5 => [
-            'name' => 'faq',
-            'icon' => 'bill'
-        ],
-
-        6 => [
-            'name' => 'quiz_certificate',
-            'icon' => 'clipboard-tick'
-        ],
-
     ];
 
     if (empty(getGeneralOptionsSettings('direct_publication_of_courses'))) {
-        $progressSteps[7] = [
+        // Final review step is step 4 in the new flow.
+        $progressSteps[4] = [
             'name' => 'message_to_reviewer',
             'icon' => 'shield-search'
         ];

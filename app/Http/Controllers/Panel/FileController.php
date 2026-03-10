@@ -100,6 +100,7 @@ class FileController extends Controller
             'webinar_id' => 'required',
             'chapter_id' => 'required',
             'title' => 'required|max:255',
+            'duration' => 'nullable|integer|min:0',
             'accessibility' => 'required|' . Rule::in(File::$accessibility),
             'price' => ['nullable', 'numeric', 'min:0', Rule::requiredIf($data['accessibility'] == 'paid')],
             'file_url' => 'required',
@@ -324,6 +325,7 @@ class FileController extends Controller
                 'chapter_id' => $data['chapter_id'],
                 'file' => $data['file_url'],
                 'volume' => $volume,
+                'duration' => isset($data['duration']) && $data['duration'] !== '' ? (int) $data['duration'] : null,
                 'file_type' => !empty($fileInfos) ? $fileInfos['extension'] : $data['file_type'],
                 'accessibility' => $data['accessibility'],
                 'price' => $data['price'],
@@ -550,6 +552,7 @@ class FileController extends Controller
                     'file_type' => Rule::requiredIf(in_array($data['storage'], $sourceRequiredFileType)),
                     'volume' => Rule::requiredIf(in_array($data['storage'], $sourceRequiredFileVolume)),
                     'description' => 'nullable',
+                    'duration' => 'nullable|integer|min:0',
                 ];
 
                 if ($data['storage'] == 'upload_archive') {
@@ -760,6 +763,7 @@ class FileController extends Controller
                     'chapter_id' => $data['chapter_id'],
                     'file' => $data['file_url'],
                     'volume' => $volume,
+                    'duration' => isset($data['duration']) && $data['duration'] !== '' ? (int) $data['duration'] : null,
                     'file_type' => !empty($fileInfos) ? $fileInfos['extension'] : $data['file_type'],
                     'accessibility' => $data['accessibility'],
                     'price' => $data['price'],

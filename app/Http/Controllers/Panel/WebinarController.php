@@ -78,7 +78,8 @@ class WebinarController extends Controller
         $facultiesAll = Faculty::orderBy('name')->get();
         $faculties = $facultiesAll->unique('name')->values();
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 7 : 6;
+        // New flow: steps 1 (basic), 2 (extra), 3 (content), and optionally 4 (message to reviewer).
+        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
 
         $data = [
             'pageTitle' => trans('webinars.new_page_title'),
@@ -202,7 +203,8 @@ class WebinarController extends Controller
         }
         $locale = $request->get('locale', app()->getLocale());
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 7 : 6;
+        // New flow uses 3 or 4 visible steps (1: basic, 2: extra, 3: content, 4: message_to_reviewer when enabled).
+        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
 
         if ($step > $stepCount) {
             return redirect("/panel/courses/{$id}/step/{$stepCount}");
@@ -281,40 +283,6 @@ class WebinarController extends Controller
                     ]);
                 },
             ]);
-        } elseif ($step == 4) {
-            $query->with([
-                'prerequisites' => function ($query) {
-                    $query->with(['prerequisiteWebinar' => function ($qu) {
-                        $qu->with(['teacher' => function ($q) {
-                            $q->select('id', 'full_name');
-                        }]);
-                    }])->orderBy('order', 'asc');
-                }
-            ]);
-        } elseif ($step == 5) {
-            $query->with([
-                'faqs' => function ($query) {
-                    $query->orderBy('order', 'asc');
-                },
-                'webinarExtraDescription' => function ($query) {
-                    $query->orderBy('order', 'asc');
-                }
-            ]);
-        } elseif ($step == 6) {
-            $query->with([
-                'quizzes',
-                'chapters' => function ($query) {
-                    $query->where('status', WebinarChapter::$chapterActive)
-                        ->orderBy('order', 'asc');
-                }
-            ]);
-
-            $teacherQuizzes = Quiz::where('webinar_id', null)
-                ->where('creator_id', $user->id)
-                ->whereNull('webinar_id')
-                ->get();
-
-            $data['teacherQuizzes'] = $teacherQuizzes;
         }
 
 
@@ -406,7 +374,6 @@ class WebinarController extends Controller
         if ($currentStep == 2) {
             $rules = [
                 'category_id' => 'required',
-                'duration' => 'required|numeric',
                 'partners' => 'required_if:partner_instructor,on',
                 'capacity' => 'nullable|numeric|min:0'
             ];
@@ -419,16 +386,24 @@ class WebinarController extends Controller
         $webinarRulesRequired = false;
         $directPublicationOfCourses = !empty(getGeneralOptionsSettings('direct_publication_of_courses'));
 
-        if (!$directPublicationOfCourses and (($currentStep == 7 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft))) {
+        // When direct publication is disabled, any final submission (Send for Review) requires agreeing to rules.
+        if (!$directPublicationOfCourses && (!$getNextStep && !$isDraft)) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
         $this->validate($request, $rules);
 
-        $status = ($isDraft or $webinarRulesRequired) ? Webinar::$isDraft : Webinar::$pending;
+        $originalStatus = $webinar->status;
 
-        if ($directPublicationOfCourses and !$getNextStep and !$isDraft) {
+        if ($originalStatus == Webinar::$active) {
+            // Once a course has been approved/activated, keep it active on subsequent edits.
             $status = Webinar::$active;
+        } else {
+            $status = ($isDraft or $webinarRulesRequired) ? Webinar::$isDraft : Webinar::$pending;
+
+            if ($directPublicationOfCourses and !$getNextStep and !$isDraft) {
+                $status = Webinar::$active;
+            }
         }
 
         $data['status'] = $status;
@@ -565,7 +540,8 @@ class WebinarController extends Controller
 
         $webinar->update($data);
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 7 : 6;
+        // New flow: 3 steps when direct publication is enabled, 4 when review step is enabled.
+        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
 
         $url = '/panel/courses';
         if ($getNextStep) {
@@ -575,7 +551,9 @@ class WebinarController extends Controller
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/7';
+            // In the new flow, the message_to_reviewer step is step 4 when review is enabled.
+            $finalStep = $stepCount;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . $finalStep;
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }

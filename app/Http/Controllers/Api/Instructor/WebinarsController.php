@@ -457,13 +457,20 @@ class WebinarsController extends Controller
         }
 
         $webinarRulesRequired = false;
-        if (($currentStep == 7 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
+        // Any final submission (Send for Review) requires agreeing to rules.
+        if (!$getNextStep and !$isDraft) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
         validateParam($request->all(), $rules);
 
-        $data['status'] = ($isDraft or $webinarRulesRequired) ? Webinar::$isDraft : Webinar::$pending;
+        $originalStatus = $webinar->status;
+        if ($originalStatus == Webinar::$active) {
+            // Keep already approved courses active when editing via API.
+            $data['status'] = Webinar::$active;
+        } else {
+            $data['status'] = ($isDraft or $webinarRulesRequired) ? Webinar::$isDraft : Webinar::$pending;
+        }
         $data['updated_at'] = time();
 
         if ($currentStep == 1) {
@@ -532,11 +539,14 @@ class WebinarsController extends Controller
         if ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
-            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 7) ? $nextStep : 7);
+            // New flow: 3 or 4 steps; clamp next step to last visible step.
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= $stepCount) ? $nextStep : $stepCount);
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/7';
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . $stepCount;
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }
@@ -722,7 +732,7 @@ class WebinarsController extends Controller
         }
 
         $webinarRulesRequired = false;
-        if (($currentStep == 7 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
+        if (!$getNextStep and !$isDraft) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
@@ -798,11 +808,13 @@ class WebinarsController extends Controller
         if ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
-            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 7) ? $nextStep : 7);
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= $stepCount) ? $nextStep : $stepCount);
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/7';
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . $stepCount;
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }
