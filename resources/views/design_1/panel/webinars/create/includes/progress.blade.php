@@ -32,21 +32,6 @@
             'color' => '#EA580C',
         ],
 
-        <!-- 4 => [
-            'name' => 'prerequisites',
-            'icon' => 'archive-tick'
-        ],
-
-        5 => [
-            'name' => 'faq',
-            'icon' => 'bill'
-        ],
-
-        6 => [
-            'name' => 'quiz_certificate',
-            'icon' => 'clipboard-tick'
-        ], -->
-
     ];
 
     if (empty(getGeneralOptionsSettings('direct_publication_of_courses'))) {
