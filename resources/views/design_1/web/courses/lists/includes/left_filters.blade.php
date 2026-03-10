@@ -156,19 +156,24 @@
 
             <div id="leftFiltersRatings" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
                 @foreach([5,4,3,2,1] as $rateNum)
-                    <div class="d-flex align-items-center justify-content-between {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="custom-control-input">
-                            <label class="custom-control__label cursor-pointer pl-0 text-[#FAFFE0]" for="rating_{{ $rateNum }}">
-                                @include('design_1.web.components.rate', [
-                                     'rate' => $rateNum,
-                                     'rateCount' => false,
-                                     'rateClassName' => ''
-                                 ])
-                            </label>
-                        </div>
+                    <div class="{{ $loop->first ? 'mt-16' : 'mt-12' }}">
+                        <input type="radio" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="courses-rating-filter__input" {{ (request()->get('rating') == $rateNum) ? 'checked' : '' }}>
 
-                        <span class="font-12 text-[#FAFFE0]/70">{{ !empty($coursesRatingsCount[$rateNum]) ? $coursesRatingsCount[$rateNum] : 0 }}</span>
+                        <label class="courses-rating-filter d-flex align-items-center justify-content-between cursor-pointer" for="rating_{{ $rateNum }}">
+                            <span class="courses-rating-filter__left d-flex align-items-center">
+                                <span class="courses-rating-filter__checkbox"></span>
+
+                                <span class="courses-rating-filter__stars ml-12">
+                                    @include('design_1.web.components.rate', [
+                                         'rate' => $rateNum,
+                                         'rateCount' => false,
+                                         'rateClassName' => ''
+                                     ])
+                                </span>
+                            </span>
+
+                            <span class="courses-rating-filter__count font-12">{{ !empty($coursesRatingsCount[$rateNum]) ? $coursesRatingsCount[$rateNum] : 0 }}</span>
+                        </label>
                     </div>
                 @endforeach
             </div>
