@@ -355,10 +355,15 @@
     }
 
     &__details {
-        width: calc(100% - 332px);
+        flex: 1;
+        min-width: 0;
+
+        .course-about-instructor-card--has-secondary & {
+            width: calc(100% - 332px);
+        }
 
         @media (max-width: $screen-sm-max) {
-            width: 100%;
+            width: 100% !important;
         }
     }
 

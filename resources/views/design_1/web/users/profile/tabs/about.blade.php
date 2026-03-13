@@ -30,8 +30,10 @@
 <div class="row">
     @if(!empty($user->about))
         <div class="col-12 col-md-6 mt-24">
-            <h4 class="font-16 font-weight-bold">{{ trans('update.about_me') }}</h4>
-            <div class="mt-12 text-gray-500">{!! nl2br($user->about) !!}</div>
+            <div class="profile-about-me-section">
+                <h4 class="font-16 font-weight-bold mb-16">{{ trans('update.about_me') }}</h4>
+                <div class="profile-about-me-description">{!! nl2br($user->about) !!}</div>
+            </div>
         </div>
     @endif
 

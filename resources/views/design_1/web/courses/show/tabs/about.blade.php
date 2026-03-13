@@ -175,7 +175,7 @@
 <div class="course-about-instructor-card position-relative mt-32 mt-lg-60">
     <div class="course-about-instructor-card__mask"></div>
 
-    <div class="position-relative d-flex flex-column flex-lg-row align-items-start gap-24 bg-white px-16 rounded-24 z-index-3">
+    <div class="position-relative d-flex flex-column flex-lg-row align-items-start gap-24 bg-white px-16 rounded-24 z-index-3 {{ $course->teacher->getProfileSecondaryImage() ? 'course-about-instructor-card--has-secondary' : '' }}">
         <div class="course-about-instructor-card__details flex-1 py-16">
             <div class="d-flex align-items-center">
                 <div class="position-relative d-flex-center size-80 rounded-12 bg-gray-200 overflow-hidden flex-shrink-0">
@@ -214,18 +214,27 @@
             </div>
 
             <div class="mt-16 text-gray-500">{!! truncate($course->teacher->about, 716) !!}</div>
-        </div>
 
-        <div class="course-about-instructor-card__secondary-img position-relative">
-            <img src="{{ $course->teacher->getProfileSecondaryImage() }}" alt="{{ $course->teacher->full_name }}" class="img-cover">
-
-            @if($course->teacher->hasMeeting())
-                <a href="{{ $course->teacher->getMeetingReservationUrl() }}" target="_blank" class="course-about-instructor-card__book-meeting-btn d-inline-flex align-items-center gap-8 px-24 py-12 cursor-pointer">
+            @if(!$course->teacher->getProfileSecondaryImage() && $course->teacher->hasMeeting())
+                <a href="{{ $course->teacher->getMeetingReservationUrl() }}" target="_blank" class="btn btn-primary btn-lg d-inline-flex align-items-center gap-8 mt-16">
                     <x-iconsax-lin-calendar-2 class="icons text-white" width="24px" height="24px"/>
-                    <span class="text-white">{{ trans('public.book_a_meeting') }}</span>
+                    <span>{{ trans('public.book_a_meeting') }}</span>
                 </a>
             @endif
         </div>
+
+        @if($course->teacher->getProfileSecondaryImage())
+            <div class="course-about-instructor-card__secondary-img position-relative">
+                <img src="{{ $course->teacher->getProfileSecondaryImage() }}" alt="{{ $course->teacher->full_name }}" class="img-cover">
+
+                @if($course->teacher->hasMeeting())
+                    <a href="{{ $course->teacher->getMeetingReservationUrl() }}" target="_blank" class="course-about-instructor-card__book-meeting-btn d-inline-flex align-items-center gap-8 px-24 py-12 cursor-pointer">
+                        <x-iconsax-lin-calendar-2 class="icons text-white" width="24px" height="24px"/>
+                        <span class="text-white">{{ trans('public.book_a_meeting') }}</span>
+                    </a>
+                @endif
+            </div>
+        @endif
     </div>
 </div>
 
