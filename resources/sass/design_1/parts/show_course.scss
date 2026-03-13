@@ -101,6 +101,7 @@
         width: 100%;
         height: 224px;
         border-radius: 16px 16px 0 0;
+        overflow: hidden;
 
         img {
             border-radius: 16px 16px 0 0;
@@ -151,6 +152,12 @@
         left: 50%;
         transform: translateX(-50%);
         z-index: 2;
+    }
+
+    // Teacher card avatar: consistent circular crop
+    &-section .size-64.rounded-circle {
+        overflow: hidden;
+        flex-shrink: 0;
     }
 
     &__teacher {
@@ -311,6 +318,11 @@
 }
 
 .course-about-instructor-card {
+    // Main instructor avatar: consistent crop in rounded rect
+    .size-80.rounded-12 {
+        overflow: hidden;
+        flex-shrink: 0;
+    }
 
     &__mask {
         position: absolute;
@@ -325,9 +337,17 @@
     &__secondary-img {
         width: 308px;
         height: 316px;
+        min-width: 308px;
+        min-height: 316px;
         bottom: 0;
         top: -40px;
         margin-bottom: -40px;
+        overflow: hidden;
+        border-radius: 12px;
+
+        img {
+            border-radius: 12px;
+        }
 
         @media (max-width: $screen-sm-max) {
             display: none;

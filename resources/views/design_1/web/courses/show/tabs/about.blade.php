@@ -178,7 +178,7 @@
     <div class="position-relative d-flex flex-column flex-lg-row align-items-start gap-24 bg-white px-16 rounded-24 z-index-3">
         <div class="course-about-instructor-card__details flex-1 py-16">
             <div class="d-flex align-items-center">
-                <div class="position-relative d-flex-center size-80 rounded-12 bg-gray-200">
+                <div class="position-relative d-flex-center size-80 rounded-12 bg-gray-200 overflow-hidden flex-shrink-0">
                     <img src="{{ $course->teacher->getAvatar(80) }}" alt="{{ $course->teacher->full_name }}" class="img-cover rounded-12">
                 </div>
 

@@ -9,20 +9,37 @@
             tabsize: 2,
             height: height,
             placeholder: $content.attr('placeholder'),
-            fontNames: [],
+
+            // Provide a useful set of fonts and sizes for course descriptions
+            fontNames: [
+                'Arial',
+                'Helvetica',
+                'Times New Roman',
+                'Playfair Display',
+                'Courier New',
+                'Roboto',
+                'Verdana'
+            ],
+            fontSizes: [
+                '10', '12', '14', '16', '18', '20', '24', '28', '32', '36'
+            ],
+
             callbacks: {
                 onChange: onChange
             },
+
+            // Rich toolbar configuration to support styling, lists, media, and code view
             toolbar: [
                 ['style', ['style']],
-                ['font', ['bold', 'underline', 'clear']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
                 ['fontname', ['fontname']],
+                ['fontsize', ['fontsize']],
                 ['color', ['color']],
                 ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']],
                 ['table', ['table']],
                 ['insert', ['link', 'picture', 'video']],
                 ['view', ['fullscreen', 'codeview', 'help']],
-                ['paperSize', ['paperSize']], // The Button
             ]
         });
     }
