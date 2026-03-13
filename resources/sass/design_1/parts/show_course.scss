@@ -498,19 +498,46 @@
     height: 8px;
 }
 
+// About This Course section: consistent inner padding
+.course-about-section {
+    @media (max-width: 576px) {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        padding-top: 20px !important;
+        padding-bottom: 24px !important;
+    }
+}
+
 .course-show-description {
     color: var(--gray-500);
+    line-height: 1.6;
 
     p {
         color: var(--gray-500);
+        margin-bottom: 0.75em;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 
     img {
         max-width: 100% !important;
     }
 
+    ul, ol {
+        padding-left: 1.25em;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+
     li {
         list-style: inherit;
+        margin-bottom: 0.5em;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 }
 

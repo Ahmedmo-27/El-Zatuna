@@ -45,10 +45,10 @@
 
     {{-- About course --}}
     @if($course->description)
-        <div class="px-16">
-            <h2 class="font-16 font-weight-bold">{{ trans('update.about_this_course') }}</h2>
+        <div class="course-about-section px-24 pt-24 pb-28">
+            <h2 class="font-16 font-weight-bold mb-16">{{ trans('update.about_this_course') }}</h2>
 
-            <div class="course-show-description mt-12 text-gray-500">
+            <div class="course-show-description text-gray-500">
                 {!! nl2br($course->description) !!}
             </div>
         </div>
