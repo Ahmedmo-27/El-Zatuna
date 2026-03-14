@@ -136,3 +136,69 @@ h1, h2, h3, h4, h5, h6, .font-display {
         transform: rotate(360deg);
     }
 }
+
+/* Minimal UI pass */
+body {
+    background: #FAFFE0;
+}
+
+.bg-white,
+.card,
+.modal-content,
+.dropdown-menu,
+.accordion,
+.accordion > .card {
+    box-shadow: none !important;
+    border: 1px solid rgba(7, 41, 35, 0.12) !important;
+}
+
+.rounded-16,
+.rounded-12,
+.rounded-10,
+.rounded-8,
+.card,
+.modal-content,
+.dropdown-menu,
+.btn,
+.form-control,
+.select2-selection,
+.input-group-text {
+    border-radius: 10px !important;
+}
+
+.btn,
+.badge,
+.dropdown-item,
+.nav-link,
+.pagination .page-link {
+    box-shadow: none !important;
+}
+
+.form-control,
+.select2-selection,
+textarea,
+input,
+select {
+    background-image: none !important;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    line-height: 1.45;
+}
+
+.form-control,
+.select2-selection {
+    min-height: 46px;
+}
+
+p,
+.font-12,
+.font-14 {
+    line-height: 1.55;
+}

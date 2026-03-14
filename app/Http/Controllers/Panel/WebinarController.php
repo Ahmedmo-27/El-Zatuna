@@ -136,6 +136,7 @@ class WebinarController extends Controller
         $this->validate($request, $rules);
 
         $data = $request->all();
+        $isPreviewRequest = (!empty($data['preview']) and $data['preview'] == 1 and empty($data['get_next']));
 
         $data['university_id'] = !empty($data['university_id']) ? $data['university_id'] : null;
         $data['faculty_id'] = !empty($data['faculty_id']) ? $data['faculty_id'] : null;
@@ -185,6 +186,10 @@ class WebinarController extends Controller
         $url = '/panel/courses';
         if ($data['get_next'] == 1) {
             $url = '/panel/courses/' . $webinar->id . '/step/2';
+        }
+
+        if ($isPreviewRequest and !empty($webinar)) {
+            return redirect($webinar->getUrl() . '?preview=1');
         }
 
         return redirect($url);
@@ -370,6 +375,7 @@ class WebinarController extends Controller
         $getStep = $data['get_step'];
         $getNextStep = (!empty($data['get_next']) and $data['get_next'] == 1);
         $isDraft = (!empty($data['draft']) and $data['draft'] == 1);
+        $isPreviewRequest = (!empty($data['preview']) and $data['preview'] == 1 and !$getNextStep);
 
         $webinar = Webinar::where('id', $id)
             ->where(function ($query) use ($user) {
@@ -549,6 +555,7 @@ class WebinarController extends Controller
             $data['current_step'],
             $data['draft'],
             $data['get_next'],
+            $data['preview'],
             $data['partners'],
             $data['tags'],
             $data['filters'],
@@ -589,6 +596,10 @@ class WebinarController extends Controller
                 '[content_type]' => trans('admin/main.course'),
             ];
             sendNotification("content_review_request", $notifyOptions, 1);
+        }
+
+        if ($isPreviewRequest and !$webinarRulesRequired) {
+            return redirect($webinar->getUrl() . '?preview=1');
         }
 
         return redirect($url);

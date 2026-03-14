@@ -11,37 +11,6 @@
         @include('design_1.panel.webinars.create.includes.category_input', ['webinar' => $webinar ?? null])
     </div>
 
-    <div class="mt-24 {{ (!empty($webinarCategoryFilters) and count($webinarCategoryFilters)) ? '' : 'd-none' }}" id="categoriesFiltersContainer">
-        <h3 class="font-14 font-weight-bold">{{ trans('public.category_filters') }}</h3>
-
-        <div id="categoriesFiltersCard" class="row">
-            @if(!empty($webinarCategoryFilters) and count($webinarCategoryFilters))
-                @foreach($webinarCategoryFilters as $filter)
-                    <div class="col-12 col-md-3 mt-16">
-                        <div class="create-course-filter-card bg-white p-16 rounded-12 border-gray-200">
-                            <h5 class="font-14 font-weight-bold mb-16">{{ $filter->title }}</h5>
-
-                            @php
-                                $webinarFilterOptions = $webinar->filterOptions->pluck('filter_option_id')->toArray();
-
-                                if (!empty(old('filters'))) {
-                                    $webinarFilterOptions = array_merge($webinarFilterOptions, old('filters'));
-                                }
-                            @endphp
-
-                            @foreach($filter->options as $option)
-                                <div class="custom-control custom-checkbox {{ $loop->first ? '' : 'mt-12' }}">
-                                    <input type="checkbox" name="filters[]" value="{{ $option->id }}" id="filterOptions{{ $option->id }}" class="custom-control-input" {{ ((!empty($webinarFilterOptions) && in_array($option->id, $webinarFilterOptions)) ? 'checked' : '') }}>
-                                    <label class="custom-control__label cursor-pointer" for="filterOptions{{ $option->id }}">{{ $option->title }}</label>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-        </div>
-    </div>
-
     {{-- Course Options --}}
 
     <h3 class="font-14 font-weight-bold my-24">{{ trans('update.course_options') }}</h3>
