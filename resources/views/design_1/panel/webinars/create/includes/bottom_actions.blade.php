@@ -24,6 +24,9 @@
             {{-- Save as Draft --}}
             <button type="button" id="saveAsDraft" class=" btn btn-transparent text-gray-500">{{ trans('public.save_as_draft') }}</button>
 
+            {{-- Save & Preview --}}
+            <button type="button" id="previewCourse" class="btn btn-transparent text-gray-500">{{ trans('update.preview') }}</button>
+
             @if(!empty($webinar) and $webinar->creator_id == $authUser->id)
                 @include('design_1.panel.includes.content_delete_btn', [
                     'deleteContentUrl' => "/panel/courses/{$webinar->id}/delete?redirect_to=/panel/courses",

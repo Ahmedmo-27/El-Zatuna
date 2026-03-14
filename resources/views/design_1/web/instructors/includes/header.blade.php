@@ -13,7 +13,6 @@
             </div>
 
             <h1 class="font-24 font-weight-bold mt-12 text-[#FAFFE0]">{{ trans('home.instructors') }}</h1>
-            <div class="font-12 text-[#FAFFE0]/70 mt-8">{{ trans('update.explore_all_instructors_in_one_place_and_find_your_desired_instructor') }}</div>
         </div>
 
         @if(!empty($pageOverlayImage))

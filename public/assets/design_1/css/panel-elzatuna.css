@@ -253,6 +253,79 @@ body,
     background-color: #ECF4B8 !important;
 }
 
+/* ============================================
+   MINIMAL UI PASS
+   ============================================ */
+.bg-white,
+.card,
+.accordion,
+.accordion > .card,
+.modal-content,
+.dropdown-menu,
+.panel-content .bg-white,
+.panel-content__scrollable .bg-white {
+    box-shadow: none !important;
+    border: 1px solid rgba(7, 41, 35, 0.12) !important;
+}
+
+.rounded-16,
+.rounded-12,
+.rounded-10,
+.rounded-8,
+.card,
+.modal-content,
+.dropdown-menu,
+.btn,
+.form-control,
+.select2-selection,
+.input-group-text {
+    border-radius: 10px !important;
+}
+
+.btn,
+.badge,
+.dropdown-item,
+.nav-link,
+.pagination .page-link,
+.panel-content .btn,
+.panel-content__scrollable .btn {
+    box-shadow: none !important;
+}
+
+.form-control,
+.select2-selection,
+textarea,
+input,
+select {
+    background-image: none !important;
+}
+
+.panel-content__scrollable .form-group,
+.panel-content .form-group {
+    margin-bottom: 1.35rem;
+}
+
+.panel-content__scrollable .form-group-label,
+.panel-content .form-group-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    line-height: 1.45;
+}
+
+.panel-content__scrollable .form-control,
+.panel-content .form-control,
+.panel-content__scrollable .select2-selection,
+.panel-content .select2-selection {
+    min-height: 48px;
+}
+
+.panel-content__scrollable p,
+.panel-content p,
+.panel-content__scrollable .font-12,
+.panel-content .font-12 {
+    line-height: 1.55;
+}
+
 /* Card text colors - but exclude sidebar */
 body .text-dark:not(.panel-sidebar *),
 body h1:not(.panel-sidebar *),
