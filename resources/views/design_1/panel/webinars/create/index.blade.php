@@ -87,7 +87,6 @@
 
                 $(this).addClass('loadingbar').prop('disabled', true);
 
-                $('#forDraft').val(1);
                 $('#getNext').val(0);
                 $('#getStep').val(0);
                 $('#previewCourseInput').val(1);

@@ -362,11 +362,15 @@ class UpcomingCoursesController extends Controller
             $data['assignments'] = (!empty($data['assignments']) and $data['assignments'] == "on");
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
 
-
-            UpcomingCourseFilterOption::where('upcoming_course_id', $upcomingCourse->id)->delete();
-
             $filters = $request->get('filters', null);
-            if (!empty($filters) and is_array($filters)) {
+            $filtersProvided = $request->has('filters') and is_array($filters);
+            $categoryChanged = ((int)$data['category_id'] !== (int)$upcomingCourse->category_id);
+
+            if ($filtersProvided or $categoryChanged) {
+                UpcomingCourseFilterOption::where('upcoming_course_id', $upcomingCourse->id)->delete();
+            }
+
+            if ($filtersProvided and !empty($filters)) {
                 foreach ($filters as $filter) {
                     UpcomingCourseFilterOption::create([
                         'upcoming_course_id' => $upcomingCourse->id,

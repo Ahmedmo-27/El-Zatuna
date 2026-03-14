@@ -374,8 +374,8 @@ class WebinarController extends Controller
         $currentStep = $data['current_step'];
         $getStep = $data['get_step'];
         $getNextStep = (!empty($data['get_next']) and $data['get_next'] == 1);
-        $isDraft = (!empty($data['draft']) and $data['draft'] == 1);
         $isPreviewRequest = (!empty($data['preview']) and $data['preview'] == 1 and !$getNextStep);
+        $isDraft = (!empty($data['draft']) and $data['draft'] == 1 and !$isPreviewRequest);
 
         $webinar = Webinar::where('id', $id)
             ->where(function ($query) use ($user) {
@@ -435,6 +435,10 @@ class WebinarController extends Controller
 
         if ($directPublicationOfCourses and !$getNextStep and !$isDraft) {
             $status = Webinar::$active;
+        }
+
+        if ($isPreviewRequest) {
+            $status = $webinar->status;
         }
 
         $data['status'] = $status;
@@ -506,7 +510,7 @@ class WebinarController extends Controller
         }
 
         $filters = $request->get('filters', null);
-        if (!empty($filters) and is_array($filters)) {
+        if ($request->has('filters') and is_array($filters)) {
             WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
             foreach ($filters as $filter) {
                 WebinarFilterOption::create([
