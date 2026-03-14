@@ -278,6 +278,40 @@ class WebinarsController extends Controller
 
     }
 
+    /**
+     * Create a new course (webinar, course, or text_lesson). Teacher/organization only.
+     *
+     * @OA\Post(
+     *     path="/v1/instructor/webinar",
+     *     summary="Create course",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"type","title","thumbnail","image_cover","description","category_id","duration","rules"},
+     *             @OA\Property(property="type", type="string", enum={"webinar","course","text_lesson"}),
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="thumbnail", type="string", description="Image URL or base64"),
+     *             @OA\Property(property="image_cover", type="string"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="category_id", type="integer"),
+     *             @OA\Property(property="duration", type="number"),
+     *             @OA\Property(property="start_date", type="string", format="date-time", description="Required if type=webinar"),
+     *             @OA\Property(property="capacity", type="integer", description="Required if type=webinar"),
+     *             @OA\Property(property="rules", type="integer", example=1),
+     *             @OA\Property(property="is_draft", type="boolean"),
+     *             @OA\Property(property="private", type="boolean"),
+     *             @OA\Property(property="support", type="boolean"),
+     *             @OA\Property(property="downloadable", type="boolean"),
+     *             @OA\Property(property="tags", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Course created"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher/organization only")
+     * )
+     */
     public function storeAll(Request $request)
     {
         $user = auth()->user();

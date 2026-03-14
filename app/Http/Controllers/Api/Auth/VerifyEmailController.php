@@ -10,9 +10,23 @@ use Illuminate\Http\Request;
 class VerifyEmailController extends Controller
 {
     /**
-     * Verify email via link clicked in email (DEPRECATED - keeping for backward compatibility)
-     * New registrations should use code-based verification in RegisterController stepTwo
+     * Verify email via link token (legacy). Prefer code-based verification in register step 2.
      *
+     * @OA\Get(
+     *     path="/v1/auth/verify-email/{token}",
+     *     summary="Verify email (link token)",
+     *     tags={"Auth"},
+     *     @OA\Parameter(name="token", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Email verified", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="email_verified"),
+     *         @OA\Property(property="data", type="object", @OA\Property(property="verification_token", type="string"))
+     *     )),
+     *     @OA\Response(response=200, description="Invalid token", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="status", type="string", example="invalid_token")
+     *     ))
+     * )
      * @param Request $request
      * @param string $token
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
@@ -105,8 +119,25 @@ class VerifyEmailController extends Controller
     }
 
     /**
-     * Resend verification code via email
+     * Resend 6-digit verification code to email.
      *
+     * @OA\Post(
+     *     path="/v1/auth/resend-verification",
+     *     summary="Resend verification code",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email"},
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Code resent", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="verification_resent")
+     *     )),
+     *     @OA\Response(response=200, description="Error (e.g. already_verified, user_not_found)")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */

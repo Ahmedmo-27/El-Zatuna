@@ -13,8 +13,25 @@ use Illuminate\Http\Request;
 class FavoritesController extends Controller
 {
     /**
-     * Toggle favorite for an item (webinar, bundle, or product)
-     * Consolidated endpoint replacing /toggle/{id} and /toggle2
+     * Toggle favorite for an item (webinar, bundle, or product).
+     *
+     * @OA\Post(
+     *     path="/v1/panel/favorites/toggle",
+     *     summary="Toggle favorite",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"item_id","item_type"},
+     *             @OA\Property(property="item_id", type="integer"),
+     *             @OA\Property(property="item_type", type="string", enum={"webinar","bundle","product"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="favored or unfavored"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Item not found")
+     * )
      */
     public function toggle(Request $request)
     {
@@ -74,6 +91,18 @@ class FavoritesController extends Controller
         ]);
     }
 
+    /**
+     * List user's favorites (paginated).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/favorites",
+     *     summary="List favorites",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Paginated favorites"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function list(Request $request)
     {
         $user = apiAuth();
@@ -98,6 +127,20 @@ class FavoritesController extends Controller
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $paginatedData);
     }
 
+    /**
+     * Remove a favorite by ID.
+     *
+     * @OA\Delete(
+     *     path="/v1/panel/favorites/{id}",
+     *     summary="Remove favorite",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Removed"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function destroy($id)
     {
         $user = apiAuth();

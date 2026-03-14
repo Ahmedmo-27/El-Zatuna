@@ -12,8 +12,30 @@ use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 class TokenRefreshController extends Controller
 {
     /**
-     * Refresh the JWT token
+     * Refresh JWT token.
      *
+     * @OA\Post(
+     *     path="/v1/auth/refresh",
+     *     summary="Refresh token",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"refresh_token"},
+     *             @OA\Property(property="refresh_token", type="string", description="Current JWT or refresh token")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Token refreshed", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="token_refreshed"),
+     *         @OA\Property(property="data", type="object",
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="token_type", type="string", example="bearer"),
+     *             @OA\Property(property="expires_at", type="string", format="date-time")
+     *         )
+     *     )),
+     *     @OA\Response(response=200, description="Error (token_expired, token_invalid)")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */

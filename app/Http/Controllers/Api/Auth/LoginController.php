@@ -22,6 +22,36 @@ class LoginController extends Controller
     |
     */
 
+    /**
+     * Authenticate with email and password; returns JWT and session data.
+     *
+     * @OA\Post(
+     *     path="/v1/auth/login",
+     *     summary="Login",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com"),
+     *             @OA\Property(property="password", type="string", example="Str0ngPassw0rd!")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login success", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="login"),
+     *         @OA\Property(property="data", type="object",
+     *             @OA\Property(property="account_token", type="string"),
+     *             @OA\Property(property="session_token", type="string"),
+     *             @OA\Property(property="user_id", type="integer")
+     *         )
+     *     )),
+     *     @OA\Response(response=200, description="Invalid credentials", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="status", type="string", example="incorrect")
+     *     ))
+     * )
+     */
     public function login(Request $request)
     {
         $rules = [
@@ -192,6 +222,26 @@ class LoginController extends Controller
 
     }
 
+    /**
+     * Invalidate the current JWT (and optionally a specific session).
+     *
+     * @OA\Post(
+     *     path="/v1/logout",
+     *     summary="Logout",
+     *     tags={"Auth"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="session_token", type="string", description="Optional session token to invalidate")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Logout success", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="logout")
+     *     )),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function logout(Request $request)
     {
         $user = auth('api')->user();

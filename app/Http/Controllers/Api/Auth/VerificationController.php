@@ -82,6 +82,29 @@ class VerificationController extends Controller
     }
 
 
+    /**
+     * Confirm verification code (email or mobile).
+     *
+     * @OA\Post(
+     *     path="/v1/auth/verification",
+     *     summary="Confirm verification code",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username","code"},
+     *             @OA\Property(property="username", type="string", description="Email or mobile"),
+     *             @OA\Property(property="code", type="string", description="Verification code"),
+     *             @OA\Property(property="referral_code", type="string", description="Optional")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Verified", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="verified")
+     *     )),
+     *     @OA\Response(response=200, description="Invalid code or error")
+     * )
+     */
     public function confirmCode(Request $request, $username = null)
     {
 

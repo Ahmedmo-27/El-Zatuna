@@ -24,6 +24,18 @@ use Illuminate\Support\Facades\URL;
 
 class CartController extends Controller
 {
+    /**
+     * List cart items with amounts and totals.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/cart/list",
+     *     summary="List cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Cart items and amounts"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function index()
     {
         $user = apiAuth();
@@ -78,6 +90,20 @@ class CartController extends Controller
 
     }
 
+    /**
+     * Remove item from cart.
+     *
+     * @OA\Delete(
+     *     path="/v1/panel/cart/{id}",
+     *     summary="Remove from cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Deleted"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function destroy($id)
     {
         $user_id = apiAuth()->id;
@@ -144,6 +170,25 @@ class CartController extends Controller
 
     }
 
+    /**
+     * Validate a coupon code for the cart.
+     *
+     * @OA\Post(
+     *     path="/v1/panel/cart/coupon/validate",
+     *     summary="Validate coupon",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"coupon_code"},
+     *             @OA\Property(property="coupon_code", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Valid or invalid coupon"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function validateCoupon(Request $request)
     {
         $user = apiAuth();
@@ -290,6 +335,24 @@ class CartController extends Controller
     }
 
 
+    /**
+     * Checkout cart and create order (then pay via payments/request or payments/credit).
+     *
+     * @OA\Post(
+     *     path="/v1/panel/cart/checkout",
+     *     summary="Checkout cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="discount_id", type="integer", nullable=true),
+     *             @OA\Property(property="gateway_id", type="integer", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Order created; use payments/request or payments/credit to complete"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function checkout(Request $request)
     {
 
@@ -1034,8 +1097,29 @@ class CartController extends Controller
     }
 
     /**
-     * Bulk add items to cart
+     * Bulk add items to cart (courses, bundles, products).
      *
+     * @OA\Post(
+     *     path="/v1/panel/cart/bulk-add",
+     *     summary="Bulk add to cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"items"},
+     *             @OA\Property(property="items", type="array", @OA\Items(
+     *                 type="object",
+     *                 required={"item_id","item_type"},
+     *                 @OA\Property(property="item_id", type="integer"),
+     *                 @OA\Property(property="item_type", type="string", enum={"course","webinar","bundle","product"}),
+     *                 @OA\Property(property="ticket_id", type="integer", nullable=true)
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Added count and errors if any"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */

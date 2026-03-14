@@ -17,6 +17,18 @@ use Illuminate\Validation\Rule;
 
 class CommentsController extends Controller
 {
+    /**
+     * List my comments and class comments (paginated).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/comments",
+     *     summary="List comments",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="my_comment, class_comment"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function list(Request $request)
     {
         $data = [

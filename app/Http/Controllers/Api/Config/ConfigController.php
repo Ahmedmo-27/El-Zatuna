@@ -13,6 +13,27 @@ class ConfigController extends Controller
     use UserFormFieldsTrait;
 
 
+    /**
+     * Get public app config (register method, payment channels, currency, features, etc.).
+     *
+     * @OA\Get(
+     *     path="/v1/config",
+     *     summary="Get app config",
+     *     tags={"Config"},
+     *     @OA\Response(response=200, description="Config", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="retrieved"),
+     *         @OA\Property(property="data", type="object",
+     *             @OA\Property(property="register_method", type="string"),
+     *             @OA\Property(property="user_language", type="array"),
+     *             @OA\Property(property="payment_channels", type="object"),
+     *             @OA\Property(property="currency", type="object"),
+     *             @OA\Property(property="show_google_login_button", type="boolean"),
+     *             @OA\Property(property="show_facebook_login_button", type="boolean")
+     *         )
+     *     ))
+     * )
+     */
     public function list(Request $request)
     {
         $generalSettings = getGeneralSettings();
@@ -75,6 +96,17 @@ class ConfigController extends Controller
         );
     }
 
+    /**
+     * Get registration form config by type (e.g. mobile, email).
+     *
+     * @OA\Get(
+     *     path="/v1/config/register/{type}",
+     *     summary="Get register config",
+     *     tags={"Config"},
+     *     @OA\Parameter(name="type", in="path", required=true, @OA\Schema(type="string", example="mobile")),
+     *     @OA\Response(response=200, description="Register config (form fields, options)")
+     * )
+     */
     public function getRegisterConfig(Request $request, $type)
     {
         $generalSettings = getGeneralSettings();

@@ -23,6 +23,18 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
 
+    /**
+     * Get user (instructor/organization) public profile.
+     *
+     * @OA\Get(
+     *     path="/v1/users/{id}/profile",
+     *     summary="Get user profile",
+     *     tags={"Discovery"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="User details, cashbackRules for meetings"),
+     *     @OA\Response(response=404, description="User not found")
+     * )
+     */
     public function profile(Request $request, $id)
     {
         $user = User::where('id', $id)

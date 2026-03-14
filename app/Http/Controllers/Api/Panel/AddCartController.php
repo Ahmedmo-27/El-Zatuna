@@ -160,6 +160,33 @@ class AddCartController extends Controller
         return 'ok';
     }
 
+    /**
+     * Add item to cart (course, bundle, or product).
+     *
+     * @OA\Post(
+     *     path="/v1/panel/cart",
+     *     summary="Add to cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"item_id","item_name"},
+     *             @OA\Property(property="item_id", type="integer", description="Course/bundle/product ID"),
+     *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product"}),
+     *             @OA\Property(property="ticket_id", type="integer", nullable=true),
+     *             @OA\Property(property="specifications", type="object", nullable=true),
+     *             @OA\Property(property="quantity", type="integer", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Added to cart"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=200, description="Already in cart or not available", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=false),
+     *         @OA\Property(property="status", type="string", example="already_in_cart")
+     *     ))
+     * )
+     */
     public function store(Request $request)
     {
         $user = apiAuth();

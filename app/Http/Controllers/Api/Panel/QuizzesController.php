@@ -11,6 +11,20 @@ use Illuminate\Http\Request;
 
 class QuizzesController extends Controller
 {
+    /**
+     * Get quiz details for taking (enrolled users).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/quizzes/{quiz}",
+     *     summary="Get quiz",
+     *     tags={"Panel", "My courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="quiz", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Quiz details"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function show($id){
         $quiz = Quiz::where('id', $id)
             ->where('status', WebinarChapter::$chapterActive)->first();
