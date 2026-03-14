@@ -73,10 +73,13 @@ class WebinarChapter extends Model implements TranslatableContract
 
     public function getDuration()
     {
+        // If a manual duration is set on the chapter, prefer that.
+        if (!is_null($this->duration)) {
+            return (int) $this->duration;
+        }
+
         $time = 0;
-
         $time += $this->sessions->sum('duration');
-
         $time += $this->textLessons->sum('study_time');
 
         return $time;

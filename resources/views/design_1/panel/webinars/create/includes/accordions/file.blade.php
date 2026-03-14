@@ -82,6 +82,17 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-group-label">{{ trans('public.duration') }} ({{ trans('public.minutes') }})</label>
+                    <input type="number"
+                           name="ajax[{{ !empty($file) ? $file->id : 'new' }}][duration]"
+                           class="form-control"
+                           min="0"
+                           value="{{ !empty($file) && $file->duration !== null ? $file->duration : '' }}"
+                           placeholder="{{ trans('public.optional') }}">
+                    <div class="invalid-feedback"></div>
+                </div>
+
+                <div class="form-group">
                     <label class="form-group-label">{{ trans('public.source') }}</label>
                     @php
                         $availableSources = getFeaturesSettings('available_sources');

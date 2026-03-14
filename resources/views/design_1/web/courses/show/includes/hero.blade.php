@@ -1,7 +1,9 @@
 <div class="course-hero d-flex flex-column justify-content-end rounded-32 px-20 bg-gray-200">
     <div class="course-hero__mask rounded-32"></div>
 
-    <img src="{{ $course->getImageCover() }}" class="course-hero__cover-img img-cover rounded-32" alt="{{ $course->title }}"/>
+    @if($course->getImageCover())
+        <img src="{{ $course->getImageCover() }}" class="course-hero__cover-img img-cover rounded-32" alt="{{ $course->title }}"/>
+    @endif
 
     <div class="course-hero__content position-relative z-index-3">
         @if(!empty($course->category))

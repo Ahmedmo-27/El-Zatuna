@@ -174,3 +174,48 @@
         z-index: 1;
     }
 }
+
+// About Me section: match course page "About This Course" appearance (padding + typography)
+.profile-about-me-section {
+    padding: 24px 24px 28px;
+
+    @media (max-width: 576px) {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 20px;
+        padding-bottom: 24px;
+    }
+}
+
+.profile-about-me-description {
+    color: var(--gray-500);
+    line-height: 1.6;
+
+    p {
+        color: var(--gray-500);
+        margin-bottom: 0.75em;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    img {
+        max-width: 100% !important;
+    }
+
+    ul, ol {
+        padding-left: 1.25em;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+
+    li {
+        list-style: inherit;
+        margin-bottom: 0.5em;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}

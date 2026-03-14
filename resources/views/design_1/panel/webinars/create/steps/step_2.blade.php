@@ -7,7 +7,6 @@
     <h3 class="font-14 font-weight-bold">{{ trans('update.taxonomy') }}</h3>
 
     <div class="form-group mt-24">
-        <label class="form-group-label is-required">{{ trans('public.category') }}</label>
         @include('design_1.panel.webinars.create.includes.category_input', ['webinar' => $webinar ?? null])
     </div>
 
@@ -27,9 +26,8 @@
     </div>
 
 
-    <div class="row">
-
-        @if($webinar->isWebinar())
+    @if($webinar->isWebinar())
+        <div class="row">
             <div class="col-12 col-md-6">
                 <div class="form-group">
                     <span class="has-translation bg-transparent"><x-iconsax-lin-calendar-2 class="text-gray-border" width="24px" height="24px"/></span>
@@ -43,22 +41,8 @@
                     @enderror
                 </div>
             </div>
-        @endif
-
-        <div class="col-12 @if($webinar->isWebinar()) col-md-6 @endif">
-            <div class="form-group">
-                <span class="has-translation px-8 bg-gray-100 w-auto text-gray-500">{{ trans('public.minutes') }}</span>
-                <label class="form-group-label is-required">{{ trans('public.duration') }}</label>
-                <input type="text" name="duration" class="form-control @error('duration')  is-invalid @enderror" value="{{ (!empty($webinar) and !empty($webinar->duration)) ? $webinar->duration : old('duration') }}">
-
-                @error('duration')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-                @enderror
-            </div>
         </div>
-    </div>
+    @endif
 
     @if($webinar->isWebinar() and getFeaturesSettings('timezone_in_create_webinar'))
         @php
@@ -131,16 +115,6 @@
         </div>
     @endif
 
-    <div class="form-group d-flex align-items-center">
-        <div class="custom-switch mr-8">
-            <input id="downloadableSwitch" type="checkbox" name="downloadable" class="custom-control-input" {{ (!empty($webinar) and $webinar->downloadable) ? 'checked' :  '' }}>
-            <label class="custom-control-label cursor-pointer" for="downloadableSwitch"></label>
-        </div>
-
-        <div class="">
-            <label class="cursor-pointer" for="downloadableSwitch">{{ trans('home.downloadable') }}</label>
-        </div>
-    </div>
 
     <div class="form-group d-flex align-items-center">
         <div class="custom-switch mr-8">
@@ -179,10 +153,6 @@
         @enderror
     </div>
 
-    <div class="form-group tagsinput-bg-white mt-15">
-        <label class="form-group-label d-block">{{ trans('public.tags') }}</label>
-        <input type="text" name="tags" data-max-tag="5" value="{{ !empty($webinar) ? implode(',',$webinarTags) : '' }}" class="form-control inputtags" placeholder="{{ trans('public.type_tag_name_and_press_enter') }} ({{ trans('forms.max') }} : 5)"/>
-    </div>
 
 
 </div>
