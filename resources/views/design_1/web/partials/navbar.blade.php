@@ -21,9 +21,11 @@
                 <a href="/" class="{{ $navLinkClass }} {{ $isHomePage ? $navActiveClass : $navInactiveClass }}" aria-current="{{ $isHomePage ? 'page' : 'false' }}">
                     <x-iconsax-lin-home-2 class="w-5 h-5"/> Home
                 </a>
-                <a href="/classes" class="{{ $navLinkClass }} {{ $isClassesPage ? $navActiveClass : $navInactiveClass }}" aria-current="{{ $isClassesPage ? 'page' : 'false' }}">
-                    <x-iconsax-lin-book class="w-5 h-5"/> Subjects/Courses
-                </a>
+                @auth
+                    <a href="/classes" class="{{ $navLinkClass }} {{ $isClassesPage ? $navActiveClass : $navInactiveClass }}" aria-current="{{ $isClassesPage ? 'page' : 'false' }}">
+                        <x-iconsax-lin-book class="w-5 h-5"/> Subjects/Courses
+                    </a>
+                @endauth
                 <a href="/instructors" class="{{ $navLinkClass }} {{ $isInstructorsPage ? $navActiveClass : $navInactiveClass }}" aria-current="{{ $isInstructorsPage ? 'page' : 'false' }}">
                     <x-iconsax-bol-teacher class="w-5 h-5"/> Instructors
                 </a>
@@ -77,9 +79,11 @@
             <a href="/" class="{{ $isHomePage ? 'text-[#C8CD06] bg-[#ECF4B8]/60' : 'hover:text-[#C8CD06] hover:bg-[#ECF4B8]/60' }} transition-colors duration-200 flex items-center gap-3 px-4 py-2.5 rounded-xl" aria-current="{{ $isHomePage ? 'page' : 'false' }}">
                 <x-iconsax-lin-home-2 class="w-5 h-5"/> Home
             </a>
-            <a href="/classes" class="{{ $isClassesPage ? 'text-[#C8CD06] bg-[#ECF4B8]/60' : 'hover:text-[#C8CD06] hover:bg-[#ECF4B8]/60' }} transition-colors duration-200 flex items-center gap-3 px-4 py-2.5 rounded-xl" aria-current="{{ $isClassesPage ? 'page' : 'false' }}">
-                <x-iconsax-lin-book class="w-5 h-5"/> Subjects/Courses
-            </a>
+            @auth
+                <a href="/classes" class="{{ $isClassesPage ? 'text-[#C8CD06] bg-[#ECF4B8]/60' : 'hover:text-[#C8CD06] hover:bg-[#ECF4B8]/60' }} transition-colors duration-200 flex items-center gap-3 px-4 py-2.5 rounded-xl" aria-current="{{ $isClassesPage ? 'page' : 'false' }}">
+                    <x-iconsax-lin-book class="w-5 h-5"/> Subjects/Courses
+                </a>
+            @endauth
             <a href="/instructors" class="{{ $isInstructorsPage ? 'text-[#C8CD06] bg-[#ECF4B8]/60' : 'hover:text-[#C8CD06] hover:bg-[#ECF4B8]/60' }} transition-colors duration-200 flex items-center gap-3 px-4 py-2.5 rounded-xl" aria-current="{{ $isInstructorsPage ? 'page' : 'false' }}">
                 <x-iconsax-bol-teacher class="w-5 h-5"/> Instructors
             </a>

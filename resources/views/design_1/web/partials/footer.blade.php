@@ -6,7 +6,9 @@
                 <li><a href="/" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-home-2 class="w-4 h-4"/> Home</a></li>
                 <li><a href="/about" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-info-circle class="w-4 h-4"/> About</a></li>
                 <li><a href="/departments" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-courthouse class="w-4 h-4"/> Departments</a></li>
-                <li><a href="/classes" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-book class="w-4 h-4"/> Subjects/Courses</a></li>
+                @auth
+                    <li><a href="/classes" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-book class="w-4 h-4"/> Subjects/Courses</a></li>
+                @endauth
                 <li><a href="/register" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-user-add class="w-4 h-4"/> Sign Up</a></li>
                 <li><a href="/login" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-login class="w-4 h-4"/> Log In</a></li>
             </ul>

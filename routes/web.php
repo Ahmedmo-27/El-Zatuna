@@ -354,7 +354,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/{categoryTitle}/{subCategoryTitle?}', 'CategoriesController@index');
     });
 
-    Route::get('/classes', 'ClassesController@index');
+    Route::get('/classes', 'ClassesController@index')->middleware('web.auth');
 
     Route::get('/reward-courses', 'RewardCoursesController@index');
 

@@ -109,26 +109,5 @@
                 @endforeach
             </div>
         </div>
-        {{-- Organization --}}
-        <div class="accordion card-before-line card-before-line__4-12 pt-16 px-16 pb-4">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersOrganization" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    {{ trans('home.organization') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersOrganization" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersOrganization" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                <div class="form-group mb-0 mt-24">
-                    <label class="form-group-label text-[#FAFFE0]">{{ trans('update.instructor_organization') }}</label>
-                    <select name="organizations[]" class="form-control select2" data-minimum-results-for-search="Infinity">
-                        <option value=""></option>
-                    </select>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
