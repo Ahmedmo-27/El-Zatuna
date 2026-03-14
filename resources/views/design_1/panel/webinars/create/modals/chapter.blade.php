@@ -28,6 +28,17 @@
         <span class="invalid-feedback"></span>
     </div>
 
+    <div class="form-group">
+        <label class="form-group-label">{{ trans('public.duration') }} ({{ trans('public.minutes') }})</label>
+        <input type="number"
+               name="ajax[chapter][duration]"
+               class="form-control"
+               min="0"
+               value="{{ !empty($chapter) && !is_null($chapter->duration) ? $chapter->duration : '' }}"
+               placeholder="e.g. 45">
+        <span class="invalid-feedback"></span>
+    </div>
+
     <div class="form-group d-flex align-items-center">
         <div class="custom-switch mr-8">
             <input id="statusSwitch" type="checkbox" name="ajax[chapter][status]" class="custom-control-input" {{ (!empty($chapter) and $chapter->status == \App\Models\WebinarChapter::$chapterActive) ? 'checked' :  '' }}>

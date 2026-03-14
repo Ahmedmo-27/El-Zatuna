@@ -1,5 +1,9 @@
 @php
-    // Step 3 (pricing) removed: course price is set by admin when reviewing the course
+    // New flow:
+    // 1) basic information
+    // 2) extra information
+    // 3) content
+    // 4) (optional) message to reviewer when direct publication is disabled.
     $progressSteps = [
         1 => [
             'name' => 'basic_information',
@@ -16,44 +20,16 @@
         ],
 
         3 => [
-            'name' => 'pricing',
-            'icon' => 'empty-wallet',
-            'bg' => '#ECFDF3',
-            'color' => '#059669',
-        ],
-
-        4 => [
             'name' => 'content',
             'icon' => 'document-cloud',
             'bg' => '#FFF7ED',
             'color' => '#EA580C',
         ],
-
-        4 => [
-            'name' => 'prerequisites',
-            'icon' => 'archive-tick',
-            'bg' => '#EEF2FF',
-            'color' => '#4F46E5',
-        ],
-
-        5 => [
-            'name' => 'faq',
-            'icon' => 'bill',
-            'bg' => '#FEF3C7',
-            'color' => '#D97706',
-        ],
-
-        6 => [
-            'name' => 'quiz_certificate',
-            'icon' => 'clipboard-tick',
-            'bg' => '#FCE7F3',
-            'color' => '#DB2777',
-        ],
-
     ];
 
     if (empty(getGeneralOptionsSettings('direct_publication_of_courses'))) {
-        $progressSteps[7] = [
+        // Final review step is step 4 in the new flow.
+        $progressSteps[4] = [
             'name' => 'message_to_reviewer',
             'icon' => 'shield-search',
             'bg' => '#E5F7F2',

@@ -9,7 +9,7 @@
 
 
         <div class="d-flex align-items-center">
-            <div class="position-relative size-64 rounded-circle">
+            <div class="position-relative size-64 rounded-circle overflow-hidden flex-shrink-0">
                 <img src="{{ $userRow->getAvatar(64) }}" alt="{{ $userRow->full_name }}" class="img-cover rounded-circle">
 
                 @if($userRow->verified)

@@ -107,6 +107,7 @@ class ChapterController extends Controller
             'webinar_id' => 'required',
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
+            'duration' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -127,6 +128,7 @@ class ChapterController extends Controller
                 //'type' => $data['type'],
                 'status' => $status,
                 'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
+                'duration' => !empty($data['duration']) ? (int) $data['duration'] : null,
                 'created_at' => time(),
             ]);
 
@@ -139,6 +141,8 @@ class ChapterController extends Controller
                 ], [
                     'title' => $data['title'],
                 ]);
+
+                $this->recalculateWebinarDuration($webinar);
             }
 
             return response()->json([
@@ -183,6 +187,7 @@ class ChapterController extends Controller
             'webinar_id' => 'required',
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
+            'duration' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -211,6 +216,7 @@ class ChapterController extends Controller
                 $chapter->update([
                     'status' => $status,
                     'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
+                    'duration' => !empty($data['duration']) ? (int) $data['duration'] : null,
                 ]);
 
                 WebinarChapterTranslation::updateOrCreate([
@@ -219,6 +225,8 @@ class ChapterController extends Controller
                 ], [
                     'title' => $data['title'],
                 ]);
+
+                $this->recalculateWebinarDuration($webinar);
 
                 return response()->json([
                     'code' => 200
@@ -241,7 +249,14 @@ class ChapterController extends Controller
 
             if ($chapter->user_id == $user->id or (!empty($webinar) and $webinar->canAccess($user))) {
 
+                $webinarId = $chapter->webinar_id;
                 $chapter->delete();
+
+                if (!empty($webinarId)) {
+                    if ($webinar = Webinar::find($webinarId)) {
+                        $this->recalculateWebinarDuration($webinar);
+                    }
+                }
 
                 return response()->json([
                     'code' => 200
@@ -327,5 +342,16 @@ class ChapterController extends Controller
         return response()->json([
             'code' => 200
         ], 200);
+    }
+
+    protected function recalculateWebinarDuration(Webinar $webinar): void
+    {
+        $totalMinutes = $webinar->chapters()
+            ->where('status', WebinarChapter::$chapterActive)
+            ->sum('duration');
+
+        $webinar->update([
+            'duration' => (int) $totalMinutes,
+        ]);
     }
 }

@@ -49,7 +49,7 @@
                     </li>
 
                     <li class="actions-dropdown__dropdown-menu-item">
-                        <a href="/panel/courses/{{ $course->id }}/step/4" target="_blank" class="">{{ trans('public.edit') }}</a>
+                        <a href="/panel/courses/{{ $course->id }}/edit" target="_blank" class="">{{ trans('public.edit') }}</a>
                     </li>
 
                 </ul>

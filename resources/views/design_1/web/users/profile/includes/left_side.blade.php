@@ -1,7 +1,7 @@
 <div class="profile-card-has-mask bg-white py-16 rounded-24 w-100">
     <div class="d-flex-center flex-column text-center px-16">
 
-        <div class="profile-avatar-card size-80 rounded-circle mt-32">
+        <div class="profile-avatar-card size-80 rounded-circle mt-32 overflow-hidden">
             <img src="{{ $user->getAvatar(80) }}" alt="{{ $user->full_name }}" class="img-cover rounded-circle">
 
             @if($user->verified)
