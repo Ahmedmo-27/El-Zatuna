@@ -62,12 +62,13 @@ return [
             'oauth2_callback' => 'api/oauth2-callback',
 
             /*
-             * Middleware allows to prevent unexpected access to API documentation
+             * Middleware: only admins can access /api/documentation.
+             * Not logged in → redirect to /login. Logged in but not admin → 403 "You need admin privileges".
              */
             'middleware' => [
-                'api' => [],
-                'asset' => [],
-                'docs' => [],
+                'api' => ['web', 'auth', 'swagger.admin'],
+                'asset' => ['web', 'auth', 'swagger.admin'],
+                'docs' => ['web', 'auth', 'swagger.admin'],
                 'oauth2_callback' => [],
             ],
 

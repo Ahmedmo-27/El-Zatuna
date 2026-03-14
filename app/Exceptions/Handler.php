@@ -149,6 +149,7 @@ class Handler extends ExceptionHandler
                     'statusCode' => $statusCode,
                     'errorSettings' => $errorSettings,
                     'dontShowCookieSecurity' => true,
+                    'exceptionMessage' => $exception->getMessage(),
                 ];
 
                 $data = array_merge($data, $shareData);

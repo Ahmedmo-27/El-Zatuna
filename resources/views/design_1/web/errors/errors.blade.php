@@ -2,6 +2,7 @@
 
 @php
     $statusCode = $statusCode ?? 404;
+    $exceptionMessage = $exceptionMessage ?? null;
 
     $translateWithFallback = function ($key, $fallback) {
         $translated = trans($key);
@@ -17,7 +18,7 @@
         : $translateWithFallback('update.an_unexpected_error_occurred_please_try_again_or_return_to_the_homepage', 'An unexpected error occurred. Please try again or return to the homepage.');
 
     $displayTitle = !empty($errorSettings['title']) ? $errorSettings['title'] : $defaultTitle;
-    $displayDescription = !empty($errorSettings['description']) ? $errorSettings['description'] : $defaultDescription;
+    $displayDescription = !empty($exceptionMessage) ? $exceptionMessage : (!empty($errorSettings['description']) ? $errorSettings['description'] : $defaultDescription);
     $displayImage = !empty($errorSettings['image']) ? $errorSettings['image'] : '/assets/design_1/img/no-result/notifications.svg';
     $displayButtonTitle = !empty($errorSettings['button']['title']) ? $errorSettings['button']['title'] : trans('public.home');
     $displayButtonLink = !empty($errorSettings['button']['link']) ? $errorSettings['button']['link'] : '/';
