@@ -9,4 +9,13 @@
     >
         <img src="/assets/design_1/img/map/pin_large.svg" class="marker" width="40" height="40">
     </div>
+@else
+    <div class="contact-page-map-placeholder d-flex-center text-center p-20">
+        <div>
+            <h5 class="font-16 font-weight-bold text-[#FAFFE0] mb-8">{{ trans('update.address') }}</h5>
+            <p class="font-14 text-[#FAFFE0]/80 mb-0">
+                {{ trans('site.not_defined') }}
+            </p>
+        </div>
+    </div>
 @endif

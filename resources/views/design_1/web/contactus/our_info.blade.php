@@ -1,11 +1,15 @@
-<div class="d-flex flex-column bg-[#FAFFE0] p-16 rounded-16 w-100 h-100">
+<div class="contact-page-info-inner d-flex flex-column w-100 h-100">
+    <p class="contact-info-kicker mb-0">{{ trans('update.have_a_question?') }}</p>
+    <h3 class="contact-info-heading">{{ trans('update.contact_our_team') }}</h3>
 
-    <div class="mb-40">
+    <div>
         {{-- Contact Numbers --}}
-        <div class="d-flex align-items-start">
-            <x-iconsax-bul-call class="icons text-[#072923]" width="32px" height="32px"/>
+        <div class="d-flex align-items-start contact-info-item">
+            <div class="contact-info-icon-badge d-flex-center mr-10">
+                <x-iconsax-bul-call class="icons contact-info-icon" width="20px" height="20px"/>
+            </div>
             <div class="ml-8 mt-4">
-                <h4 class="font-16 font-weight-bold text-[#072923]">{{ trans('update.contact_numbers') }}</h4>
+                <h4 class="font-18 font-weight-bold contact-info-label">{{ trans('update.contact_numbers') }}</h4>
 
                 @if(!empty($contactSettings['phones']))
                     @php
@@ -14,64 +18,42 @@
 
                     @if(!empty($contactNumbers) and is_array($contactNumbers))
                         @foreach($contactNumbers as $contactNumber)
-                            <p class="font-14 text-[#072923] mt-8">{{ $contactNumber }}</p>
+                            <p class="font-14 contact-info-value mt-8">{{ $contactNumber }}</p>
                         @endforeach
                     @endif
                 @else
-                    <p class="font-14 text-[#072923] mt-8">{{ trans('site.not_defined') }}</p>
+                    <p class="font-14 contact-info-value mt-8">{{ trans('site.not_defined') }}</p>
                 @endif
             </div>
         </div>
 
         {{-- Email --}}
-        <div class="d-flex align-items-start mt-32">
-            <x-iconsax-bul-sms class="icons text-[#072923]" width="32px" height="32px"/>
-            <div class="ml-8 mt-4">
-                <h4 class="font-16 font-weight-bold text-[#072923]">{{ trans('public.email') }}</h4>
-
-                @if(!empty($contactSettings['emails']))
-                    @php
-                        $contactEmails = explode(',', $contactSettings['emails']);
-                    @endphp
-
-                    @if(!empty($contactEmails) and is_array($contactEmails))
-                        @foreach($contactEmails as $contactEmail)
-                            <p class="font-14 text-[#072923] mt-8">{{ $contactEmail }}</p>
-                        @endforeach
-                    @endif
-                @else
-                    <p class="font-14 text-[#072923] mt-8">{{ trans('site.not_defined') }}</p>
-                @endif
+        <div class="d-flex align-items-start contact-info-item">
+            <div class="contact-info-icon-badge d-flex-center mr-10">
+                <x-iconsax-bul-sms class="icons contact-info-icon" width="20px" height="20px"/>
             </div>
-        </div>
-
-        {{-- location --}}
-        <div class="d-flex align-items-start mt-32">
-            <x-iconsax-bul-location class="icons text-[#072923]" width="32px" height="32px"/>
             <div class="ml-8 mt-4">
-                <h4 class="font-16 font-weight-bold text-[#072923]">{{ trans('update.address') }}</h4>
+                <h4 class="font-18 font-weight-bold contact-info-label">{{ trans('public.email') }}</h4>
 
-                @if(!empty($contactSettings['address']))
-                    <p class="font-14 text-[#072923] mt-8">{!! nl2br($contactSettings['address']) !!}</p>
-                @else
-                    <p class="font-14 text-[#072923] mt-8">{{ trans('site.not_defined') }}</p>
-                @endif
+                @php
+                    $contactEmails = [];
+
+                    if (!empty($contactSettings['emails'])) {
+                        $contactEmails = explode(',', $contactSettings['emails']);
+                    }
+
+                    $contactEmails[] = 'support@elzatuna.com';
+
+                    $contactEmails = array_values(array_unique(array_filter(array_map(function ($email) {
+                        return trim($email);
+                    }, $contactEmails))));
+                @endphp
+
+                @foreach($contactEmails as $contactEmail)
+                    <a href="mailto:{{ $contactEmail }}" class="d-block font-14 contact-info-value mt-8">{{ $contactEmail }}</a>
+                @endforeach
             </div>
         </div>
     </div>
-
-
-    @if(!empty($contactSettings['additional_information_title']) and !empty($contactSettings['additional_information_subtitle']))
-        <div class="contact-page-additional-information-card bg-white p-16 rounded-12 mt-auto">
-            <h5 class="font-14 font-weight-bold text-[#072923]">{{ $contactSettings['additional_information_title'] }}</h5>
-            <div class="mt-8 font-12 text-[#072923]/70">{!! nl2br($contactSettings['additional_information_subtitle']) !!}</div>
-
-            @if(!empty($contactSettings['additional_information_image']))
-                <div class="contact-page-adif__image d-flex-center">
-                    <img src="{{ $contactSettings['additional_information_image'] }}" alt="" class="img-fluid">
-                </div>
-            @endif
-        </div>
-    @endif
 
 </div>
