@@ -76,7 +76,6 @@
 
                 <div class="ml-8">
                     <a href="{{ $course->teacher->getProfileUrl() }}" target="_blank" class="font-14 font-weight-bold text-white">{{ $course->teacher->full_name }}</a>
-                    <p class="mt-2 font-12 text-white">{{ $course->teacher->role->caption }}</p>
                 </div>
             </div>
         </div>

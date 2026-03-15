@@ -58,16 +58,4 @@
     @endif
 
 
-    {{-- Quizzes --}}
-    @if(!empty($quizzes) and $quizzes->count() > 0)
-        <section class="mt-16" id="quizAccordion">
-            @foreach($quizzes as $quiz)
-                @include('design_1.web.courses.show.tabs.contents.quiz' , ['quiz' => $quiz, 'accordionParent' => 'quizAccordion'])
-            @endforeach
-        </section>
-    @endif
-
-    {{-- Certificates --}}
-    @include('design_1.web.courses.show.tabs.contents.all_certificates')
-
 </div>
