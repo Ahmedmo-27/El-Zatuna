@@ -32,7 +32,7 @@ class CartController extends Controller
      *     summary="List cart",
      *     tags={"Panel", "Cart"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Cart items and amounts"),
+     *     @OA\Response(response=200, description="Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, or meeting."),
      *     @OA\Response(response=401, description="Unauthorized")
      * )
      */
@@ -41,6 +41,9 @@ class CartController extends Controller
         $user = apiAuth();
         $carts = Cart::where('creator_id', $user->id)
             ->with([
+                'webinar',
+                'file.webinar',
+                'chapter.webinar',
                 'productOrder' => function ($query) {
                     $query->whereHas('product');
                 }
@@ -1133,7 +1136,7 @@ class CartController extends Controller
      *                 type="object",
      *                 required={"item_id","item_type"},
      *                 @OA\Property(property="item_id", type="integer"),
-     *                 @OA\Property(property="item_type", type="string", enum={"course","webinar","bundle","product"}),
+     *                 @OA\Property(property="item_type", type="string", enum={"course","webinar","bundle","product","chapter"}, description="chapter = paid course section"),
      *                 @OA\Property(property="ticket_id", type="integer", nullable=true)
      *             ))
      *         )
@@ -1156,7 +1159,7 @@ class CartController extends Controller
             $rules = [
                 'items' => 'required|array|min:1',
                 'items.*.item_id' => 'required|integer',
-                'items.*.item_type' => 'required|string|in:course,webinar,bundle,product',
+                'items.*.item_type' => 'required|string|in:course,webinar,bundle,product,chapter',
                 'items.*.ticket_id' => 'nullable|integer',
             ];
 
@@ -1270,6 +1273,38 @@ class CartController extends Controller
                             'created_at' => time()
                         ]);
 
+                        $addedCount++;
+                    } elseif ($itemType === 'chapter') {
+                        $chapter = \App\Models\WebinarChapter::where('id', $itemId)
+                            ->where('status', \App\Models\WebinarChapter::$chapterActive)
+                            ->with('webinar')
+                            ->first();
+
+                        if (!$chapter || !$chapter->webinar) {
+                            $errors[] = ['item_id' => $itemId, 'error' => 'Section not found or not available'];
+                            continue;
+                        }
+                        if ($chapter->isFirstSection() || (float) $chapter->price <= 0) {
+                            $errors[] = ['item_id' => $itemId, 'error' => trans('cart.course_not_free')];
+                            continue;
+                        }
+                        if ($chapter->webinar->checkUserHasBought($user) || $chapter->checkUserHasBought($user)) {
+                            $errors[] = ['item_id' => $itemId, 'error' => trans('site.you_bought_webinar')];
+                            continue;
+                        }
+                        if ($chapter->webinar->creator_id == $user->id) {
+                            $errors[] = ['item_id' => $itemId, 'error' => trans('cart.cant_purchase_your_course')];
+                            continue;
+                        }
+
+                        Cart::updateOrCreate([
+                            'creator_id' => $user->id,
+                            'chapter_id' => $chapter->id,
+                        ], [
+                            'webinar_id' => null,
+                            'file_id' => null,
+                            'created_at' => time()
+                        ]);
                         $addedCount++;
                     }
 

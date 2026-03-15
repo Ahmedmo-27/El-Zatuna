@@ -10,6 +10,7 @@ use App\Models\ProductOrder;
 use App\Models\ReserveMeeting;
 use App\Models\Ticket;
 use App\Models\Api\Webinar;
+use App\Models\WebinarChapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\Rule;
@@ -160,8 +161,45 @@ class AddCartController extends Controller
         return 'ok';
     }
 
+    public function storeUserChapterCart($user, $data)
+    {
+        $chapter_id = $data['item_id'];
+
+        $chapter = WebinarChapter::where('id', $chapter_id)
+            ->where('status', WebinarChapter::$chapterActive)
+            ->with('webinar')
+            ->first();
+
+        if (empty($chapter) || empty($chapter->webinar)) {
+            return apiResponse2(0, 'not_found', trans('cart.course_not_found'));
+        }
+
+        if ($chapter->isFirstSection() || (float) $chapter->price <= 0) {
+            return apiResponse2(0, 'free_section', trans('cart.course_not_free'));
+        }
+
+        if ($chapter->webinar->checkUserHasBought($user) || $chapter->checkUserHasBought($user)) {
+            return apiResponse2(0, 'already_bought', trans('site.you_bought_webinar'));
+        }
+
+        if ($chapter->webinar->creator_id == $user->id) {
+            return apiResponse2(0, 'cant_purchase', trans('cart.cant_purchase_your_course'));
+        }
+
+        Cart::updateOrCreate([
+            'creator_id' => $user->id,
+            'chapter_id' => $chapter->id,
+        ], [
+            'webinar_id' => null,
+            'file_id' => null,
+            'created_at' => time()
+        ]);
+
+        return 'ok';
+    }
+
     /**
-     * Add item to cart (course, bundle, or product).
+     * Add item to cart (course, bundle, product, or course section).
      *
      * @OA\Post(
      *     path="/v1/panel/cart",
@@ -172,9 +210,9 @@ class AddCartController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"item_id","item_name"},
-     *             @OA\Property(property="item_id", type="integer", description="Course/bundle/product ID"),
-     *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product"}),
-     *             @OA\Property(property="ticket_id", type="integer", nullable=true),
+     *             @OA\Property(property="item_id", type="integer", description="Course/bundle/product/section (chapter) ID"),
+     *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product","chapter"}, description="webinar=full course, chapter=paid course section"),
+     *             @OA\Property(property="ticket_id", type="integer", nullable=true, description="For webinar only"),
      *             @OA\Property(property="specifications", type="object", nullable=true),
      *             @OA\Property(property="quantity", type="integer", nullable=true)
      *         )
@@ -193,7 +231,7 @@ class AddCartController extends Controller
         
         validateParam($request->all(), [
             'item_id' => 'required',
-            'item_name' => 'required|in:webinar,bundle,product',
+            'item_name' => 'required|in:webinar,bundle,product,chapter',
             'ticket_id' => 'nullable',
             'specifications' => 'nullable',
             'quantity' => 'nullable'
@@ -215,6 +253,8 @@ class AddCartController extends Controller
             $result = $this->storeUserProductCart($user, $data);
         } elseif ($item_name == 'bundle') {
             $result = $this->storeUserBundleCart($user, $data);
+        } elseif ($item_name == 'chapter') {
+            $result = $this->storeUserChapterCart($user, $data);
         }
 
         if ($result != 'ok') {

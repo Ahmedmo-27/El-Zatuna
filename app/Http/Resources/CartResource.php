@@ -17,12 +17,18 @@ class CartResource extends JsonResource
 
 
         $type = null;
-        if ($this->webinar_id) {
+        if ($this->webinar_id && !$this->chapter_id) {
             $type = 'webinar';
+        } elseif ($this->chapter_id) {
+            $type = 'chapter';
         } elseif ($this->bundle_id) {
             $type = 'bundle';
         } elseif ($this->reserve_meeting_id) {
             $type = 'meeting';
+        } elseif ($this->file_id) {
+            $type = 'file';
+        } elseif ($this->product_order_id) {
+            $type = 'product';
         }
         $info = $this->getItemInfo();
         return [
