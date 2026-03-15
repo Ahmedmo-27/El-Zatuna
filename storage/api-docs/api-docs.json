@@ -1,0 +1,2451 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "El-Zatuna LMS API",
+        "description": "API documentation for El-Zatuna LMS",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "API base URL"
+        }
+    ],
+    "paths": {
+        "/v1/auth/forget-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Forgot password",
+                "description": "Start password reset (email or mobile).",
+                "operationId": "788a966c6f2803918c5281a54c0d35c3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "email",
+                                            "mobile"
+                                        ]
+                                    },
+                                    "email": {
+                                        "description": "Required when type=email",
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "country_code": {
+                                        "description": "Required when type=mobile",
+                                        "type": "string",
+                                        "example": "+20"
+                                    },
+                                    "mobile": {
+                                        "description": "Required when type=mobile",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success (status=done) or failure (validation/errors). Body: success (boolean), status (string)."
+                    }
+                }
+            }
+        },
+        "/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login",
+                "description": "Authenticate with email and password; returns JWT and session data.",
+                "operationId": "f342a4b6876c6b3f231b6aa7bcb94fbb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ahmed@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "Str0ngPassw0rd!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login success (status=login, data with tokens) or invalid credentials (status=incorrect). Body: success, status, data (optional)."
+                    }
+                }
+            }
+        },
+        "/v1/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout",
+                "description": "Invalidate the current JWT (and optionally a specific session).",
+                "operationId": "4455e2c12c789d5a1fd8cbb0ad06b969",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "session_token": {
+                                        "description": "Optional session token to invalidate",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Logout success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "logout"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/auth/register/step/{step}": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register (step 1, 2, or 3)",
+                "description": "Registration: step 1 (name+email), step 2 (verify code), step 3 (complete profile).",
+                "operationId": "cac473147e4c2c5274a7144619e5d6f8",
+                "parameters": [
+                    {
+                        "name": "step",
+                        "in": "path",
+                        "description": "1=name+email, 2=verify code, 3=complete profile",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                1,
+                                2,
+                                3
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "description": "Step 1: full_name, email. Step 2: email, verification_code. Step 3: verification_token, username, password, password_confirmation, university_id, faculty_id, referral_code (optional)"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success (verification_sent, email_verified, registered) or error (already_registered, invalid_code, invalid_token, validation). Body: success, status, data."
+                    }
+                }
+            }
+        },
+        "/v1/auth/reset-password/{token}": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset password",
+                "description": "Complete password reset with token from email.",
+                "operationId": "4e29d7e4e3f764cd6a63014efbb241a1",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset (status=password_reset) or not found (status=not_found). Body: success, status."
+                    }
+                }
+            }
+        },
+        "/v1/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh token",
+                "description": "Refresh JWT token.",
+                "operationId": "487fbec2a8cdd03edd27f1686ebc763e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "refresh_token"
+                                ],
+                                "properties": {
+                                    "refresh_token": {
+                                        "description": "Current JWT or refresh token",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token refreshed (status=token_refreshed, data with access_token) or error (token_expired, token_invalid). Body: success, status, data (optional)."
+                    }
+                }
+            }
+        },
+        "/v1/auth/verification": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Confirm verification code",
+                "description": "Confirm verification code (email or mobile).",
+                "operationId": "9b0f995ffa1e32db0188682f00d046df",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "description": "Email or mobile",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "description": "Verification code",
+                                        "type": "string"
+                                    },
+                                    "referral_code": {
+                                        "description": "Optional",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Verified (status=verified) or invalid code/error. Body: success, status."
+                    }
+                }
+            }
+        },
+        "/v1/auth/verify-email/{token}": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify email (link token)",
+                "description": "Verify email via link token (legacy). Prefer code-based verification in register step 2.",
+                "operationId": "ee4f14d90193f4af37276212db2a11fb",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email verified (status=email_verified, data.verification_token) or invalid token (status=invalid_token). Body: success, status, data (optional)."
+                    }
+                }
+            }
+        },
+        "/v1/auth/resend-verification": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Resend verification code",
+                "description": "Resend 6-digit verification code to email.",
+                "operationId": "639bf58bf472cdffda6a30dbf8cd6469",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ahmed@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code resent (status=verification_resent) or error (already_verified, user_not_found). Body: success, status."
+                    }
+                }
+            }
+        },
+        "/v1/config": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get app config",
+                "description": "Get public app config (register method, payment channels, currency, features, etc.).",
+                "operationId": "553aed33dbe3a506e48ba44c5278481f",
+                "responses": {
+                    "200": {
+                        "description": "Config",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "retrieved"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "register_method": {
+                                                    "type": "string"
+                                                },
+                                                "user_language": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "title": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "payment_channels": {
+                                                    "type": "object"
+                                                },
+                                                "currency": {
+                                                    "type": "object"
+                                                },
+                                                "show_google_login_button": {
+                                                    "type": "boolean"
+                                                },
+                                                "show_facebook_login_button": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/config/register/{type}": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get register config",
+                "description": "Get registration form config by type (e.g. mobile, email).",
+                "operationId": "c1bc2221176f97ba9a00deb787d598e5",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "mobile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Register config (form fields, options)"
+                    }
+                }
+            }
+        },
+        "/v1/instructor/quizzes": {
+            "post": {
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Create quiz",
+                "description": "Create a quiz (course section). Teacher only.",
+                "operationId": "80babbd600412bfa711489284ca2da1a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "pass_mark"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "webinar_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "chapter_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "pass_mark": {
+                                        "type": "integer"
+                                    },
+                                    "attempt": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "time": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "active": {
+                                        "type": "boolean"
+                                    },
+                                    "certificate": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Quiz created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Teacher only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/instructor/quizzes/{id}": {
+            "put": {
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Update quiz",
+                "description": "Update a quiz. Teacher only.",
+                "operationId": "e3941f21c5274f4f5e57c180ad4b4e7e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "pass_mark"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "webinar_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "chapter_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "pass_mark": {
+                                        "type": "integer"
+                                    },
+                                    "attempt": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "time": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "active": {
+                                        "type": "boolean"
+                                    },
+                                    "certificate": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Teacher only"
+                    },
+                    "404": {
+                        "description": "Quiz not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Delete quiz",
+                "description": "Delete a quiz. Teacher only.",
+                "operationId": "de60fb1ec117f6ce0b5149db0f82c947",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Teacher only"
+                    },
+                    "404": {
+                        "description": "Quiz not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/instructor/webinar": {
+            "post": {
+                "tags": [
+                    "Instructor"
+                ],
+                "summary": "Create course",
+                "description": "Create a new course (webinar, course, or text_lesson). Teacher/organization only.",
+                "operationId": "3a1f3e02292ad17d4c21779b0d6c1535",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "title",
+                                    "thumbnail",
+                                    "image_cover",
+                                    "description",
+                                    "category_id",
+                                    "duration",
+                                    "rules"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "webinar",
+                                            "course",
+                                            "text_lesson"
+                                        ]
+                                    },
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "thumbnail": {
+                                        "description": "Image URL or base64",
+                                        "type": "string"
+                                    },
+                                    "image_cover": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "category_id": {
+                                        "type": "integer"
+                                    },
+                                    "duration": {
+                                        "type": "number"
+                                    },
+                                    "start_date": {
+                                        "description": "Required if type=webinar",
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "capacity": {
+                                        "description": "Required if type=webinar",
+                                        "type": "integer"
+                                    },
+                                    "rules": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_draft": {
+                                        "type": "boolean"
+                                    },
+                                    "private": {
+                                        "type": "boolean"
+                                    },
+                                    "support": {
+                                        "type": "boolean"
+                                    },
+                                    "downloadable": {
+                                        "type": "boolean"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Course created"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Teacher/organization only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/cart": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Cart"
+                ],
+                "summary": "Add to cart",
+                "description": "Add item to cart (course, bundle, product, or course section).",
+                "operationId": "19f73bda72b816c1b0ea5f67c7f0f8b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "item_id",
+                                    "item_name"
+                                ],
+                                "properties": {
+                                    "item_id": {
+                                        "description": "Course/bundle/product/section (chapter) ID",
+                                        "type": "integer"
+                                    },
+                                    "item_name": {
+                                        "description": "webinar=full course, chapter=paid course section",
+                                        "type": "string",
+                                        "enum": [
+                                            "webinar",
+                                            "bundle",
+                                            "product",
+                                            "chapter"
+                                        ]
+                                    },
+                                    "ticket_id": {
+                                        "description": "For webinar only",
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "specifications": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Added to cart or already in cart/not available (status=already_in_cart). Body: success, status."
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/broadcasting/info": {
+            "get": {
+                "tags": [
+                    "Broadcasting"
+                ],
+                "summary": "Get broadcasting connection info",
+                "description": "Get WebSocket connection info (channels, driver config).",
+                "operationId": "668a756817b0e05209d0e3824b9c6f96",
+                "responses": {
+                    "200": {
+                        "description": "Connection info (channels, pusher key/cluster if applicable)"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/broadcasting/test": {
+            "post": {
+                "tags": [
+                    "Broadcasting"
+                ],
+                "summary": "Test broadcast",
+                "description": "Send a test broadcast notification to the current user's channel.",
+                "operationId": "4a01d351c691b1f9cd5c05abb1689b76",
+                "responses": {
+                    "200": {
+                        "description": "Test notification sent"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/broadcasting/events": {
+            "get": {
+                "tags": [
+                    "Broadcasting"
+                ],
+                "summary": "Get available broadcast events",
+                "description": "Get list of available WebSocket events and their payloads.",
+                "operationId": "f76aa0c6c144caa8ec2a1833d92e1f69",
+                "responses": {
+                    "200": {
+                        "description": "Events (notification.sent, message.received, course.progress.updated, quiz.graded, meeting.started, support.ticket.replied)"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/cart/list": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "Cart"
+                ],
+                "summary": "List cart",
+                "description": "List cart items with amounts and totals.",
+                "operationId": "20db40216878195599496ad328530684",
+                "responses": {
+                    "200": {
+                        "description": "Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, or meeting."
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/cart/{id}": {
+            "delete": {
+                "tags": [
+                    "Panel",
+                    "Cart"
+                ],
+                "summary": "Remove from cart",
+                "description": "Remove item from cart.",
+                "operationId": "f25e5199c5302d152dbe385ac99ec4cc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/cart/coupon/validate": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Cart"
+                ],
+                "summary": "Validate coupon",
+                "description": "Validate a coupon code for the cart.",
+                "operationId": "9fd07d8e2c56cc9f23bf5d975a79a23f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "coupon_code"
+                                ],
+                                "properties": {
+                                    "coupon_code": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Valid or invalid coupon"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/cart/checkout": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Cart"
+                ],
+                "summary": "Checkout cart",
+                "description": "Checkout cart and create order (then pay via payments/request or payments/credit).",
+                "operationId": "4f18ccdcd2db75b4f9340292bee8f4b8",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "discount_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "gateway_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Order created; use payments/request or payments/credit to complete"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/cart/bulk-add": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Cart"
+                ],
+                "summary": "Bulk add to cart",
+                "description": "Bulk add items to cart (courses, bundles, products).",
+                "operationId": "89f1ad61d61f08ae093c7aee411f3924",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "items"
+                                ],
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "item_id",
+                                                "item_type"
+                                            ],
+                                            "properties": {
+                                                "item_id": {
+                                                    "type": "integer"
+                                                },
+                                                "item_type": {
+                                                    "description": "chapter = paid course section",
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "course",
+                                                        "webinar",
+                                                        "bundle",
+                                                        "product",
+                                                        "chapter"
+                                                    ]
+                                                },
+                                                "ticket_id": {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Added count and errors if any"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/comments": {
+            "get": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "List comments",
+                "description": "List my comments and class comments (paginated).",
+                "operationId": "7f3ea85dcf396c44ef520a2f2f39824b",
+                "responses": {
+                    "200": {
+                        "description": "my_comment, class_comment"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/favorites/toggle": {
+            "post": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "Toggle favorite",
+                "description": "Toggle favorite for an item (webinar, bundle, or product).",
+                "operationId": "7302965b04431efaa96baf8ee985df9a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "item_id",
+                                    "item_type"
+                                ],
+                                "properties": {
+                                    "item_id": {
+                                        "type": "integer"
+                                    },
+                                    "item_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "webinar",
+                                            "bundle",
+                                            "product"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "favored or unfavored"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Item not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/favorites": {
+            "get": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "List favorites",
+                "description": "List user's favorites (paginated).",
+                "operationId": "764e32298ed53883249365a959d0685d",
+                "responses": {
+                    "200": {
+                        "description": "Paginated favorites"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/favorites/{id}": {
+            "delete": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "Remove favorite",
+                "description": "Remove a favorite by ID.",
+                "operationId": "694624592fb4e0349c69db790cbb879b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Removed"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/files/{file}": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "Get course file",
+                "description": "Get file (video/document) details for playback or download (enrolled users).",
+                "operationId": "346db1542c76a6a469c9899dfdb66fe8",
+                "parameters": [
+                    {
+                        "name": "file",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File details and access URL"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Not enrolled or no access"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/notifications": {
+            "get": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "List notifications",
+                "description": "List notifications (optional query: status=unread|read).",
+                "operationId": "a933f18a4a1c3d940e2aeacae07dce09",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "unread",
+                                "read"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated notifications"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/notifications/{id}/seen": {
+            "post": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "Mark notification as seen",
+                "description": "Mark a notification as seen.",
+                "operationId": "4ad4756e63c6b2fd9f851b696e0adafa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Marked as seen"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/payments/request": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Payments"
+                ],
+                "summary": "Request payment",
+                "description": "Request payment for an order (redirect/gateway link or payment data).",
+                "operationId": "5f2434c770bfdaa0181ba095b18fb0b2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "gateway_id",
+                                    "order_id"
+                                ],
+                                "properties": {
+                                    "gateway_id": {
+                                        "description": "Payment channel ID",
+                                        "type": "integer"
+                                    },
+                                    "order_id": {
+                                        "description": "Pending order ID",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment link or gateway data"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/payments/verify/{gateway}": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "Payments"
+                ],
+                "summary": "Verify payment (GET)",
+                "description": "Verify payment after gateway callback (GET or POST).",
+                "operationId": "17320f2e7df0d6c44f91519db31bdd9a",
+                "parameters": [
+                    {
+                        "name": "gateway",
+                        "in": "path",
+                        "description": "Gateway identifier (e.g. paypal, paytm)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment verified or error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Payments"
+                ],
+                "summary": "Verify payment (POST)",
+                "operationId": "53583ab5a483972279efdebacb48bb00",
+                "parameters": [
+                    {
+                        "name": "gateway",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment verified or error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/quizzes/{quiz}": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "Get quiz",
+                "description": "Get quiz details for taking (enrolled users).",
+                "operationId": "834aed42138ad5b277fd863b67791e5d",
+                "parameters": [
+                    {
+                        "name": "quiz",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Quiz details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/sessions/{session}": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "Get session",
+                "description": "Get live session details (join link, etc.) for enrolled users.",
+                "operationId": "89ea7778128ca4488889f72840ac12a3",
+                "parameters": [
+                    {
+                        "name": "session",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session details"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/dashboard/summary": {
+            "get": {
+                "tags": [
+                    "Panel"
+                ],
+                "summary": "Dashboard summary",
+                "description": "Dashboard summary (balance, notifications, cart count, badges, etc.).",
+                "operationId": "6592d453b4de05fe7b7125f425fe4b59",
+                "responses": {
+                    "200": {
+                        "description": "Summary data (balance, unread_notifications, count_cart_items, badges, pendingAppointments, etc.)"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/text-lessons/{lesson}": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "Get text lesson",
+                "description": "Get text lesson content (enrolled users).",
+                "operationId": "d511cd38472e36b31148f4dc46a3b028",
+                "parameters": [
+                    {
+                        "name": "lesson",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Text lesson content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/profile-setting": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "Profile"
+                ],
+                "summary": "Get profile",
+                "description": "Get current user profile/settings.",
+                "operationId": "693c5aa08da2a4c25092d11dbb3fa95c",
+                "responses": {
+                    "200": {
+                        "description": "User details (profile)"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Panel",
+                    "Profile"
+                ],
+                "summary": "Update profile",
+                "description": "Update profile (name, email, mobile, bio, timezone, address, etc.).",
+                "operationId": "74c7acf33c47ed7adb64f719b7129f22",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "full_name": {
+                                        "type": "string"
+                                    },
+                                    "language": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "mobile": {
+                                        "type": "string"
+                                    },
+                                    "timezone": {
+                                        "type": "string"
+                                    },
+                                    "about": {
+                                        "type": "string"
+                                    },
+                                    "bio": {
+                                        "type": "string"
+                                    },
+                                    "country_id": {
+                                        "type": "integer"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "newsletter": {
+                                        "type": "boolean"
+                                    },
+                                    "public_message": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/profile-setting/images": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "Profile"
+                ],
+                "summary": "Upload profile/cover images",
+                "description": "Upload profile picture, cover (identity_scan), or certificate.",
+                "operationId": "6a715e8f17cdb45bede57e4d58f129f1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "profile_image": {
+                                        "description": "Profile/avatar image",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "identity_scan": {
+                                        "description": "Identity document (e.g. for instructor)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "certificate": {
+                                        "description": "Certificate file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/profile-setting/password": {
+            "put": {
+                "tags": [
+                    "Panel",
+                    "Profile"
+                ],
+                "summary": "Update password",
+                "description": "Change password.",
+                "operationId": "4acdb1bd4702116a93b979669760ce21",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "new_password"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string"
+                                    },
+                                    "new_password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/webinars/{webinar}/chapters": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "List course chapters",
+                "description": "List chapters and content items for a course (for watching).",
+                "operationId": "158cac0feffee3d45fc4116dec7d6f1a",
+                "parameters": [
+                    {
+                        "name": "webinar",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chapters with items (files, sessions, text lessons, quizzes)"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/webinars/{id}": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "Get my course",
+                "description": "Get my course/webinar details (creator or teacher) for viewing/editing.",
+                "operationId": "fbbed1484d1a87bc373c9202dd3130a1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Course details (for enrolled or owner) or invalid (status=invalid). Body: success, status, data (optional)."
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/webinars/purchases": {
+            "get": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "List purchased courses",
+                "description": "List my purchased courses.",
+                "operationId": "1ba738b796d248b111de0f350ec08043",
+                "responses": {
+                    "200": {
+                        "description": "List of purchased webinars"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/webinars/{id}/free": {
+            "post": {
+                "tags": [
+                    "Panel",
+                    "My courses"
+                ],
+                "summary": "Enroll in free course",
+                "description": "Enroll in a free course.",
+                "operationId": "b248db416fd8ced181c311f8b2429f5c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enrolled"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Course not found or not free"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/categories": {
+            "get": {
+                "tags": [
+                    "Discovery"
+                ],
+                "summary": "List categories",
+                "description": "List categories.",
+                "operationId": "f78d63ac5a4d05e983fd396f9d2df730",
+                "responses": {
+                    "200": {
+                        "description": "Categories with count"
+                    }
+                }
+            }
+        },
+        "/v1/trend-categories": {
+            "get": {
+                "tags": [
+                    "Discovery"
+                ],
+                "summary": "List trend categories",
+                "description": "List trend categories.",
+                "operationId": "3b4258f13b0c2f702e031c072e179ca0",
+                "responses": {
+                    "200": {
+                        "description": "Trend categories with count"
+                    }
+                }
+            }
+        },
+        "/v1/categories/{id}/webinars": {
+            "get": {
+                "tags": [
+                    "Discovery"
+                ],
+                "summary": "Get courses by category",
+                "description": "Get webinars (courses) by category.",
+                "operationId": "dddfd77d1fef07723eabb955353c83ab",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category filters and webinars"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                }
+            }
+        },
+        "/v1/certificate_validation": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Validate certificate",
+                "description": "Validate a certificate by ID (public verification).",
+                "operationId": "7c8b92ee5cb987def61674c53d50ea55",
+                "parameters": [
+                    {
+                        "name": "certificate_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "is_valid and certificate details or null"
+                    }
+                }
+            }
+        },
+        "/v1/featured-courses": {
+            "get": {
+                "tags": [
+                    "Discovery"
+                ],
+                "summary": "List featured courses",
+                "description": "List featured courses (home / home_categories).",
+                "operationId": "603ee5b569f86024f40e2b5aa937132a",
+                "responses": {
+                    "200": {
+                        "description": "List of featured webinars"
+                    }
+                }
+            }
+        },
+        "/v1/courses/reports/reasons": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "List report reasons",
+                "description": "Get report reasons (for reporting a course).",
+                "operationId": "0287e14467247b32d4718947d620a989",
+                "responses": {
+                    "200": {
+                        "description": "List of report reasons"
+                    }
+                }
+            }
+        },
+        "/v1/search": {
+            "get": {
+                "tags": [
+                    "Discovery"
+                ],
+                "summary": "Search",
+                "description": "Search courses, users, teachers, organizations (min 3 characters).",
+                "operationId": "452554c6828118db136580d1c6a15938",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Results: webinars, users, teachers, organizations"
+                    }
+                }
+            }
+        },
+        "/v1/users/{id}/profile": {
+            "get": {
+                "tags": [
+                    "Discovery"
+                ],
+                "summary": "Get user profile",
+                "description": "Get user (instructor/organization) public profile.",
+                "operationId": "029ef456b1a0b2db7dc07c0671b89b27",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User details, cashbackRules for meetings"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/v1/courses/{id}/quizzes": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "List course quizzes",
+                "description": "List quizzes for a course (public course page).",
+                "operationId": "a2ee17161286bef66edd5c6e66bcfca0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of quizzes"
+                    }
+                }
+            }
+        },
+        "/v1/courses/{id}/certificates": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "List course certificates",
+                "description": "List certificates available for a course (completion, quiz certificates).",
+                "operationId": "ca82d32b9d4a21bb90114ac8fa5e2332",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of certificate types/links"
+                    }
+                }
+            }
+        },
+        "/v1/courses": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "List courses",
+                "description": "List public courses (webinars).",
+                "operationId": "9329dd4ee984230f7dea6fd82c879521",
+                "responses": {
+                    "200": {
+                        "description": "List of courses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "retrieved"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/courses/{id}": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Get course details",
+                "description": "Get course (webinar) details by ID.",
+                "operationId": "b55383a80575cebfd321f92d6a5e95cf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Course details or invalid (status=invalid). Body: success, status, data (optional)."
+                    }
+                }
+            }
+        },
+        "/v1/courses/{id}/content": {
+            "get": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Get course content",
+                "description": "Get course content (chapters, files, sessions, text lessons, quizzes).",
+                "operationId": "f200114153c6de20c18ad12678de985b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Course content (chapters, items, learning status)"
+                    }
+                }
+            }
+        },
+        "/v1/courses/{webinar_id}/toggle": {
+            "post": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Toggle course learning status",
+                "description": "Toggle learning status for a course (auth required).",
+                "operationId": "bee440faa5e12c83b492cde8e47ca454",
+                "parameters": [
+                    {
+                        "name": "webinar_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/courses/{id}/report": {
+            "post": {
+                "tags": [
+                    "Courses"
+                ],
+                "summary": "Report course",
+                "description": "Report a course (auth required).",
+                "operationId": "05388eab98ffdbf686c7b4bc2aed594a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason_id"
+                                ],
+                                "properties": {
+                                    "reason_id": {
+                                        "type": "integer"
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Reported",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "reported"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1": {
+            "get": {
+                "tags": [
+                    "General"
+                ],
+                "summary": "API info",
+                "description": "Returns API version and documentation links",
+                "operationId": "getApiInfo",
+                "responses": {
+                    "200": {
+                        "description": "API info",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "stable"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "LMS API v1"
+                                        },
+                                        "version": {
+                                            "type": "string",
+                                            "example": "v1"
+                                        },
+                                        "documentation": {
+                                            "description": "Link to docs",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Use the JWT token from login/register. Header: Authorization: Bearer {token}",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Config",
+            "description": "Config"
+        },
+        {
+            "name": "Instructor",
+            "description": "Instructor"
+        },
+        {
+            "name": "Panel",
+            "description": "Panel"
+        },
+        {
+            "name": "Cart",
+            "description": "Cart"
+        },
+        {
+            "name": "Broadcasting",
+            "description": "Broadcasting"
+        },
+        {
+            "name": "My courses",
+            "description": "My courses"
+        },
+        {
+            "name": "Payments",
+            "description": "Payments"
+        },
+        {
+            "name": "Profile",
+            "description": "Profile"
+        },
+        {
+            "name": "Discovery",
+            "description": "Discovery"
+        },
+        {
+            "name": "Courses",
+            "description": "Courses"
+        },
+        {
+            "name": "General",
+            "description": "General"
+        }
+    ]
+}
