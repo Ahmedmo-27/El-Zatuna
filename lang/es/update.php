@@ -221,7 +221,7 @@ return [
 'reward_no_result_hint' => 'You have no earned points. Start using the platform and earn points and rewards.',
 'exchangeable' => 'Points conversion',
 'exchangeable_unit' => 'Points conversion rate',
-'exchangeable_unit_hint' => 'The user will get 1 currency unit for this amount of points. e.g. if you enter 500, the user will get $1 for each 500 points',
+'exchangeable_unit_hint' => 'The user will get 1 currency unit for this amount of points. e.g. if you enter 500, the user will get 1 EGP for each 500 points',
 'admin_reward_setting_active_hint' => 'By activating this feature, the system will calculate point rewards based on user actions',
 'admin_reward_setting_exchangeable_hint' => 'Enable this feature to allow users to convert their point rewards to the wallet charge',
 'want_more_points_link' => 'Points policy page',

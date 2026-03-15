@@ -746,7 +746,7 @@ function currency($user = null)
 
 function getDefaultCurrency()
 {
-    return getFinancialCurrencySettings('currency') ?? 'USD';
+    return getFinancialCurrencySettings('currency') ?? 'EGP';
 }
 
 function currencySign($currency = null)
@@ -860,7 +860,7 @@ function currencySign($currency = null)
             return '$';
             break;
         case 'EGP':
-            return '£';
+            return 'EGP';
             break;
         case 'GTQ':
             return 'Q';
@@ -967,9 +967,6 @@ function currencySign($currency = null)
         case 'KWD':
             return 'KD';
             break;
-        case 'EGP':
-            return 'ج.م';
-            break;
         case 'NAD':
             return 'NAD';
             break;
@@ -1010,10 +1007,10 @@ function currencySign($currency = null)
             return 'MZM';
             break;
         default:
-            return '$';
+            return 'EGP';
     }
 
-    return '$';
+    return 'EGP';
 }
 
 function getCountriesMobileCode()
@@ -2074,7 +2071,7 @@ function curformat($amount)
     }
 
     // (A3) RESULT
-    return "\$$whole.$decimal";
+    return "EGP $whole.$decimal";
 }
 
 function handlePriceFormat($price, $decimals = 0, $decimal_separator = '.', $thousands_separator = '')
