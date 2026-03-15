@@ -57,7 +57,7 @@ class CartItemInfo
 
         $info['imgPath'] = !empty($webinar) ? $webinar->getImage() : null;
         $info['itemUrl'] = !empty($webinar) ? $webinar->getUrl() : null;
-        $info['title'] = $chapter->title . ' (Section)';
+        $info['title'] = !empty($webinar) ? $webinar->title . ' — ' . $chapter->title : $chapter->title . ' (Section)';
         $info['profileUrl'] = !empty($webinar) && $webinar->teacher ? $webinar->teacher->getProfileUrl() : null;
         $info['teacherName'] = !empty($webinar) && $webinar->teacher ? $webinar->teacher->full_name : null;
         $info['rate'] = !empty($webinar) ? $webinar->getRate() : null;

@@ -2,11 +2,23 @@
     $cartTaxType = !empty($cartItemInfo['isProduct']) ? 'store' : 'general';
 @endphp
 
-@if($carts->whereNotNull('webinar_id')->whereNull('file_id')->count())
+@php
+    $courseCartItems = $carts->filter(function ($c) {
+        return $c->webinar_id && !$c->file_id && !$c->chapter_id;
+    });
+    $sectionCartItems = $carts->whereNotNull('chapter_id');
+    $hasCourseItems = $courseCartItems->count() > 0 || $sectionCartItems->count() > 0;
+@endphp
+@if($hasCourseItems)
     <div class="card-before-line px-16">
         <h5 class="font-14 mb-16">{{ trans('update.courses') }}</h5>
 
-        @foreach($carts->whereNotNull('webinar_id')->whereNull('file_id') as $cartItem)
+        @foreach($courseCartItems as $cartItem)
+            @include('design_1.web.cart.overview.includes.item_cards.course', [
+                'cartItemInfo' => $cartItem->getItemInfo(),
+            ])
+        @endforeach
+        @foreach($sectionCartItems as $cartItem)
             @include('design_1.web.cart.overview.includes.item_cards.course', [
                 'cartItemInfo' => $cartItem->getItemInfo(),
             ])
