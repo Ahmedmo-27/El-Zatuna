@@ -450,7 +450,7 @@ class WebinarController extends Controller
                 $canAccess = true;
 
                 if ($file->accessibility == 'paid') {
-                    $canAccess = ($webinar->checkUserHasBought() or $file->checkUserHasBought());
+                    $canAccess = canUserAccessCourseContent($webinar, auth()->user(), $file->chapter) || $file->checkUserHasBought();
                 }
 
                 if ($canAccess) {
@@ -502,7 +502,7 @@ class WebinarController extends Controller
                 $canAccess = true;
 
                 if ($file->accessibility == 'paid') {
-                    $canAccess = ($webinar->checkUserHasBought() or $file->checkUserHasBought());
+                    $canAccess = canUserAccessCourseContent($webinar, auth()->user(), $file->chapter) || $file->checkUserHasBought();
                 }
 
                 if ($canAccess) {
@@ -558,7 +558,7 @@ class WebinarController extends Controller
                 $canAccess = true;
 
                 if ($file->accessibility == 'paid') {
-                    $canAccess = ($webinar->checkUserHasBought() or $file->checkUserHasBought());
+                    $canAccess = canUserAccessCourseContent($webinar, auth()->user(), $file->chapter) || $file->checkUserHasBought();
                 }
 
                 if ($canAccess) {
@@ -624,7 +624,7 @@ class WebinarController extends Controller
             if (!empty($file)) {
                 $canAccess = true;
                 if ($file->accessibility == 'paid') {
-                    $canAccess = ($webinar->checkUserHasBought() || $file->checkUserHasBought());
+                    $canAccess = canUserAccessCourseContent($webinar, auth()->user(), $file->chapter) || $file->checkUserHasBought();
                 }
                 if ($canAccess) {
                     $notVideoSource = ['iframe', 'google_drive', 'dropbox'];

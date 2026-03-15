@@ -28,6 +28,7 @@ class CartController extends Controller
                 'user',
                 'webinar',
                 'file.webinar',
+                'chapter.webinar',
                 'installmentPayment',
                 'reserveMeeting' => function ($query) {
                     $query->with([
@@ -437,8 +438,9 @@ class CartController extends Controller
             OrderItem::create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,
-                'webinar_id' => $cart->webinar_id ?? ($cart->file ? $cart->file->webinar_id : null),
+                'webinar_id' => $cart->webinar_id ?? ($cart->file ? $cart->file->webinar_id : null) ?? ($cart->chapter ? $cart->chapter->webinar_id : null),
                 'file_id' => $cart->file_id ?? null,
+                'chapter_id' => $cart->chapter_id ?? null,
                 'bundle_id' => $cart->bundle_id ?? null,
                 'product_id' => (!empty($cart->product_order_id) and !empty($cart->productOrder->product)) ? $cart->productOrder->product->id : null,
                 'product_order_id' => (!empty($cart->product_order_id)) ? $cart->product_order_id : null,
@@ -486,6 +488,8 @@ class CartController extends Controller
             $user = $cart->webinar_id ? $cart->webinar->creator : $cart->bundle->creator;
         } elseif (!empty($cart->file_id) and !empty($cart->file)) {
             $user = $cart->file->webinar ? $cart->file->webinar->creator : null;
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $user = $cart->chapter->webinar ? $cart->chapter->webinar->creator : null;
         } elseif (!empty($cart->reserve_meeting_id)) {
             $user = $cart->reserveMeeting->meeting->creator;
         } elseif (!empty($cart->product_order_id) and !empty($cart->productOrder)) {
@@ -577,6 +581,20 @@ class CartController extends Controller
             $subTotal += $price;
         } elseif (!empty($cart->file_id) and !empty($cart->file)) {
             $price = $cart->file->price;
+            $discount = 0;
+
+            $priceWithoutDiscount = $price - $discount;
+
+            if ($tax > 0 and $priceWithoutDiscount > 0) {
+                $taxPrice += $priceWithoutDiscount * $tax / 100;
+            }
+
+            $commissionPrice += $this->getCommissionPrice('courses', $priceWithoutDiscount, $seller);
+
+            $totalDiscount += $discount;
+            $subTotal += $price;
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $price = (float) $cart->chapter->price;
             $discount = 0;
 
             $priceWithoutDiscount = $price - $discount;

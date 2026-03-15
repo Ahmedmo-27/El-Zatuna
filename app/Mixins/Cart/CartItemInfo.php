@@ -8,6 +8,8 @@ class CartItemInfo
     {
         if (!empty($cart->file_id) and !empty($cart->file)) {
             return $this->getFileInfo($cart, $cart->file);
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            return $this->getChapterInfo($cart, $cart->chapter);
         } elseif (!empty($cart->webinar_id)) {
             $webinar = $cart->webinar;
 
@@ -44,6 +46,25 @@ class CartItemInfo
         $info['rateCount'] = $webinar->reviews()->pluck('creator_id')->count();
         $info['price'] = $webinar->price;
         $info['discountPrice'] = $webinar->getDiscount($cart->ticket) ? ($webinar->price - $webinar->getDiscount($cart->ticket)) : null;
+
+        return $info;
+    }
+
+    private function getChapterInfo($cart, $chapter)
+    {
+        $info = [];
+        $webinar = $chapter->webinar;
+
+        $info['imgPath'] = !empty($webinar) ? $webinar->getImage() : null;
+        $info['itemUrl'] = !empty($webinar) ? $webinar->getUrl() : null;
+        $info['title'] = $chapter->title . ' (Section)';
+        $info['profileUrl'] = !empty($webinar) && $webinar->teacher ? $webinar->teacher->getProfileUrl() : null;
+        $info['teacherName'] = !empty($webinar) && $webinar->teacher ? $webinar->teacher->full_name : null;
+        $info['rate'] = !empty($webinar) ? $webinar->getRate() : null;
+        $info['rateCount'] = !empty($webinar) ? $webinar->reviews()->pluck('creator_id')->count() : null;
+        $info['price'] = (float) $chapter->price;
+        $info['discountPrice'] = null;
+        $info['quantity'] = 1;
 
         return $info;
     }

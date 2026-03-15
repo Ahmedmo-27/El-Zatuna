@@ -442,6 +442,7 @@ return [
 'currency_position_left_with_space' => 'يسار مع مسافة',
 'currency_position_right_with_space' => 'يمين مع مسافة',
 'go_to_learning_page' => 'الذهاب إلى صفحة التعلم',
+'check_first_section_for_free' => 'شاهد القسم الأول مجاناً',
 'meeting_settings' => 'إعدادات الاجتماع',
 'price_range' => 'نطاق السعر',
 'instructor_age' => 'عمر المدرب',

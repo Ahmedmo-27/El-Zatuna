@@ -39,6 +39,11 @@ class OrderItem extends Model
         return $this->belongsTo('App\Models\File', 'file_id', 'id');
     }
 
+    public function chapter()
+    {
+        return $this->belongsTo('App\Models\WebinarChapter', 'chapter_id', 'id');
+    }
+
     public function bundle()
     {
         return $this->belongsTo('App\Models\Bundle', 'bundle_id', 'id');
@@ -98,6 +103,8 @@ class OrderItem extends Model
             $seller = $orderItem->webinar->creator_id;
         } elseif (!empty($orderItem->file_id) and !empty($orderItem->file)) {
             $seller = $orderItem->file->creator_id;
+        } elseif (!empty($orderItem->chapter_id) and !empty($orderItem->chapter)) {
+            $seller = $orderItem->chapter->webinar ? $orderItem->chapter->webinar->creator_id : null;
         } elseif (!empty($orderItem->reserve_meeting_id)) {
             $seller = $orderItem->reserveMeeting->meeting->creator_id;
         } elseif (!empty($orderItem->product_id)) {

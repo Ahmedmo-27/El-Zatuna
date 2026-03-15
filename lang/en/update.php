@@ -455,6 +455,7 @@ return [
 'currency_position_left_with_space' => 'Left with Space',
 'currency_position_right_with_space' => 'Right with Space',
 'go_to_learning_page' => 'Go to Learning Page',
+'check_first_section_for_free' => 'Check first section for free',
 'meeting_settings' => 'Meeting Settings',
 'price_range' => 'Price Range',
 'instructor_age' => 'Instructor Age',

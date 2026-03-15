@@ -59,10 +59,11 @@ class File extends WebFile
     {
         $user = apiAuth();
         $access = false;
-        $hasBought = $this->webinar->checkUserHasBought($user);
-        $hasBoughtFile = $this->checkUserHasBought($user);
         if ($this->accessibility == 'paid') {
-            if ($user and ($hasBought or $hasBoughtFile)) {
+            if ($user && canUserAccessCourseContent($this->webinar, $user, $this->chapter)) {
+                $access = true;
+            }
+            if (!$access && $user && $this->checkUserHasBought($user)) {
                 $access = true;
             }
         } else {
@@ -73,21 +74,15 @@ class File extends WebFile
 
     public function getAuthHasAccessAttribute()
     {
-
         $user = apiAuth();
         $canAccess = null;
         if ($user) {
             $canAccess = true;
             if ($this->accessibility == 'paid') {
-                $canAccess = ($this->webinar->checkUserHasBought($user) or $this->checkUserHasBought($user)) ? true : false;
+                $canAccess = canUserAccessCourseContent($this->webinar, $user, $this->chapter) || $this->checkUserHasBought($user);
             }
-
         }
-
-
         return $canAccess;
-
-
     }
 
     public function webinar()

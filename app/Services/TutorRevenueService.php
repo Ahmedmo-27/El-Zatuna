@@ -103,4 +103,51 @@ class TutorRevenueService
             ]);
         });
     }
+
+    public function recordChapterSale(OrderItem $orderItem, Sale $sale): void
+    {
+        if (empty($orderItem->chapter_id) || $sale->type !== Order::$chapter) {
+            return;
+        }
+
+        $chapter = $orderItem->chapter;
+        if (empty($chapter)) {
+            return;
+        }
+
+        $webinar = $chapter->webinar;
+        if (empty($webinar)) {
+            return;
+        }
+
+        $tutorUser = $webinar->teacher ?: $webinar->creator;
+        if (empty($tutorUser)) {
+            return;
+        }
+
+        $tutor = $tutorUser->getOrCreateTutor();
+
+        $baseAmount = max((float)$orderItem->total_amount - (float)$orderItem->tax_price, 0);
+        $feePercent = (float)Setting::getFinancialSettings('tutor_platform_fee');
+        $platformFee = round(($baseAmount * $feePercent) / 100, 2);
+        $tutorEarnings = round($baseAmount - $platformFee, 2);
+
+        DB::transaction(function () use ($orderItem, $chapter, $tutor, $baseAmount, $platformFee, $tutorEarnings) {
+            CourseRevenue::create([
+                'course_id' => $chapter->webinar_id,
+                'file_id' => null,
+                'tutor_id' => $tutor->id,
+                'student_id' => $orderItem->user_id,
+                'amount' => $baseAmount,
+                'platform_fee' => $platformFee,
+                'tutor_earnings' => $tutorEarnings,
+                'created_at' => time(),
+            ]);
+
+            $tutor->update([
+                'payout_balance' => $tutor->payout_balance + $tutorEarnings,
+                'updated_at' => time(),
+            ]);
+        });
+    }
 }

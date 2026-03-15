@@ -87,6 +87,7 @@ class ChapterController extends Controller
                         'status' => $chapter->status,
                         'title' => $chapter->title,
                         'type' => $chapter->type,
+                        'price' => isset($chapter->price) ? (float) $chapter->price : 0,
                         'created_at' => $chapter->created_at,
                     ];
                 }
@@ -129,6 +130,7 @@ class ChapterController extends Controller
                 'status' => $status,
                 'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
                 'duration' => !empty($data['duration']) ? (int) $data['duration'] : null,
+                'price' => isset($data['price']) && $data['price'] !== '' ? (float) $data['price'] : 0,
                 'created_at' => time(),
             ]);
 
@@ -188,6 +190,7 @@ class ChapterController extends Controller
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
             'duration' => 'nullable|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -217,6 +220,7 @@ class ChapterController extends Controller
                     'status' => $status,
                     'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
                     'duration' => !empty($data['duration']) ? (int) $data['duration'] : null,
+                    'price' => isset($data['price']) && $data['price'] !== '' ? (float) $data['price'] : 0,
                 ]);
 
                 WebinarChapterTranslation::updateOrCreate([

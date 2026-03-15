@@ -52,8 +52,11 @@ class LearningPageController extends Controller
             return $installmentLimitation;
         }
 
+        $hasBought = $data['hasBought'] ?? false;
+        $hasInstallment = !empty($course->getInstallmentOrder());
+        $canAccessFirstSectionFree = !$hasBought && !$hasInstallment && $user && $course->chapters && $course->chapters->count() > 0;
 
-        if (!$data or (!$data['hasBought'] and empty($course->getInstallmentOrder()))) {
+        if (!$data or (!$hasBought and !$hasInstallment and !$canAccessFirstSectionFree)) {
             $data = [
                 'pageTitle' => trans('update.access_denied'),
                 'pageRobot' => getPageRobotNoIndex(),

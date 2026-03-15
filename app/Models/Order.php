@@ -25,6 +25,7 @@ class Order extends Model
     public static $installmentPayment = 'installment_payment';
     public static $gift = 'gift';
     public static $file = 'file';
+    public static $chapter = 'chapter';
 
     public static $addiction = 'addiction';
     public static $deduction = 'deduction';
