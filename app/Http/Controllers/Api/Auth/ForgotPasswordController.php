@@ -33,11 +33,7 @@ class ForgotPasswordController extends Controller
      *             @OA\Property(property="mobile", type="string", description="Required when type=mobile")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Done", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="done")
-     *     )),
-     *     @OA\Response(response=200, description="Failure (validation/errors in data)")
+     *     @OA\Response(response=200, description="Success (status=done) or failure (validation/errors). Body: success (boolean), status (string).")
      * )
      */
     public function forgot(Request $request)

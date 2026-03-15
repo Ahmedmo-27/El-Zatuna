@@ -25,16 +25,7 @@ class TokenRefreshController extends Controller
      *             @OA\Property(property="refresh_token", type="string", description="Current JWT or refresh token")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Token refreshed", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="token_refreshed"),
-     *         @OA\Property(property="data", type="object",
-     *             @OA\Property(property="access_token", type="string"),
-     *             @OA\Property(property="token_type", type="string", example="bearer"),
-     *             @OA\Property(property="expires_at", type="string", format="date-time")
-     *         )
-     *     )),
-     *     @OA\Response(response=200, description="Error (token_expired, token_invalid)")
+     *     @OA\Response(response=200, description="Token refreshed (status=token_refreshed, data with access_token) or error (token_expired, token_invalid). Body: success, status, data (optional).")
      * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse

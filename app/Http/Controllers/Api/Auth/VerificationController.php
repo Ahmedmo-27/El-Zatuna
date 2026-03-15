@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 class VerificationController extends Controller
 {
 
-    public function checkConfirmed($user = null, $username, $value)
+    public function checkConfirmed($username, $value, $user = null)
     {
         $disableRegistrationVerificationProcess = getGeneralOptionsSettings('disable_registration_verification_process');
 
@@ -98,11 +98,7 @@ class VerificationController extends Controller
      *             @OA\Property(property="referral_code", type="string", description="Optional")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Verified", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="verified")
-     *     )),
-     *     @OA\Response(response=200, description="Invalid code or error")
+     *     @OA\Response(response=200, description="Verified (status=verified) or invalid code/error. Body: success, status.")
      * )
      */
     public function confirmCode(Request $request, $username = null)

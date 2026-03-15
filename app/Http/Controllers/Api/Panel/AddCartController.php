@@ -217,12 +217,8 @@ class AddCartController extends Controller
      *             @OA\Property(property="quantity", type="integer", nullable=true)
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Added to cart"),
-     *     @OA\Response(response=401, description="Unauthorized"),
-     *     @OA\Response(response=200, description="Already in cart or not available", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=false),
-     *         @OA\Property(property="status", type="string", example="already_in_cart")
-     *     ))
+     *     @OA\Response(response=200, description="Added to cart or already in cart/not available (status=already_in_cart). Body: success, status."),
+     *     @OA\Response(response=401, description="Unauthorized")
      * )
      */
     public function store(Request $request)

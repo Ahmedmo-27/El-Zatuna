@@ -88,11 +88,7 @@ class WebinarController extends Controller
      *     summary="Get course details",
      *     tags={"Courses"},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Course details"),
-     *     @OA\Response(response=200, description="Invalid", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=false),
-     *         @OA\Property(property="status", type="string", example="invalid")
-     *     ))
+     *     @OA\Response(response=200, description="Course details or invalid (status=invalid). Body: success, status, data (optional).")
      * )
      */
     public function show($id)

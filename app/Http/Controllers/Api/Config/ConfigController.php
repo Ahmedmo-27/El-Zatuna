@@ -25,7 +25,7 @@ class ConfigController extends Controller
      *         @OA\Property(property="status", type="string", example="retrieved"),
      *         @OA\Property(property="data", type="object",
      *             @OA\Property(property="register_method", type="string"),
-     *             @OA\Property(property="user_language", type="array"),
+     *             @OA\Property(property="user_language", type="array", @OA\Items(type="object", @OA\Property(property="id", type="string"), @OA\Property(property="title", type="string"))),
      *             @OA\Property(property="payment_channels", type="object"),
      *             @OA\Property(property="currency", type="object"),
      *             @OA\Property(property="show_google_login_button", type="boolean"),

@@ -37,19 +37,7 @@ class LoginController extends Controller
      *             @OA\Property(property="password", type="string", example="Str0ngPassw0rd!")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Login success", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="login"),
-     *         @OA\Property(property="data", type="object",
-     *             @OA\Property(property="account_token", type="string"),
-     *             @OA\Property(property="session_token", type="string"),
-     *             @OA\Property(property="user_id", type="integer")
-     *         )
-     *     )),
-     *     @OA\Response(response=200, description="Invalid credentials", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=false),
-     *         @OA\Property(property="status", type="string", example="incorrect")
-     *     ))
+     *     @OA\Response(response=200, description="Login success (status=login, data with tokens) or invalid credentials (status=incorrect). Body: success, status, data (optional).")
      * )
      */
     public function login(Request $request)
@@ -109,7 +97,7 @@ class LoginController extends Controller
             auth('api')->logout();
             //  dd(apiAuth());
             $verificationController = new VerificationController();
-            $checkConfirmed = $verificationController->checkConfirmed($user, 'email', $request->input('email'));
+            $checkConfirmed = $verificationController->checkConfirmed('email', $request->input('email'), $user);
 
             if ($checkConfirmed['status'] == 'send') {
 

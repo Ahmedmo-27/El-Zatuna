@@ -17,15 +17,7 @@ class VerifyEmailController extends Controller
      *     summary="Verify email (link token)",
      *     tags={"Auth"},
      *     @OA\Parameter(name="token", in="path", required=true, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Email verified", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="email_verified"),
-     *         @OA\Property(property="data", type="object", @OA\Property(property="verification_token", type="string"))
-     *     )),
-     *     @OA\Response(response=200, description="Invalid token", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=false),
-     *         @OA\Property(property="status", type="string", example="invalid_token")
-     *     ))
+     *     @OA\Response(response=200, description="Email verified (status=email_verified, data.verification_token) or invalid token (status=invalid_token). Body: success, status, data (optional).")
      * )
      * @param Request $request
      * @param string $token
@@ -132,11 +124,7 @@ class VerifyEmailController extends Controller
      *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Code resent", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="verification_resent")
-     *     )),
-     *     @OA\Response(response=200, description="Error (e.g. already_verified, user_not_found)")
+     *     @OA\Response(response=200, description="Code resent (status=verification_resent) or error (already_verified, user_not_found). Body: success, status.")
      * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse

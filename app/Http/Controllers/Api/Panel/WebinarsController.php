@@ -24,12 +24,8 @@ class WebinarsController extends Controller
      *     tags={"Panel", "My courses"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Course details (for enrolled or owner)"),
-     *     @OA\Response(response=401, description="Unauthorized"),
-     *     @OA\Response(response=200, description="Invalid", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=false),
-     *         @OA\Property(property="status", type="string", example="invalid")
-     *     ))
+     *     @OA\Response(response=200, description="Course details (for enrolled or owner) or invalid (status=invalid). Body: success, status, data (optional)."),
+     *     @OA\Response(response=401, description="Unauthorized")
      * )
      */
     public function show($id)

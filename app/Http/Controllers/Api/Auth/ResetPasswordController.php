@@ -42,14 +42,7 @@ class ResetPasswordController extends Controller
      *             @OA\Property(property="password_confirmation", type="string")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Password reset", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=true),
-     *         @OA\Property(property="status", type="string", example="password_reset")
-     *     )),
-     *     @OA\Response(response=200, description="Not found", @OA\JsonContent(
-     *         @OA\Property(property="success", type="boolean", example=false),
-     *         @OA\Property(property="status", type="string", example="not_found")
-     *     ))
+     *     @OA\Response(response=200, description="Password reset (status=password_reset) or not found (status=not_found). Body: success, status.")
      * )
      */
     public function updatePassword(Request $request,$token)
