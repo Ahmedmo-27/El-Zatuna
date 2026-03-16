@@ -31,6 +31,9 @@ class DatabaseSeeder extends Seeder
 
         $this->call(HomeLandingSeeder::class);
 
+        $this->call(FreeCoursesSeeder::class);
+        $this->call(FreeCoursesContentSeeder::class);
+
         // $this->call(DemoDataSeeder::class);
     }
 }
