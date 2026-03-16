@@ -18,7 +18,7 @@
                     
                     <div class="mt-8 md:mt-10 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-4 sm:gap-6">
                         <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#BDEA42] hover:scale-110 transition-all duration-300 shadow-2xl relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-book class="w-5 h-5 sm:w-6 sm:h-6"/> Enroll on courses</a>
-                        <a href="/contact" class="border-2 border-[#072923] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#072923] hover:text-[#FAFFE0] transition-all duration-300 relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-sms class="w-5 h-5 sm:w-6 sm:h-6"/> Request Course</a>
+                        <a href="/contact?type=request_course" class="border-2 border-[#072923] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#072923] hover:text-[#FAFFE0] transition-all duration-300 relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-sms class="w-5 h-5 sm:w-6 sm:h-6"/> Request Course</a>
                     </div>
 
                     <div class="mt-16 md:mt-14 inline-flex items-center gap-3 bg-[#FAFFE0] border border-[#ECF4B8] rounded-full px-3 sm:px-4 py-2">

@@ -72,6 +72,21 @@
             margin-bottom: 16px;
         }
 
+        .contact-page-form .contact-type-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(250, 255, 224, 0.3);
+            background: rgba(7, 41, 35, 0.45);
+            color: #FAFFE0;
+            font-weight: 600;
+            padding: 9px 16px;
+        }
+
+        .contact-page-form .contact-type-btn.active {
+            background: #C8CD06;
+            border-color: #C8CD06;
+            color: #072923;
+        }
+
         .contact-page-form .form-group-label {
             position: static !important;
             display: block;

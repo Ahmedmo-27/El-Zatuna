@@ -933,6 +933,7 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['admin.auth', 'admin.loca
     */
     Route::group(['prefix' => 'contacts'], function () {
         Route::get('/', 'ContactController@index')->name('admin.contacts');
+        Route::get('/course-requests', 'ContactController@courseRequests')->name('admin.contacts.course_requests');
         Route::get('/{id}/reply', 'ContactController@reply')->name('admin.contacts.reply');
         Route::post('/{id}/reply', 'ContactController@storeReply')->name('admin.contacts.reply.store');
         Route::delete('/{id}/delete', 'ContactController@delete')->name('admin.contacts.delete');

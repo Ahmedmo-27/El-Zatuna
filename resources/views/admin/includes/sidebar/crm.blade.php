@@ -117,11 +117,21 @@
             @endcan
 
             @can('admin_contacts')
-                <li class="{{ (request()->is(getAdminPanelUrl('/contacts*', false))) ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ getAdminPanelUrl() }}/contacts">
+                <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/contacts*', false))) ? 'active' : '' }}">
+                    <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                         <x-iconsax-bul-directbox-receive class="icons" width="24px" height="24px"/>
                         <span>{{ trans('admin/main.contacts') }}</span>
                     </a>
+
+                    <ul class="dropdown-menu">
+                        <li class="{{ (request()->is(getAdminPanelUrl('/contacts', false))) ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ getAdminPanelUrl() }}/contacts">All Contacts</a>
+                        </li>
+
+                        <li class="{{ (request()->is(getAdminPanelUrl('/contacts/course-requests', false))) ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ getAdminPanelUrl() }}/contacts/course-requests">Course Requests</a>
+                        </li>
+                    </ul>
                 </li>
             @endcan
 

@@ -26,6 +26,7 @@
                                 <th class="text-left">{{ trans('admin/main.user_name') }}</th>
                                 <th class="text-left">{{ trans('admin/main.email') }}</th>
                                 <th class="text-center">{{ trans('public.phone') }}</th>
+                                <th class="text-center">Type</th>
                                 <th class="text-left">{{ trans('site.subject') }}</th>
                                 <th class="text-center">{{ trans('site.message') }}</th>
                                 <th class="text-center">{{ trans('admin/main.status') }}</th>
@@ -38,11 +39,37 @@
                                     <td>{{ $contact->name }}</td>
                                     <td class="text-left">{{ $contact->email }}</td>
                                     <td class="text-center">{{ $contact->phone }}</td>
+
+                                    <td class="text-center">
+                                        @if(($contact->contact_type ?? 'message') === 'request_course')
+                                            <span class="badge-status text-warning bg-warning-20">Course Request</span>
+                                        @else
+                                            <span class="badge-status text-primary bg-primary-20">Message</span>
+                                        @endif
+                                    </td>
+
                                     <td class="text-left">{{ $contact->subject }}</td>
 
                                     <td class="text-center">
+                                        @php
+                                            $fullMessage = $contact->message;
+
+                                            if (($contact->contact_type ?? 'message') === 'request_course') {
+                                                $yearSuffixes = [1 => 'st', 2 => 'nd', 3 => 'rd', 4 => 'th', 5 => 'th'];
+                                                $yearLabel = !empty($contact->study_year) ? $contact->study_year . ($yearSuffixes[$contact->study_year] ?? 'th') . ' Year' : '-';
+
+                                                $fullMessage .= "\n\nCourse Request Details:";
+                                                $fullMessage .= "\nUniversity: " . ($contact->university_name ?? '-');
+                                                $fullMessage .= "\nCollege: " . ($contact->college_name ?? '-');
+                                                $fullMessage .= "\nField: " . ($contact->study_field ?? '-');
+                                                $fullMessage .= "\nCourse Name: " . ($contact->course_name ?? '-');
+                                                $fullMessage .= "\nStudy Year: " . $yearLabel;
+                                                $fullMessage .= "\nCan Provide Materials: " . (($contact->can_provide_materials ?? null) === 'yes' ? 'Yes' : ((($contact->can_provide_materials ?? null) === 'no') ? 'No' : '-'));
+                                            }
+                                        @endphp
+
                                         <button type="button" class="js-show-description btn btn-sm btn-outline-primary">{{ trans('admin/main.show') }}</button>
-                                        <input type="hidden" value="{{ nl2br($contact->message) }}">
+                                        <input type="hidden" value="{{ nl2br($fullMessage) }}">
                                     </td>
 
                                     <td class="text-center">
