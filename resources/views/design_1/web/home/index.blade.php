@@ -143,7 +143,7 @@
                             'href' => $course->getUrl(),
                             'image' => $course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923',
                             'title' => $course->title,
-                            'subtitle' => $course->teacher->full_name ?? 'Instructor',
+                            'subtitle' => $course->teacher?->full_name ?? 'Instructor',
                             'originalPrice' => $course->price,
                             'discountedPrice' => $discountedPrice,
                             'discountPercent' => $discountPercent,
