@@ -8,6 +8,16 @@ use Illuminate\Http\Request;
 
 class FeatureWebinarController
 {
+    /**
+     * List featured courses (home / home_categories).
+     *
+     * @OA\Get(
+     *     path="/v1/featured-courses",
+     *     summary="List featured courses",
+     *     tags={"Discovery"},
+     *     @OA\Response(response=200, description="List of featured webinars")
+     * )
+     */
     public function index(Request $request){
 
         $webinars=FeatureWebinar::whereIn('page', ['home', 'home_categories'])

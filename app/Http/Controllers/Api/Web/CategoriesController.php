@@ -10,6 +10,16 @@ use App\Models\Api\Category;
 
 class CategoriesController extends Controller
 {
+    /**
+     * List categories.
+     *
+     * @OA\Get(
+     *     path="/v1/categories",
+     *     summary="List categories",
+     *     tags={"Discovery"},
+     *     @OA\Response(response=200, description="Categories with count")
+     * )
+     */
     public function index(Request $request)
     {
 
@@ -26,6 +36,16 @@ class CategoriesController extends Controller
 
     }
 
+    /**
+     * List trend categories.
+     *
+     * @OA\Get(
+     *     path="/v1/trend-categories",
+     *     summary="List trend categories",
+     *     tags={"Discovery"},
+     *     @OA\Response(response=200, description="Trend categories with count")
+     * )
+     */
     public function trendCategory()
     {
 
@@ -40,6 +60,18 @@ class CategoriesController extends Controller
         ] );
     }
 
+    /**
+     * Get webinars (courses) by category.
+     *
+     * @OA\Get(
+     *     path="/v1/categories/{id}/webinars",
+     *     summary="Get courses by category",
+     *     tags={"Discovery"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Category filters and webinars"),
+     *     @OA\Response(response=404, description="Category not found")
+     * )
+     */
     public function categoryWebinar(Request $request, $id)
     {
         $category = Category::find($id);

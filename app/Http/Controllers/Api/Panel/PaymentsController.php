@@ -76,6 +76,26 @@ class PaymentsController extends Controller
     }
 
 
+    /**
+     * Request payment for an order (redirect/gateway link or payment data).
+     *
+     * @OA\Post(
+     *     path="/v1/panel/payments/request",
+     *     summary="Request payment",
+     *     tags={"Panel", "Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"gateway_id","order_id"},
+     *             @OA\Property(property="gateway_id", type="integer", description="Payment channel ID"),
+     *             @OA\Property(property="order_id", type="integer", description="Pending order ID")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Payment link or gateway data"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function paymentRequest(Request $request)
     {
         $user = apiAuth();
@@ -143,6 +163,28 @@ class PaymentsController extends Controller
     }
 
 
+    /**
+     * Verify payment after gateway callback (GET or POST).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/payments/verify/{gateway}",
+     *     summary="Verify payment (GET)",
+     *     tags={"Panel", "Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="gateway", in="path", required=true, description="Gateway identifier (e.g. paypal, paytm)", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Payment verified or error"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     * @OA\Post(
+     *     path="/v1/panel/payments/verify/{gateway}",
+     *     summary="Verify payment (POST)",
+     *     tags={"Panel", "Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="gateway", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Payment verified or error"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function paymentVerify(Request $request, $gateway)
     {
         $paymentChannel = PaymentChannel::where('class_name', $gateway)

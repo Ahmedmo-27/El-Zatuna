@@ -17,6 +17,20 @@ use Illuminate\Support\Facades\Auth;
 
 class SessionController extends Controller
 {
+    /**
+     * Get live session details (join link, etc.) for enrolled users.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/sessions/{session}",
+     *     summary="Get session",
+     *     tags={"Panel", "My courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="session", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Session details"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function show($id)
     {
         $session = Session::where('id', $id)

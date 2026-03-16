@@ -58,8 +58,9 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
-        if ($request->is('api/*')) {
-
+        // Swagger docs: use web-style handling (redirect to login, HTML 403) not API JSON
+        $isSwaggerDocs = $request->is('api/documentation') || $request->is('api/docs') || $request->is('api/docs/*');
+        if ($request->is('api/*') && ! $isSwaggerDocs) {
             return $this->renderApi($request, $exception);
         }
 
@@ -149,6 +150,7 @@ class Handler extends ExceptionHandler
                     'statusCode' => $statusCode,
                     'errorSettings' => $errorSettings,
                     'dontShowCookieSecurity' => true,
+                    'exceptionMessage' => $exception->getMessage(),
                 ];
 
                 $data = array_merge($data, $shareData);

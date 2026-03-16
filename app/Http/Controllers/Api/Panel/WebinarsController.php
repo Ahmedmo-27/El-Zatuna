@@ -15,6 +15,19 @@ use Illuminate\Support\Facades\DB;
 
 class WebinarsController extends Controller
 {
+    /**
+     * Get my course/webinar details (creator or teacher) for viewing/editing.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/webinars/{id}",
+     *     summary="Get my course",
+     *     tags={"Panel", "My courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Course details (for enrolled or owner) or invalid (status=invalid). Body: success, status, data (optional)."),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function show($id)
     {
         $user = apiAuth();
@@ -77,6 +90,18 @@ class WebinarsController extends Controller
         return $paginatedData;
     }
 
+    /**
+     * List my purchased courses.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/webinars/purchases",
+     *     summary="List purchased courses",
+     *     tags={"Panel", "My courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="List of purchased webinars"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function indexPurchases(Request $request)
     {
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),
@@ -85,6 +110,20 @@ class WebinarsController extends Controller
             ]);
     }
 
+    /**
+     * Enroll in a free course.
+     *
+     * @OA\Post(
+     *     path="/v1/panel/webinars/{id}/free",
+     *     summary="Enroll in free course",
+     *     tags={"Panel", "My courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Enrolled"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Course not found or not free")
+     * )
+     */
     public function free(Request $request, $id)
     {
         $user = apiAuth();

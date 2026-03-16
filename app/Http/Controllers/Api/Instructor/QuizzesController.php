@@ -18,6 +18,33 @@ use Illuminate\Support\Facades\Validator;
 class QuizzesController extends Controller
 {
 
+    /**
+     * Create a quiz (course section). Teacher only.
+     *
+     * @OA\Post(
+     *     path="/v1/instructor/quizzes",
+     *     summary="Create quiz",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","pass_mark"},
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="webinar_id", type="integer", nullable=true),
+     *             @OA\Property(property="chapter_id", type="integer", nullable=true),
+     *             @OA\Property(property="pass_mark", type="integer"),
+     *             @OA\Property(property="attempt", type="integer", nullable=true),
+     *             @OA\Property(property="time", type="integer", nullable=true),
+     *             @OA\Property(property="active", type="boolean"),
+     *             @OA\Property(property="certificate", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Quiz created"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher only")
+     * )
+     */
     public function store(Request $request)
     {
 
@@ -69,6 +96,35 @@ class QuizzesController extends Controller
 
     }
 
+    /**
+     * Update a quiz. Teacher only.
+     *
+     * @OA\Put(
+     *     path="/v1/instructor/quizzes/{id}",
+     *     summary="Update quiz",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","pass_mark"},
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="webinar_id", type="integer", nullable=true),
+     *             @OA\Property(property="chapter_id", type="integer", nullable=true),
+     *             @OA\Property(property="pass_mark", type="integer"),
+     *             @OA\Property(property="attempt", type="integer", nullable=true),
+     *             @OA\Property(property="time", type="integer", nullable=true),
+     *             @OA\Property(property="active", type="boolean"),
+     *             @OA\Property(property="certificate", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Updated"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher only"),
+     *     @OA\Response(response=404, description="Quiz not found")
+     * )
+     */
     public function update(Request $request, $id)
     {
         $quiz = Quiz::find($id);
@@ -122,6 +178,21 @@ class QuizzesController extends Controller
         return apiResponse2(1, 'updated', trans('public.updated'));
     }
 
+    /**
+     * Delete a quiz. Teacher only.
+     *
+     * @OA\Delete(
+     *     path="/v1/instructor/quizzes/{id}",
+     *     summary="Delete quiz",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Deleted"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher only"),
+     *     @OA\Response(response=404, description="Quiz not found")
+     * )
+     */
     public function destroy(Request $request, $id)
     {
         $user_id = auth()->id();

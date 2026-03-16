@@ -32,6 +32,12 @@
             @endif
         </button>
 
+        @if($canSale && $course->chapters && $course->chapters->count() > 0)
+            <a href="{{ auth()->check() ? $course->getLearningPageUrl() : '/login?redirect=' . urlencode($course->getLearningPageUrl()) }}" class="btn btn-outline-primary btn-block btn-lg mt-14">
+                {{ trans('update.check_first_section_for_free') }}
+            </a>
+        @endif
+
         @if($canSale and !empty($course->points))
             <a href="{{ !(auth()->check()) ? '/login' : '#' }}" class="{{ (auth()->check()) ? 'js-buy-with-point' : '' }} btn btn-outline-warning btn-block btn-lg mt-14 {{ (!$canSale) ? 'disabled' : '' }}" rel="nofollow" data-path="/course/{{ $course->slug }}/points/get-modal">
                 {!! trans('update.buy_with_n_points',['points' => $course->points]) !!}

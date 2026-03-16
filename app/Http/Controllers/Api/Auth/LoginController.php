@@ -22,6 +22,24 @@ class LoginController extends Controller
     |
     */
 
+    /**
+     * Authenticate with email and password; returns JWT and session data.
+     *
+     * @OA\Post(
+     *     path="/v1/auth/login",
+     *     summary="Login",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com"),
+     *             @OA\Property(property="password", type="string", example="Str0ngPassw0rd!")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login success (status=login, data with tokens) or invalid credentials (status=incorrect). Body: success, status, data (optional).")
+     * )
+     */
     public function login(Request $request)
     {
         $rules = [
@@ -79,7 +97,7 @@ class LoginController extends Controller
             auth('api')->logout();
             //  dd(apiAuth());
             $verificationController = new VerificationController();
-            $checkConfirmed = $verificationController->checkConfirmed($user, 'email', $request->input('email'));
+            $checkConfirmed = $verificationController->checkConfirmed('email', $request->input('email'), $user);
 
             if ($checkConfirmed['status'] == 'send') {
 
@@ -192,6 +210,26 @@ class LoginController extends Controller
 
     }
 
+    /**
+     * Invalidate the current JWT (and optionally a specific session).
+     *
+     * @OA\Post(
+     *     path="/v1/logout",
+     *     summary="Logout",
+     *     tags={"Auth"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="session_token", type="string", description="Optional session token to invalidate")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Logout success", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="logout")
+     *     )),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function logout(Request $request)
     {
         $user = auth('api')->user();

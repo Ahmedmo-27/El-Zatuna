@@ -746,7 +746,7 @@ function currency($user = null)
 
 function getDefaultCurrency()
 {
-    return getFinancialCurrencySettings('currency') ?? 'USD';
+    return getFinancialCurrencySettings('currency') ?? 'EGP';
 }
 
 function currencySign($currency = null)
@@ -860,7 +860,7 @@ function currencySign($currency = null)
             return '$';
             break;
         case 'EGP':
-            return '£';
+            return 'EGP';
             break;
         case 'GTQ':
             return 'Q';
@@ -967,9 +967,6 @@ function currencySign($currency = null)
         case 'KWD':
             return 'KD';
             break;
-        case 'EGP':
-            return 'ج.م';
-            break;
         case 'NAD':
             return 'NAD';
             break;
@@ -1010,10 +1007,10 @@ function currencySign($currency = null)
             return 'MZM';
             break;
         default:
-            return '$';
+            return 'EGP';
     }
 
-    return '$';
+    return 'EGP';
 }
 
 function getCountriesMobileCode()
@@ -1919,6 +1916,36 @@ function isAdminUrl($url = null)
     return (1 === strpos($url, $prefix));
 }
 
+/**
+ * Check if user can access course content. Full course purchase, first section (free), or section purchase grants access.
+ * Users who paid the full course price (e.g. 2000) get access to ALL sections with no extra payment.
+ *
+ * @param \App\Models\Webinar $course
+ * @param \App\User|null $user
+ * @param \App\Models\WebinarChapter|null $chapter Section/chapter the content belongs to; null = full course access only
+ * @return bool
+ */
+function canUserAccessCourseContent($course, $user = null, $chapter = null)
+{
+    if (empty($user) && auth()->check()) {
+        $user = auth()->user();
+    }
+    if (empty($user)) {
+        $user = function_exists('apiAuth') ? apiAuth() : null;
+    }
+    if (empty($course)) {
+        return false;
+    }
+    // Full course purchase (e.g. 2000) grants access to all sections — no extra charge per section
+    if ($course->checkUserHasBought($user) || !empty($course->getInstallmentOrder())) {
+        return true;
+    }
+    if (empty($chapter)) {
+        return false;
+    }
+    return $chapter->isFirstSection() || $chapter->checkUserHasBought($user);
+}
+
 function getTranslateAttributeValue($model, $key, $loca = null)
 {
     $isAdminUrl = isAdminUrl();
@@ -2044,7 +2071,7 @@ function curformat($amount)
     }
 
     // (A3) RESULT
-    return "\$$whole.$decimal";
+    return "EGP $whole.$decimal";
 }
 
 function handlePriceFormat($price, $decimals = 0, $decimal_separator = '.', $thousands_separator = '')

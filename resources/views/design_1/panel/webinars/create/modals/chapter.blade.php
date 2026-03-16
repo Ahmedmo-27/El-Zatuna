@@ -39,6 +39,19 @@
         <span class="invalid-feedback"></span>
     </div>
 
+    <div class="form-group">
+        <label class="form-group-label">{{ trans('public.price') }}</label>
+        <input type="number"
+               name="ajax[chapter][price]"
+               class="form-control"
+               min="0"
+               step="0.01"
+               value="{{ isset($chapter->price) ? $chapter->price : '' }}"
+               placeholder="0 = free section">
+        <small class="form-text text-muted">0 = free section. Users who buy the full course get all sections.</small>
+        <span class="invalid-feedback"></span>
+    </div>
+
     <div class="form-group d-flex align-items-center">
         <div class="custom-switch mr-8">
             <input id="statusSwitch" type="checkbox" name="ajax[chapter][status]" class="custom-control-input" {{ (!empty($chapter) and $chapter->status == \App\Models\WebinarChapter::$chapterActive) ? 'checked' :  '' }}>

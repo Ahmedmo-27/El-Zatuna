@@ -24,11 +24,26 @@ use Illuminate\Support\Facades\URL;
 
 class CartController extends Controller
 {
+    /**
+     * List cart items with amounts and totals.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/cart/list",
+     *     summary="List cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, or meeting."),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function index()
     {
         $user = apiAuth();
         $carts = Cart::where('creator_id', $user->id)
             ->with([
+                'webinar',
+                'file.webinar',
+                'chapter.webinar',
                 'productOrder' => function ($query) {
                     $query->whereHas('product');
                 }
@@ -78,6 +93,20 @@ class CartController extends Controller
 
     }
 
+    /**
+     * Remove item from cart.
+     *
+     * @OA\Delete(
+     *     path="/v1/panel/cart/{id}",
+     *     summary="Remove from cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Deleted"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function destroy($id)
     {
         $user_id = apiAuth()->id;
@@ -144,6 +173,25 @@ class CartController extends Controller
 
     }
 
+    /**
+     * Validate a coupon code for the cart.
+     *
+     * @OA\Post(
+     *     path="/v1/panel/cart/coupon/validate",
+     *     summary="Validate coupon",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"coupon_code"},
+     *             @OA\Property(property="coupon_code", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Valid or invalid coupon"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function validateCoupon(Request $request)
     {
         $user = apiAuth();
@@ -248,7 +296,10 @@ class CartController extends Controller
             OrderItem::create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,
-                'webinar_id' => $cart->webinar_id ?? null,
+                'webinar_id' => $cart->webinar_id ?? ($cart->chapter ? $cart->chapter->webinar_id : null),
+                'file_id' => $cart->file_id ?? null,
+                'chapter_id' => $cart->chapter_id ?? null,
+                'bundle_id' => $cart->bundle_id ?? null,
                 'reserve_meeting_id' => $cart->reserve_meeting_id ?? null,
                 'subscribe_id' => $cart->subscribe_id ?? null,
                 'promotion_id' => $cart->promotion_id ?? null,
@@ -290,6 +341,24 @@ class CartController extends Controller
     }
 
 
+    /**
+     * Checkout cart and create order (then pay via payments/request or payments/credit).
+     *
+     * @OA\Post(
+     *     path="/v1/panel/cart/checkout",
+     *     summary="Checkout cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="discount_id", type="integer", nullable=true),
+     *             @OA\Property(property="gateway_id", type="integer", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Order created; use payments/request or payments/credit to complete"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function checkout(Request $request)
     {
 
@@ -455,6 +524,10 @@ class CartController extends Controller
 
         if (!empty($cart->webinar_id) or !empty($cart->bundle_id)) {
             $user = $cart->webinar_id ? $cart->webinar->creator : $cart->bundle->creator;
+        } elseif (!empty($cart->file_id) and !empty($cart->file)) {
+            $user = $cart->file->webinar ? $cart->file->webinar->creator : null;
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $user = $cart->chapter->webinar ? $cart->chapter->webinar->creator : null;
         } elseif (!empty($cart->reserve_meeting_id)) {
             $user = $cart->reserveMeeting->meeting->creator;
         } elseif (!empty($cart->product_order_id)) {
@@ -541,6 +614,20 @@ class CartController extends Controller
 
             $source = !empty($cart->webinar_id) ? 'courses' : 'bundles';
             $commissionPrice += $this->getCommissionPrice($source, $priceWithoutDiscount, $seller);
+
+            $totalDiscount += $discount;
+            $subTotal += $price;
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $price = (float) $cart->chapter->price;
+            $discount = 0;
+
+            $priceWithoutDiscount = $price - $discount;
+
+            if ($tax > 0 and $priceWithoutDiscount > 0) {
+                $taxPrice += $priceWithoutDiscount * $tax / 100;
+            }
+
+            $commissionPrice += $this->getCommissionPrice('courses', $priceWithoutDiscount, $seller);
 
             $totalDiscount += $discount;
             $subTotal += $price;
@@ -1034,8 +1121,29 @@ class CartController extends Controller
     }
 
     /**
-     * Bulk add items to cart
+     * Bulk add items to cart (courses, bundles, products).
      *
+     * @OA\Post(
+     *     path="/v1/panel/cart/bulk-add",
+     *     summary="Bulk add to cart",
+     *     tags={"Panel", "Cart"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"items"},
+     *             @OA\Property(property="items", type="array", @OA\Items(
+     *                 type="object",
+     *                 required={"item_id","item_type"},
+     *                 @OA\Property(property="item_id", type="integer"),
+     *                 @OA\Property(property="item_type", type="string", enum={"course","webinar","bundle","product","chapter"}, description="chapter = paid course section"),
+     *                 @OA\Property(property="ticket_id", type="integer", nullable=true)
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Added count and errors if any"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -1051,7 +1159,7 @@ class CartController extends Controller
             $rules = [
                 'items' => 'required|array|min:1',
                 'items.*.item_id' => 'required|integer',
-                'items.*.item_type' => 'required|string|in:course,webinar,bundle,product',
+                'items.*.item_type' => 'required|string|in:course,webinar,bundle,product,chapter',
                 'items.*.ticket_id' => 'nullable|integer',
             ];
 
@@ -1165,6 +1273,38 @@ class CartController extends Controller
                             'created_at' => time()
                         ]);
 
+                        $addedCount++;
+                    } elseif ($itemType === 'chapter') {
+                        $chapter = \App\Models\WebinarChapter::where('id', $itemId)
+                            ->where('status', \App\Models\WebinarChapter::$chapterActive)
+                            ->with('webinar')
+                            ->first();
+
+                        if (!$chapter || !$chapter->webinar) {
+                            $errors[] = ['item_id' => $itemId, 'error' => 'Section not found or not available'];
+                            continue;
+                        }
+                        if ($chapter->isFirstSection() || (float) $chapter->price <= 0) {
+                            $errors[] = ['item_id' => $itemId, 'error' => trans('cart.course_not_free')];
+                            continue;
+                        }
+                        if ($chapter->webinar->checkUserHasBought($user) || $chapter->checkUserHasBought($user)) {
+                            $errors[] = ['item_id' => $itemId, 'error' => trans('site.you_bought_webinar')];
+                            continue;
+                        }
+                        if ($chapter->webinar->creator_id == $user->id) {
+                            $errors[] = ['item_id' => $itemId, 'error' => trans('cart.cant_purchase_your_course')];
+                            continue;
+                        }
+
+                        Cart::updateOrCreate([
+                            'creator_id' => $user->id,
+                            'chapter_id' => $chapter->id,
+                        ], [
+                            'webinar_id' => null,
+                            'file_id' => null,
+                            'created_at' => time()
+                        ]);
                         $addedCount++;
                     }
 

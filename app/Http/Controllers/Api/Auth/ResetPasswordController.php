@@ -25,6 +25,26 @@ class ResetPasswordController extends Controller
 
     //   use ResetsPasswords;
 
+    /**
+     * Complete password reset with token from email.
+     *
+     * @OA\Post(
+     *     path="/v1/auth/reset-password/{token}",
+     *     summary="Reset password",
+     *     tags={"Auth"},
+     *     @OA\Parameter(name="token", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password","password_confirmation"},
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="password", type="string"),
+     *             @OA\Property(property="password_confirmation", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Password reset (status=password_reset) or not found (status=not_found). Body: success, status.")
+     * )
+     */
     public function updatePassword(Request $request,$token)
     {
 

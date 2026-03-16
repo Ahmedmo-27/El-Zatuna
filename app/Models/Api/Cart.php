@@ -12,27 +12,35 @@ class Cart extends Model
         return [
             'id'=>$this->id  ,
             'user'=>$this->user->brief ,
-            'webinar'=>$this->webinar->brief??null ,
+            'webinar'=>($this->webinar_id ? $this->webinar->brief : ($this->chapter_id && $this->chapter && $this->chapter->webinar ? $this->chapter->webinar->brief : null)) ?? null ,
             'price'=>$this->price ,
             'discount'=>$this->discount ,
             'meeting'=>$this->reserveMeeting->details??null
-
-
         ] ;
     }
 
     public function getDiscountAttribute(){
         if($this->webinar_id){
-        return $this->webinar->price - $this->webinar->getDiscount($this->ticket) ;
+            return $this->webinar->price - $this->webinar->getDiscount($this->ticket) ;
+        }
+        if ($this->chapter_id && $this->chapter) {
+            return null;
         }
         return null ;
-      //  $cart->webinar->price - $cart->webinar->getDiscount($cart->ticket), 2, ".", ""
     }
+
     public function getPriceAttribute(){
         if($this->webinar_id){
             return $this->webinar->price  ;
         }
-        return $this->reserveMeeting->paid_amount ;
+        if ($this->chapter_id && $this->chapter) {
+            return (float) $this->chapter->price;
+        }
+        if ($this->reserve_meeting_id) {
+            return $this->reserveMeeting->paid_amount ;
+        }
+        $info = $this->getItemInfo();
+        return $info['price'] ?? 0;
     }
 
     public function user()

@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->suppressSwaggerUnknownClassWarnings();
         $this->registerBrevoMailTransport();
 
         Paginator::defaultView('pagination::default');
@@ -37,6 +38,20 @@ class AppServiceProvider extends ServiceProvider
                 array_keys($_SERVER)
             ));
         }
+    }
+
+    /**
+     * Prevent swagger-php "Skipping unknown ..." warnings from being converted to exceptions
+     * when running php artisan l5-swagger:generate.
+     */
+    protected function suppressSwaggerUnknownClassWarnings(): void
+    {
+        set_error_handler(function (int $severity, string $message, string $file, int $line) {
+            if ($severity === E_USER_WARNING && str_contains($message, 'Skipping unknown ')) {
+                return true; // Suppress: do not convert to ErrorException
+            }
+            return false; // Let other errors be handled normally
+        }, E_USER_WARNING);
     }
 
     protected function registerBrevoMailTransport(): void

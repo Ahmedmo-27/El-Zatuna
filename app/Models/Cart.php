@@ -29,6 +29,11 @@ class Cart extends Model
         return $this->belongsTo('App\Models\File', 'file_id', 'id');
     }
 
+    public function chapter()
+    {
+        return $this->belongsTo('App\Models\WebinarChapter', 'chapter_id', 'id');
+    }
+
     public function bundle()
     {
         return $this->belongsTo('App\Models\Bundle', 'bundle_id', 'id');
@@ -98,6 +103,8 @@ class Cart extends Model
 
         if (!empty($cart->file_id) and !empty($cart->file)) {
             $price += $cart->file->price;
+        } else if (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $price += (float) $cart->chapter->price;
         } else if ((!empty($cart->ticket_id) or !empty($cart->special_offer_id)) and !empty($cart->webinar)) {
             $price += $cart->webinar->price - $cart->webinar->getDiscount($cart->ticket);
         } else if (!empty($cart->webinar_id) and !empty($cart->webinar)) {

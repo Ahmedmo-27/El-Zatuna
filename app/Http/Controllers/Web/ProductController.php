@@ -498,7 +498,7 @@ class ProductController extends Controller
             $data['pageSchema']['offers'] = [
                 '@type' => 'Offer',
                 'price' => (float)$product->price,
-                'priceCurrency' => 'USD',
+                'priceCurrency' => 'EGP',
                 'availability' => 'https://schema.org/InStock',
                 'url' => url('/products/' . $product->slug),
             ];

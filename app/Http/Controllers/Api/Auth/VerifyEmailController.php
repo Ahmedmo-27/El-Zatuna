@@ -10,9 +10,15 @@ use Illuminate\Http\Request;
 class VerifyEmailController extends Controller
 {
     /**
-     * Verify email via link clicked in email (DEPRECATED - keeping for backward compatibility)
-     * New registrations should use code-based verification in RegisterController stepTwo
+     * Verify email via link token (legacy). Prefer code-based verification in register step 2.
      *
+     * @OA\Get(
+     *     path="/v1/auth/verify-email/{token}",
+     *     summary="Verify email (link token)",
+     *     tags={"Auth"},
+     *     @OA\Parameter(name="token", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Email verified (status=email_verified, data.verification_token) or invalid token (status=invalid_token). Body: success, status, data (optional).")
+     * )
      * @param Request $request
      * @param string $token
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
@@ -105,8 +111,21 @@ class VerifyEmailController extends Controller
     }
 
     /**
-     * Resend verification code via email
+     * Resend 6-digit verification code to email.
      *
+     * @OA\Post(
+     *     path="/v1/auth/resend-verification",
+     *     summary="Resend verification code",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email"},
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Code resent (status=verification_resent) or error (already_verified, user_not_found). Body: success, status.")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */

@@ -20,6 +20,18 @@ class SummaryController extends Controller
 
 
 
+    /**
+     * Dashboard summary (balance, notifications, cart count, badges, etc.).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/dashboard/summary",
+     *     summary="Dashboard summary",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Summary data (balance, unread_notifications, count_cart_items, badges, pendingAppointments, etc.)"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function list(Request $request)
     {
         $user = apiAuth();

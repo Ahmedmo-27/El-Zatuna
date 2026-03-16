@@ -12,6 +12,17 @@ use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
+    /**
+     * Search courses, users, teachers, organizations (min 3 characters).
+     *
+     * @OA\Get(
+     *     path="/v1/search",
+     *     summary="Search",
+     *     tags={"Discovery"},
+     *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string", minLength=3)),
+     *     @OA\Response(response=200, description="Results: webinars, users, teachers, organizations")
+     * )
+     */
     public function list(Request $request)
     {
         $data = [];

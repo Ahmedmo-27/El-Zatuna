@@ -34,6 +34,23 @@ class RegisterController extends Controller
     | provide this functionality without requiring any additional code.
     |
     */
+    /**
+     * Registration: step 1 (name+email), step 2 (verify code), step 3 (complete profile).
+     *
+     * @OA\Post(
+     *     path="/v1/auth/register/step/{step}",
+     *     summary="Register (step 1, 2, or 3)",
+     *     tags={"Auth"},
+     *     @OA\Parameter(name="step", in="path", required=true, description="1=name+email, 2=verify code, 3=complete profile", @OA\Schema(type="integer", enum={1,2,3})),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             description="Step 1: full_name, email. Step 2: email, verification_code. Step 3: verification_token, username, password, password_confirmation, university_id, faculty_id, referral_code (optional)"
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Success (verification_sent, email_verified, registered) or error (already_registered, invalid_code, invalid_token, validation). Body: success, status, data.")
+     * )
+     */
     public function stepRegister(Request $request, $step)
     {
         if ($step == 1) {
