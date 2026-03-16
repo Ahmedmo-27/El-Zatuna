@@ -98,6 +98,8 @@ class FrontComponentsDataMixins
 
         $tickets = Ticket::query()->where('start_date', '<', $now)
             ->where('end_date', '>', $now)
+            ->where('discount', '>', 0)
+            ->whereNotNull('webinar_id')
             ->get();
 
         foreach ($tickets as $ticket) {
@@ -109,6 +111,8 @@ class FrontComponentsDataMixins
         $specialOffersWebinarIds = SpecialOffer::query()->where('status', 'active')
             ->where('from_date', '<', $now)
             ->where('to_date', '>', $now)
+            ->where('percent', '>', 0)
+            ->whereNotNull('webinar_id')
             ->pluck('webinar_id')
             ->toArray();
 
@@ -117,6 +121,9 @@ class FrontComponentsDataMixins
         return Webinar::query()->whereIn('id', array_unique($webinarIdsHasDiscount))
             ->where('status', 'active')
             ->where('private', false)
+            ->where('type', Webinar::$course)
+            ->whereNotNull('price')
+            ->where('price', '>', 0)
             ->with([
                 'teacher' => function ($qu) {
                     $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');

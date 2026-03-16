@@ -61,9 +61,9 @@
 
             <div class="mt-16 bg-[#BDEA42] rounded-[28px] px-8 py-10 md:px-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-briefcase', 'value' => '257', 'label' => 'Skillful Instructor'])
-                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-book', 'value' => '29', 'label' => 'Professional Courses'])
-                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-building-3', 'value' => '6', 'label' => 'Official Organizations'])
+                                        @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-profile-2user', 'value' => '257', 'label' => 'Students'])
+                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-book', 'value' => number_format($professionalCoursesCount ?? 0), 'label' => 'Professional Courses'])
+                    @include('design_1.web.components.home.stat_item', ['icon' => 'iconsax-lin-briefcase', 'value' => number_format($instructorsCount ?? 0), 'label' => 'Skilled Instructors'])
                 </div>
             </div>
         </section>
@@ -118,6 +118,7 @@
             <a href="/upcoming_courses" class="mt-20 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
         </section>
 
+        @if(($discountedCourses ?? collect())->isNotEmpty())
         <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-28">
             <div class="bg-[#072923] rounded-[32px] p-10 md:p-14 lg:p-16">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between text-[#FAFFE0] gap-10 md:gap-12">
@@ -128,24 +129,31 @@
                     <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-semibold px-5 py-2 rounded-full text-sm">View More</a>
                 </div>
 
-                @php
-                    $discountedCourses = $discountedCourses ?? collect();
-                    $discountedCards = $discountedCourses->isNotEmpty() ? $discountedCourses : collect([1, 2, 3]);
-                @endphp
-
                 <div class="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
-                    @foreach(($discountedCards ?? collect()) as $course)
+                    @foreach(($discountedCourses ?? collect()) as $course)
+                        @php
+                            $ticketData = $course->bestTicket(true);
+                            $discountedPrice = $ticketData['bestTicket'] ?? null;
+                            $discountPercent = $ticketData['percent'] ?? 0;
+                        @endphp
+
+                        @continue(empty($discountPercent) || empty($discountedPrice) || $discountedPrice >= $course->price)
+
                         @include('design_1.web.components.home.course_card_light', [
-                            'href' => is_object($course) ? $course->getUrl() : '/classes',
-                            'image' => is_object($course) ? ($course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923') : 'https://placehold.co/600x400/FAFFE0/072923',
-                            'title' => is_object($course) ? $course->title : 'Discounted course',
-                            'subtitle' => is_object($course) && $course->teacher ? $course->teacher->full_name : 'Instructor',
+                            'href' => $course->getUrl(),
+                            'image' => $course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923',
+                            'title' => $course->title,
+                            'subtitle' => $course->teacher?->full_name ?? 'Instructor',
+                            'originalPrice' => $course->price,
+                            'discountedPrice' => $discountedPrice,
+                            'discountPercent' => $discountPercent,
                         ])
                     @endforeach
                 </div>
                 <p class="mt-20 md:mt-24 pt-2 pb-4 text-xs text-[#FAFFE0]/70">Over $240K Saved With Exclusive Course Discounts</p>
             </div>
         </section>
+        @endif
 
         @if($freeCourses->isNotEmpty())
         <section class="max-w-[1600px] mx-auto px-8 md:px-12 lg:px-16 py-24">
@@ -277,7 +285,7 @@
                 @endforeach
             </div>
             <div class="mt-12 flex flex-col items-start gap-3">
-                <p class="text-sm text-[#C8CD06]">400+ skilled instructors available to assist you every step of the way</p>
+                <p class="text-sm text-[#C8CD06]">{{ number_format($instructorsCount ?? 0) }} skilled instructors available to assist you every step of the way</p>
                 <a href="/instructors" class="bg-[#C8CD06] text-[#072923] font-semibold px-5 py-2 rounded-full text-sm">All Instructors</a>
             </div>
         </section>
