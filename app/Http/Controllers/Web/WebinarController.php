@@ -149,8 +149,8 @@ class WebinarController extends Controller
 
         if (!$justReturnData) {
 
-            /* Check Not Active */
-            if ($course->status != "active" and (empty($user) or (!$user->isAdmin() and !$course->canAccess($user)))) {
+            /* Check Not Active - allow pending so visitors see "Coming soon" on course page */
+            if ($course->status != "active" and $course->status != "pending" and (empty($user) or (!$user->isAdmin() and !$course->canAccess($user)))) {
                 $data = [
                     'pageTitle' => trans('update.access_denied'),
                     'pageRobot' => getPageRobotNoIndex(),

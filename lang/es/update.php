@@ -1158,6 +1158,7 @@ return [
 'buyer_address' => 'Customer Address',
 
 'enroll_on_course' => 'Enroll on course',
+'coming_soon' => 'Próximamente',
 'course_noticeboard_color_warning' => 'Yellow',
 'course_noticeboard_color_danger' => 'Red',
 'course_noticeboard_color_neutral' => 'Gray',

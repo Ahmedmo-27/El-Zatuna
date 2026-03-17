@@ -1,6 +1,7 @@
 @php
     $canSale = ($course->canSale() and !$hasBought);
     $authUserJoinedWaitlist = false;
+    $isPending = ($course->status === 'pending' || $course->status === \App\Models\Webinar::$pending);
 
     if (!empty($authUser)) {
         $authUserWaitlist = $course->waitlists()->where('user_id', $authUser->id)->first();
@@ -9,7 +10,12 @@
 @endphp
 
 <div class="js-enroll-actions-card mt-20 d-flex flex-column px-16">
-    @if(!$canSale and $course->canJoinToWaitlist())
+    @if($isPending)
+        <div class="d-flex align-items-center justify-content-center py-16 px-16 rounded-16 bg-warning-20 border border-warning">
+            <x-iconsax-lin-calendar-2 class="icons text-warning" width="24px" height="24px"/>
+            <span class="font-16 font-weight-bold text-warning ml-8">{{ trans('update.coming_soon') }}</span>
+        </div>
+    @elseif(!$canSale and $course->canJoinToWaitlist())
         <button type="button" class="btn btn-block btn-primary btn-lg {{ (!$authUserJoinedWaitlist) ? 'js-join-waitlist-user' : 'disabled' }}" {{ $authUserJoinedWaitlist ? 'disabled' : '' }} data-path="/course/{{ $course->slug }}/waitlists/get-modal">
             @if($authUserJoinedWaitlist)
                 {{ trans('update.already_joined') }}
@@ -69,7 +75,7 @@
         </a>
     @endif
 
-    @if($canSale and $course->subscribe)
+    @if(!$isPending and $canSale and $course->subscribe)
         <a href="/subscribes/apply/{{ $course->slug }}" class="btn btn-outline-accent btn-block btn-lg mt-14 @if(!$canSale) disabled @endif">{{ trans('public.subscribe') }}</a>
     @endif
 

@@ -10,7 +10,12 @@
             </div>
         </div>
 
-        @if($hasBought or !empty($course->getInstallmentOrder()))
+        @if($course->status === 'pending' || $course->status === \App\Models\Webinar::$pending)
+            <div class="d-flex align-items-center font-16 font-weight-bold text-warning">
+                <x-iconsax-lin-calendar-2 class="icons text-warning" width="24px" height="24px"/>
+                <span class="ml-8">{{ trans('update.coming_soon') }}</span>
+            </div>
+        @elseif($hasBought or !empty($course->getInstallmentOrder()))
             <a href="{{ $course->getLearningPageUrl() }}" class="btn btn-primary btn-lg">{{ trans('update.go_to_learning_page') }}</a>
         @else
             <button type="button" class="js-bottom-fixed-enroll-on-course-btn btn btn-primary btn-lg">{{ trans('update.enroll_on_course') }}</button>
