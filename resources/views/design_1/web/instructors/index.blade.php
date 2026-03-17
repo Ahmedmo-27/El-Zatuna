@@ -2,6 +2,7 @@
 
 @push("styles_top")
     <link rel="stylesheet" href="{{ getDesign1StylePath("instructors_lists") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/list-filters-elzatuna.css">
 @endpush
 
 @php

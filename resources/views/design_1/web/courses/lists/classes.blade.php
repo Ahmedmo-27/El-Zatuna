@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="/assets/default/vendors/swiper/swiper-bundle.min.css">
     <link rel="stylesheet" href="{{ getDesign1StylePath("courses_lists") }}">
     <link rel="stylesheet" href="/assets/design_1/css/course-list-elzatuna.css">
+    <link rel="stylesheet" href="/assets/design_1/css/list-filters-elzatuna.css">
 @endpush
 
 @section("content")
