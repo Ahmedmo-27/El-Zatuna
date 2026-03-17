@@ -190,6 +190,7 @@ return [
     'accept_rules' => 'Estoy de acuerdo con los términos y reglas.',
 
     'message_to_reviewer' => 'Mensaje para el revisor',
+    'save_first_step_to_unlock' => 'Guarda primero el primer paso para desbloquear el resto.',
 
     'send_for_review' => 'Enviar para revisión',
     'save_as_draft' => 'Guardar como borrador',

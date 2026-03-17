@@ -20,6 +20,11 @@
     });
 
     $('body').on('click', '#getNextStep', function (e) {
+        if ($(this).hasClass('create-course-nav-btn--disabled') || !$(this).hasClass('cursor-pointer')) {
+            e.preventDefault();
+            return;
+        }
+
         $(this).addClass('loadingbar').prop('disabled', true);
         e.preventDefault();
         $('#forDraft').val(1);
