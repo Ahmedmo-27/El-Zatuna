@@ -599,23 +599,40 @@ class CartController extends Controller
             $price = $item->price;
             $discount = $item->getDiscount($cart->ticket, $user);
 
-            // If this is a full course (webinar) and the user already purchased some sections (chapters),
-            // subtract the total price of purchased sections from the base course price.
+            // If this is a full course (webinar) and the user already has access to some sections (chapters),
+            // via direct purchase OR subscription coupon, subtract the sum of those section prices.
             if (!empty($cart->webinar_id) && !empty($user)) {
-                $purchasedChaptersTotal = \App\Models\Sale::query()
+                // Chapters from direct chapter sales
+                $chapterIdsFromSales = \App\Models\Sale::query()
                     ->where('buyer_id', $user->id)
                     ->where('type', \App\Models\Sale::$chapter)
                     ->whereHas('chapter', function ($q) use ($cart) {
                         $q->where('webinar_id', $cart->webinar_id);
                     })
                     ->whereNull('refund_at')
-                    ->sum('total_amount');
+                    ->pluck('chapter_id')
+                    ->toArray();
 
-                if ($purchasedChaptersTotal > 0) {
-                    $price = max(0, $price - $purchasedChaptersTotal);
-                    // Ensure we don't discount below this new base
-                    if ($discount > $price) {
-                        $discount = $price;
+                // Chapters unlocked via subscription (SubscribeUse)
+                $chapterIdsFromSubscribes = \App\Models\SubscribeUse::query()
+                    ->where('user_id', $user->id)
+                    ->where('webinar_id', $cart->webinar_id)
+                    ->pluck('chapter_id')
+                    ->toArray();
+
+                $allChapterIds = array_unique(array_filter(array_merge($chapterIdsFromSales, $chapterIdsFromSubscribes)));
+
+                if (!empty($allChapterIds)) {
+                    $purchasedChaptersTotal = \App\Models\WebinarChapter::query()
+                        ->whereIn('id', $allChapterIds)
+                        ->sum('price');
+
+                    if ($purchasedChaptersTotal > 0) {
+                        $price = max(0, $price - $purchasedChaptersTotal);
+                        // Ensure we don't discount below this new base
+                        if ($discount > $price) {
+                            $discount = $price;
+                        }
                     }
                 }
             }

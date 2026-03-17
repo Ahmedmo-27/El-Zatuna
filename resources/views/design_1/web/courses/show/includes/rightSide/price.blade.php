@@ -36,18 +36,33 @@
         $effectivePrice = $course->price;
 
         if (!empty($user)) {
-            // Subtract already purchased sections (chapters) of this course
-            $purchasedChaptersTotal = \App\Models\Sale::query()
+            // Include sections the user has via direct purchase OR subscription coupons
+            $chapterIdsFromSales = \App\Models\Sale::query()
                 ->where('buyer_id', $user->id)
                 ->where('type', \App\Models\Sale::$chapter)
                 ->whereHas('chapter', function ($q) use ($course) {
                     $q->where('webinar_id', $course->id);
                 })
                 ->whereNull('refund_at')
-                ->sum('total_amount');
+                ->pluck('chapter_id')
+                ->toArray();
 
-            if ($purchasedChaptersTotal > 0) {
-                $effectivePrice = max(0, $course->price - $purchasedChaptersTotal);
+            $chapterIdsFromSubscribes = \App\Models\SubscribeUse::query()
+                ->where('user_id', $user->id)
+                ->where('webinar_id', $course->id)
+                ->pluck('chapter_id')
+                ->toArray();
+
+            $allChapterIds = array_unique(array_filter(array_merge($chapterIdsFromSales, $chapterIdsFromSubscribes)));
+
+            if (!empty($allChapterIds)) {
+                $purchasedChaptersTotal = \App\Models\WebinarChapter::query()
+                    ->whereIn('id', $allChapterIds)
+                    ->sum('price');
+
+                if ($purchasedChaptersTotal > 0) {
+                    $effectivePrice = max(0, $course->price - $purchasedChaptersTotal);
+                }
             }
         }
 
