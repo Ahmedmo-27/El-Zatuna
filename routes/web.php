@@ -514,19 +514,6 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     });
 
 
-    Route::group(['prefix' => 'upcoming_courses'], function () {
-        Route::get('/', 'UpcomingCoursesController@index');
-        Route::get('{slug}', 'UpcomingCoursesController@show');
-        Route::get('/{slug}/share-modal', 'UpcomingCoursesController@getShareModal');
-        Route::get('/{slug}/report-modal', 'UpcomingCoursesController@getReportModal');
-
-        Route::group(['middleware' => 'web.auth'], function () {
-            Route::get('{slug}/toggleFollow', 'UpcomingCoursesController@toggleFollow');
-            Route::get('{slug}/favorite', 'UpcomingCoursesController@favorite');
-            Route::post('{id}/report', 'UpcomingCoursesController@report');
-        });
-    });
-
     Route::group(['prefix' => 'installments'], function () {
         Route::group(['middleware' => 'web.auth'], function () {
             Route::get('/request_submitted', 'InstallmentsController@requestSubmitted');

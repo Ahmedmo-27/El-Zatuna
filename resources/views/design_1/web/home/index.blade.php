@@ -108,14 +108,14 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-9">
                 @foreach(($upcomingCourses ?? collect()) as $upcomingCourse)
                     @include('design_1.web.components.home.course_card_dark', [
-                        'href' => '/upcoming_courses/' . $upcomingCourse->slug,
+                        'href' => $upcomingCourse->getUrl(),
                         'image' => $upcomingCourse->getImageCover() ?? $upcomingCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0',
                         'title' => $upcomingCourse->title,
                         'subtitle' => $upcomingCourse->teacher->full_name ?? 'Instructor',
                     ])
                 @endforeach
             </div>
-            <a href="/upcoming_courses" class="mt-20 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
+            <a href="/classes" class="mt-20 inline-flex bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm">View More</a>
         </section>
 
         @if(($discountedCourses ?? collect())->isNotEmpty())
