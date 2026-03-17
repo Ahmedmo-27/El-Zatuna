@@ -54,13 +54,6 @@ class ClassesController extends Controller
                           ->whereNull('faculty_id');
         }
 
-        $type = $request->get('type');
-        if (!empty($type) and is_array($type) and in_array('bundle', $type)) {
-            $webinarsQuery = Bundle::where('bundles.status', 'active');
-            $this->tableName = 'bundles';
-            $this->columnId = 'bundle_id';
-        }
-
         // Enforce teacher ownership on /classes (webinars or bundles)
         if (!empty($user) and $user->isTeacher()) {
             $webinarsQuery->where(function ($query) use ($user) {
@@ -120,7 +113,6 @@ class ClassesController extends Controller
         $isDownloadable = $request->get('downloadable', null);
         $sort = $request->get('sort', null);
         $filterOptions = $request->get('filter_option', []);
-        $typeOptions = $request->get('type', []);
         $moreOptions = $request->get('moreOptions', []);
         $instructor = $request->get('instructor', null);
 
@@ -144,10 +136,6 @@ class ClassesController extends Controller
 
             if (!empty($isDownloadable) and $isDownloadable == 'on') {
                 $query->where('downloadable', 1);
-            }
-
-            if (!empty($typeOptions) and is_array($typeOptions)) {
-                $query->whereIn("{$this->tableName}.type", $typeOptions);
             }
 
             if (!empty($moreOptions) and is_array($moreOptions)) {
