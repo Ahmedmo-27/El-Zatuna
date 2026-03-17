@@ -5,6 +5,10 @@
 @endpush
 
 @section('content')
+    @php
+        $returnTo = request()->get('return_to');
+    @endphp
+
     <section class="section">
         <div class="section-header">
             <h1>{{ $pageTitle }}</h1>
@@ -24,12 +28,28 @@
                             <h4>{{ trans('admin/main.user_name') }}: <span class="text-black-50">{{ $contact->name }}</span></h4>
                             <h4>{{ trans('admin/main.email') }} : <span class="text-black-50">{{ $contact->email }}</span></h4>
                             <h4>{{ trans('admin/main.phone') }} : <span class="text-black-50">{{ $contact->phone }}</span></h4>
+                            <h4>Type : <span class="text-black-50">{{ ($contact->contact_type ?? 'message') === 'request_course' ? 'Course Request' : 'Message' }}</span></h4>
+
+                            @if(($contact->contact_type ?? 'message') === 'request_course')
+                                @php
+                                    $yearSuffixes = [1 => 'st', 2 => 'nd', 3 => 'rd', 4 => 'th', 5 => 'th'];
+                                    $yearLabel = !empty($contact->study_year) ? $contact->study_year . ($yearSuffixes[$contact->study_year] ?? 'th') . ' Year' : '-';
+                                @endphp
+
+                                <h4>University : <span class="text-black-50">{{ $contact->university_name ?? '-' }}</span></h4>
+                                <h4>College : <span class="text-black-50">{{ $contact->college_name ?? '-' }}</span></h4>
+                                <h4>Field : <span class="text-black-50">{{ $contact->study_field ?? '-' }}</span></h4>
+                                <h4>Course Name : <span class="text-black-50">{{ $contact->course_name ?? '-' }}</span></h4>
+                                <h4>Study Year : <span class="text-black-50">{{ $yearLabel }}</span></h4>
+                                <h4>Can Provide Materials : <span class="text-black-50">{{ ($contact->can_provide_materials ?? null) === 'yes' ? 'Yes' : ((($contact->can_provide_materials ?? null) === 'no') ? 'No' : '-') }}</span></h4>
+                            @endif
+
                             <h4>{{ trans('site.message') }} :</h4>
                             <p class="mt-2">{{ nl2br($contact->message) }}</p>
                         </div>
 
                         <div class="card-body ">
-                            <form action="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply" method="post">
+                            <form action="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply{{ !empty($returnTo) ? '?return_to='.$returnTo : '' }}" method="post">
                                 {{ csrf_field() }}
 
                                 <div class="form-group mt-15">

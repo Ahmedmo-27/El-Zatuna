@@ -11,17 +11,48 @@ class ContactController extends Controller
 
     public function store(Request $request)
     {
+        $contactType = $request->input('contact_type') === 'request_course' ? 'request_course' : 'message';
+
         validateParam($request->all(), [
+            'contact_type' => 'nullable|in:message,request_course',
             'name' => 'required|string',
             'email' => 'required|string|email',
             'phone' => 'required|numeric',
-            'subject' => 'required|string',
             'message' => 'required|string',
-        //    'captcha' => 'required|captcha',
+            'university_name' => 'required_if:contact_type,request_course|nullable|string',
+            'college_name' => 'required_if:contact_type,request_course|nullable|string',
+            'study_field' => 'required_if:contact_type,request_course|nullable|string',
+            'course_name' => 'required_if:contact_type,request_course|nullable|string',
+            'study_year' => 'required_if:contact_type,request_course|nullable|integer|between:1,5',
+            'can_provide_materials' => 'required_if:contact_type,request_course|nullable|in:yes,no',
+            // 'captcha' => 'required|captcha',
         ]);
 
-        $data = $request->all();
-        unset($data['_token']);
+        $data = $request->only([
+            'name',
+            'email',
+            'phone',
+            'message',
+            'university_name',
+            'college_name',
+            'study_field',
+            'course_name',
+            'study_year',
+            'can_provide_materials',
+        ]);
+
+        $data['contact_type'] = $contactType;
+        $data['subject'] = $contactType === 'request_course' ? 'Course Request' : 'Contact Message';
+
+        if ($contactType !== 'request_course') {
+            $data['university_name'] = null;
+            $data['college_name'] = null;
+            $data['study_field'] = null;
+            $data['course_name'] = null;
+            $data['study_year'] = null;
+            $data['can_provide_materials'] = null;
+        }
+
         $data['created_at'] = time();
 
         Contact::create($data);
