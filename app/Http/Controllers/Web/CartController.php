@@ -447,6 +447,7 @@ class CartController extends Controller
                 'product_order_id' => (!empty($cart->product_order_id)) ? $cart->product_order_id : null,
                 'reserve_meeting_id' => $cart->reserve_meeting_id ?? null,
                 'subscribe_id' => $cart->subscribe_id ?? null,
+                'applied_subscribe_id' => null,
                 'promotion_id' => $cart->promotion_id ?? null,
                 'gift_id' => $cart->gift_id ?? null,
                 'installment_payment_id' => $cart->installment_payment_id ?? null,
@@ -464,7 +465,7 @@ class CartController extends Controller
             ]);
 
             // If this order item is a chapter and was fully discounted by the "10 sections" subscription,
-            // record a SubscribeUse entry so the usage counter is correct.
+            // persist which subscription was applied so we can create SubscribeUse *after* payment when Sale exists.
             if (!empty($cart->chapter_id) && !empty($cart->chapter)) {
                 $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
                 if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
@@ -482,13 +483,8 @@ class CartController extends Controller
                             $activeSubscribe->infinite_use
                         )
                     ) {
-                        \App\Models\SubscribeUse::create([
-                            'user_id' => $user->id,
-                            'subscribe_id' => $activeSubscribe->id,
-                            'chapter_id' => $cart->chapter_id,
-                            'item_type' => 'chapter',
-                            'sale_id' => null,
-                            'installment_order_id' => $activeSubscribe->installment_order_id ?? null,
+                        $orderItem->update([
+                            'applied_subscribe_id' => $activeSubscribe->id,
                         ]);
                     }
                 }
