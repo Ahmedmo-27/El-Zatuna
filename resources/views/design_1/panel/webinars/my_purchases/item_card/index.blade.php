@@ -1,9 +1,4 @@
-@php
-    // If the user purchased a specific section (chapter), show the section name + course name.
-    $isChapterPurchase = empty($sale->webinar) && !empty($sale->chapter) && !empty($sale->chapter->webinar) && $sale->type === \App\Models\Sale::$chapter;
-@endphp
-
-@if($isChapterPurchase)
+@if($sale->type === \App\Models\Sale::$chapter && !empty($sale->chapter) && !empty($sale->chapter->webinar))
     @php
         $course = $sale->chapter->webinar;
         $chapter = $sale->chapter;

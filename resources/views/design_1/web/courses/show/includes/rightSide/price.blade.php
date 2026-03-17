@@ -32,7 +32,26 @@
 {{-- Price --}}
 @if($course->price > 0)
     @php
-        $realPrice = handleCoursePagePrice($course->price);
+        $user = auth()->user();
+        $effectivePrice = $course->price;
+
+        if (!empty($user)) {
+            // Subtract already purchased sections (chapters) of this course
+            $purchasedChaptersTotal = \App\Models\Sale::query()
+                ->where('buyer_id', $user->id)
+                ->where('type', \App\Models\Sale::$chapter)
+                ->whereHas('chapter', function ($q) use ($course) {
+                    $q->where('webinar_id', $course->id);
+                })
+                ->whereNull('refund_at')
+                ->sum('total_amount');
+
+            if ($purchasedChaptersTotal > 0) {
+                $effectivePrice = max(0, $course->price - $purchasedChaptersTotal);
+            }
+        }
+
+        $realPrice = handleCoursePagePrice($effectivePrice);
     @endphp
 
     <div id="priceBox" class="d-flex align-items-end justify-content-center  mt-20 px-16">
@@ -54,7 +73,7 @@
 
         <div class="d-flex align-items-center text-center">
             <div id="realPrice"
-                 data-value="{{ $course->price }}"
+                 data-value="{{ $effectivePrice }}"
                  data-special-offer="{{ !empty($activeSpecialOffer) ? $activeSpecialOffer->percent : ''}}"
                  class="d-block @if(!empty($activeSpecialOffer)) font-14 text-gray-500 text-decoration-line-through @else font-24 font-weight-bold @endif">
                 {{ $realPrice['price'] }}
