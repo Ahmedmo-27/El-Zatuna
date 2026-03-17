@@ -1119,45 +1119,75 @@ class WebinarController extends Controller
 
     public function learningStatus(Request $request, $slug)
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-
-            $course = Webinar::where('slug', $slug)->first();
-
-            if (!empty($course) and $course->checkUserHasBought($user)) {
-                $data = $request->all();
-
-                $item = $data['item'];
-                $item_id = $data['item_id'];
-                $status = $data['status'];
-
-                CourseLearning::where('user_id', $user->id)
-                    ->where($item, $item_id)
-                    ->delete();
-
-                if ($status and $status == "true") {
-                    CourseLearning::create([
-                        'user_id' => $user->id,
-                        $item => $item_id,
-                        'created_at' => time()
-                    ]);
-                }
-
-                // check for certificate
-                $course->makeCertificateForUser($user);
-
-                $percent = $course->getProgress(true);
-
-                return response()->json([
-                    'code' => 200,
-                    'learning_progress_percent' => $percent,
-                    'title' => trans('public.request_success'),
-                    'msg' => trans('update.section_learning_status_changed_successful'),
-                ]);
-            }
+        if (!auth()->check()) {
+            abort(403);
         }
 
-        abort(403);
+        $user = auth()->user();
+        $course = Webinar::where('slug', $slug)->first();
+
+        if (empty($course)) {
+            abort(404);
+        }
+
+        $data = $request->all();
+        $itemKey = $data['item'] ?? null;   // file_id | session_id | text_lesson_id
+        $itemId  = $data['item_id'] ?? null;
+        $status  = $data['status'] ?? null;
+
+        if (empty($itemKey) || empty($itemId)) {
+            abort(403);
+        }
+
+        // Detect the item's chapter so we can use section-based access
+        $chapter = null;
+        switch ($itemKey) {
+            case 'file_id':
+                $file = \App\Models\File::with('chapter')->find($itemId);
+                $chapter = $file->chapter ?? null;
+                break;
+
+            case 'session_id':
+                $session = \App\Models\Session::with('chapter')->find($itemId);
+                $chapter = $session->chapter ?? null;
+                break;
+
+            case 'text_lesson_id':
+                $textLesson = \App\Models\TextLesson::with('chapter')->find($itemId);
+                $chapter = $textLesson->chapter ?? null;
+                break;
+        }
+
+        $hasFullCourse = $course->checkUserHasBought($user);
+        $hasSectionAccess = !empty($chapter) && canUserAccessCourseContent($course, $user, $chapter);
+
+        if (!$hasFullCourse && !$hasSectionAccess) {
+            abort(403);
+        }
+
+        CourseLearning::where('user_id', $user->id)
+            ->where($itemKey, $itemId)
+            ->delete();
+
+        if ($status && $status === "true") {
+            CourseLearning::create([
+                'user_id'    => $user->id,
+                $itemKey     => $itemId,
+                'created_at' => time(),
+            ]);
+        }
+
+        // check for certificate
+        $course->makeCertificateForUser($user);
+
+        $percent = $course->getProgress(true);
+
+        return response()->json([
+            'code' => 200,
+            'learning_progress_percent' => $percent,
+            'title' => trans('public.request_success'),
+            'msg' => trans('update.section_learning_status_changed_successful'),
+        ]);
     }
 
     public function autoMarkComplete(Request $request, $slug)
