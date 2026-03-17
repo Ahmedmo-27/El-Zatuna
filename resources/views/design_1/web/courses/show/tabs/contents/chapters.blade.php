@@ -19,12 +19,14 @@
                     </div>
 
                     <div class="d-flex align-items-center gap-12">
-                        @if($isPreviewChapter)
-                            <span class="px-8 py-4 bg-primary-20 text-primary font-12 rounded-8">{{ trans('public.free') }}</span>
-                        @else
-                            <span class="px-8 py-4 bg-gray-200 text-gray-600 font-12 rounded-8">
-                                {{ ($chapterPrice > 0) ? handlePrice($chapterPrice) : trans('update.paid') }}
-                            </span>
+                        @if(!$canAccessChapter)
+                            @if($isPreviewChapter)
+                                <span class="px-8 py-4 bg-primary-20 text-primary font-12 rounded-8">{{ trans('public.free') }}</span>
+                            @elseif($chapterPrice > 0)
+                                <span class="px-8 py-4 bg-gray-200 text-gray-600 font-12 rounded-8">
+                                    {{ handlePrice($chapterPrice) }}
+                                </span>
+                            @endif
                         @endif
 
                         <div class="collapse-arrow-icon d-flex cursor-pointer" href="#collapseChapter{{ $chapter->id }}" data-parent="#chaptersAccordion" role="button" data-toggle="collapse">
