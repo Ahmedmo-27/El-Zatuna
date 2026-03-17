@@ -1,8 +1,10 @@
 @php
     $checkSequenceContent = $textLesson->checkSequenceContent();
     $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
-    $isPreviewSection = (!empty($textLesson->chapter) and $textLesson->chapter->isFirstSection());
-    $canAccessTextLesson = ($hasBought or $isPreviewSection);
+    $chapter = $textLesson->chapter ?? null;
+    $isPreviewSection = (!empty($chapter) and $chapter->isFirstSection());
+    $canAccessBySection = (!empty($chapter) and canUserAccessCourseContent($course, $user ?? null, $chapter));
+    $canAccessTextLesson = ($hasBought or $canAccessBySection);
 @endphp
 
 <div class="accordion bg-gray-100 border-gray-200 p-16 rounded-12 mt-16">
@@ -97,9 +99,9 @@
                     </button>
                 @else
                     @if(!$canAccessTextLesson)
-                        <button type="button" class="btn btn-lg bg-gray-300 disabled {{ ((empty($user)) ? 'not-login-toast' : 'not-access-toast') }}">
-                            <x-iconsax-bul-shopping-cart class="icons text-gray-500" width="16px" height="16px"/>
-                            <span class="ml-4 text-gray-500">{{ trans('public.add_to_cart') }}</span>
+                        <button type="button" class="btn btn-lg bg-gray-300 disabled not-access-toast">
+                            <x-iconsax-lin-lock-1 class="icons text-gray-500" width="16px" height="16px"/>
+                            <span class="ml-4 text-gray-500">{{ trans('update.content_locked') }}</span>
                         </button>
                     @elseif(!empty($user) and $canAccessTextLesson)
                         <a href="{{ $course->getLearningPageUrl() }}?type=text_lesson&item={{ $textLesson->id }}" target="_blank" class="btn btn-primary btn-lg">

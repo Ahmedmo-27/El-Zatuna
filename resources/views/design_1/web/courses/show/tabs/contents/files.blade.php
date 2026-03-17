@@ -2,8 +2,10 @@
     $checkSequenceContent = $file->checkSequenceContent();
     $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
     $fileHasBought = (!empty($user)) ? $file->checkUserHasBought($user) : false;
-    $isPreviewSection = (!empty($file->chapter) and $file->chapter->isFirstSection());
-    $canAccessFile = ($hasBought or $fileHasBought or $isPreviewSection);
+    $chapter = $file->chapter ?? null;
+    $isPreviewSection = (!empty($chapter) and $chapter->isFirstSection());
+    $canAccessBySection = (!empty($chapter) and canUserAccessCourseContent($course, $user ?? null, $chapter));
+    $canAccessFile = ($hasBought or $fileHasBought or $canAccessBySection);
 @endphp
 
 <div class="accordion bg-gray-100 border-gray-200 p-16 rounded-12 mt-16">
@@ -92,22 +94,10 @@
                     </button>
                 @else
                     @if(!$canAccessFile)
-                        @if(!empty($user) and !empty($file->price) and $file->price > 0)
-                            <form action="/cart/store" method="post">
-                                @csrf
-                                <input type="hidden" name="item_name" value="file_id">
-                                <input type="hidden" name="item_id" value="{{ $file->id }}">
-                                <button type="submit" class="btn btn-lg btn-primary">
-                                    <x-iconsax-bul-shopping-cart class="icons text-white" width="16px" height="16px"/>
-                                    <span class="ml-4 text-white">{{ trans('public.add_to_cart') }} — {{ handlePrice($file->price) }}</span>
-                                </button>
-                            </form>
-                        @else
-                            <button type="button" class="btn btn-lg bg-gray-300 disabled {{ ((empty($user)) ? 'not-login-toast' : 'not-access-toast') }}">
-                                <x-iconsax-bul-shopping-cart class="icons text-gray-500" width="16px" height="16px"/>
-                                <span class="ml-4 text-gray-500">{{ trans('public.add_to_cart') }}</span>
-                            </button>
-                        @endif
+                        <button type="button" class="btn btn-lg bg-gray-300 disabled not-access-toast">
+                            <x-iconsax-lin-lock-1 class="icons text-gray-500" width="16px" height="16px"/>
+                            <span class="ml-4 text-gray-500">{{ trans('update.content_locked') }}</span>
+                        </button>
                     @elseif($file->downloadable)
                         <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download" class="btn btn-lg btn-primary">
                             <x-iconsax-lin-direct-inbox class="icons text-white" width="16px" height="16px"/>
