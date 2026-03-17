@@ -17,8 +17,8 @@
             'actionsOutsideLink' => false,
             'wrapInLink' => false,
             'statsLinkUrl' => $course->getUrl(),
-            // Extra context: show purchased section name under the title
-            'extraTitleLine' => trans('update.section_title') . ': ' . $chapter->title,
+            // Match cart display: "Course Title — Section Title"
+            'itemTitle' => $course->title . ' — ' . $chapter->title,
         ])
     </div>
 @else
