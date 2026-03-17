@@ -18,54 +18,8 @@
         <button type="button" class="btn btn-sm contact-type-btn {{ $defaultContactType === 'request_course' ? 'active' : '' }}" data-contact-type="request_course">Request Course</button>
     </div>
 
-    <div class="form-group mt-28">
-        <label class="form-group-label">{{ trans('site.your_name') }}</label>
-        <input type="text" name="name" value="{{ old('name') }}" class="form-control contact-page-control @error('name')  is-invalid @enderror"/>
-        @error('name')
-        <div class="invalid-feedback">
-            {{ $message }}
-        </div>
-        @enderror
-    </div>
-
-    <div class="row">
-        <div class="col-12 col-md-6">
-            <div class="form-group">
-                <label class="form-group-label">{{ trans('public.email') }}</label>
-                <input type="text" name="email" value="{{ old('email') }}" class="form-control contact-page-control @error('email')  is-invalid @enderror"/>
-                @error('email')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-                @enderror
-            </div>
-        </div>
-
-        <div class="col-12 col-md-6">
-            <div class="form-group">
-                <label class="form-group-label">{{ trans('site.phone_number') }}</label>
-                <input type="text" name="phone" value="{{ old('phone') }}" class="form-control contact-page-control @error('phone')  is-invalid @enderror"/>
-                @error('phone')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-                @enderror
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="form-group-label">{{ trans('site.message') }}</label>
-        <textarea name="message" id="" rows="7" class="form-control contact-page-control @error('message')  is-invalid @enderror">{{ old('message') }}</textarea>
-        @error('message')
-        <div class="invalid-feedback">
-            {{ $message }}
-        </div>
-        @enderror
-    </div>
-
     <div id="requestCourseFields" class="{{ $defaultContactType === 'request_course' ? '' : 'd-none' }}">
-        <p class="font-14 mt-4 mb-16 contact-page-help">
+        <p class="font-16 font-weight-bold mt-4 mb-16 contact-page-help">
             Use this option to request a course that is not currently available on the website.
         </p>
 
@@ -151,6 +105,52 @@
             </div>
             @enderror
         </div>
+    </div>
+
+    <div class="form-group mt-28">
+        <label class="form-group-label">{{ trans('site.your_name') }}</label>
+        <input type="text" name="name" value="{{ old('name') }}" class="form-control contact-page-control @error('name')  is-invalid @enderror"/>
+        @error('name')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+        @enderror
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-md-6">
+            <div class="form-group">
+                <label class="form-group-label">{{ trans('public.email') }}</label>
+                <input type="text" name="email" value="{{ old('email') }}" class="form-control contact-page-control @error('email')  is-invalid @enderror"/>
+                @error('email')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+                @enderror
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="form-group">
+                <label class="form-group-label">{{ trans('site.phone_number') }}</label>
+                <input type="text" name="phone" value="{{ old('phone') }}" class="form-control contact-page-control @error('phone')  is-invalid @enderror"/>
+                @error('phone')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-group-label">{{ trans('site.message') }}</label>
+        <textarea name="message" id="" rows="7" class="form-control contact-page-control @error('message')  is-invalid @enderror">{{ old('message') }}</textarea>
+        @error('message')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+        @enderror
     </div>
 
     @include('design_1.web.includes.captcha_input')

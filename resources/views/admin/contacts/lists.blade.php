@@ -69,7 +69,7 @@
                                         @endphp
 
                                         <button type="button" class="js-show-description btn btn-sm btn-outline-primary">{{ trans('admin/main.show') }}</button>
-                                        <input type="hidden" value="{{ nl2br($fullMessage) }}">
+                                        <textarea class="js-contact-message d-none" hidden>{{ $fullMessage }}</textarea>
                                     </td>
 
                                     <td class="text-center">
@@ -90,7 +90,7 @@
 
         <div class="dropdown-menu dropdown-menu-right">
             @can('admin_contacts_reply')
-                <a href="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply"
+                <a href="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply{{ !empty($isCourseRequestsPage) ? '?return_to=course_requests' : '' }}"
                    class="dropdown-item d-flex align-items-center mb-3 py-3 px-0 gap-4">
                     <x-iconsax-lin-messages-2 class="icons text-gray-500 mr-2" width="18px" height="18px"/>
                     <span class="text-gray-500 font-14">{{ trans('admin/main.reply') }}</span>
@@ -99,7 +99,7 @@
 
             @can('admin_contacts_delete')
                 @include('admin.includes.delete_button',[
-                    'url' => getAdminPanelUrl().'/contacts/'.$contact->id.'/delete',
+                    'url' => getAdminPanelUrl().'/contacts/'.$contact->id.'/delete'.(!empty($isCourseRequestsPage) ? '?return_to=course_requests' : ''),
                     'btnClass' => 'dropdown-item text-danger mb-0 py-3 px-0 font-14',
                     'btnText' => trans('admin/main.delete'),
                     'btnIcon' => 'trash',
@@ -134,7 +134,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="white-space: pre-wrap;">
 
                 </div>
                 <div class="modal-footer">

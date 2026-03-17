@@ -5,6 +5,10 @@
 @endpush
 
 @section('content')
+    @php
+        $returnTo = request()->get('return_to');
+    @endphp
+
     <section class="section">
         <div class="section-header">
             <h1>{{ $pageTitle }}</h1>
@@ -45,7 +49,7 @@
                         </div>
 
                         <div class="card-body ">
-                            <form action="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply" method="post">
+                            <form action="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply{{ !empty($returnTo) ? '?return_to='.$returnTo : '' }}" method="post">
                                 {{ csrf_field() }}
 
                                 <div class="form-group mt-15">
