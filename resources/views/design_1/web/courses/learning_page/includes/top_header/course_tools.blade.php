@@ -19,6 +19,8 @@
 
         <ul class="my-8">
             @if(!empty($authUser) and $authUser->isAdmin())
+                {{-- Hidden per request: quizzes and assignments --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="{{ getAdminPanelUrl("/quizzes?webinar_ids[]={$course->id}") }}" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-clipboard-tick class="icons" width="24px" height="24px"/>
@@ -32,6 +34,7 @@
                         <span class="ml-8">{{ trans('update.student_assignments') }}</span>
                     </a>
                 </li>
+                --}}
 
                 @if($course->forum)
                     <li class="learning-page__dropdown-menu__item">
@@ -77,6 +80,8 @@
                     </a>
                 </li>
             @elseif($userIsCourseTeacher)
+                {{-- Hidden per request: quizzes, assignments, and certificates --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="/panel/quizzes/results" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-clipboard-tick class="icons" width="24px" height="24px"/>
@@ -97,6 +102,7 @@
                         <span class="ml-8">{{ trans('update.student_certificates') }}</span>
                     </a>
                 </li>
+                --}}
 
                 @if($course->forum)
                     <li class="learning-page__dropdown-menu__item">
@@ -149,6 +155,8 @@
                     </a>
                 </li>
             @else
+                {{-- Hidden per request: quizzes, assignments, and certificates --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="/panel/quizzes/my-results" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-clipboard-tick class="icons" width="24px" height="24px"/>
@@ -169,6 +177,7 @@
                         <span class="ml-8">{{ trans('panel.certificates') }}</span>
                     </a>
                 </li>
+                --}}
 
                 @if($course->forum)
                     <li class="learning-page__dropdown-menu__item">

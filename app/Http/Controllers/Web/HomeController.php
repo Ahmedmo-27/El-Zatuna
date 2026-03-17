@@ -17,23 +17,33 @@ class HomeController extends Controller
         $activeTheme = getActiveTheme();
         $homeLanding = !empty($activeTheme) ? $activeTheme->homeLanding : null;
 
+        $instructorsQuery = User::query()
+            ->where('role_name', Role::$teacher)
+            ->where('status', 'active');
+
+        $instructorsCount = (clone $instructorsQuery)->count();
+
+        $professionalCoursesCount = Webinar::query()
+            ->where('status', Webinar::$active)
+            ->where('private', false)
+            ->where('type', Webinar::$course)
+            ->count();
+
         $seoSettings = getSeoMetas('home');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('home.home_title');
         $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('home.home_title');
         $pageRobot = getPageRobot('home');
 
-        $discountedCourses = $frontComponentsDataMixins->getDiscountedCoursesData(3);
-        if ($discountedCourses->isEmpty()) {
-            $discountedCourses = Webinar::query()
-                ->where('status', Webinar::$active)
-                ->where('private', false)
-                ->whereNotNull('price')
-                ->where('price', '>', 0)
-                ->with('teacher')
-                ->orderBy('updated_at', 'desc')
-                ->limit(3)
-                ->get();
-        }
+        $discountedCourses = $frontComponentsDataMixins->getDiscountedCoursesData(6)
+            ->filter(function ($course) {
+                if (empty($course->price) || $course->price <= 0) {
+                    return false;
+                }
+
+                return $course->bestTicket() < $course->price;
+            })
+            ->take(3)
+            ->values();
 
         $upcomingCourses = $frontComponentsDataMixins->getUpcomingCoursesData(3);
         if ($upcomingCourses->isEmpty()) {
@@ -69,12 +79,12 @@ class HomeController extends Controller
             'pageOgType' => 'website',
             'activeTheme' => $activeTheme,
             'homeLanding' => $homeLanding,
+            'professionalCoursesCount' => $professionalCoursesCount,
+            'instructorsCount' => $instructorsCount,
             'discountedCourses' => $discountedCourses,
             'upcomingCourses' => $upcomingCourses,
             'freeCourses' => $freeCourses,
-            'instructors' => User::query()
-                ->where('role_name', Role::$teacher)
-                ->where('status', 'active')
+            'instructors' => (clone $instructorsQuery)
                 ->orderBy('created_at', 'desc')
                 ->limit(4)
                 ->get(),
