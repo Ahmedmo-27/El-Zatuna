@@ -2,10 +2,11 @@
 
 @push("styles_top")
     <link rel="stylesheet" href="{{ getDesign1StylePath("cart_page") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/cart-pages-elzatuna.css">
 @endpush
 
 @section("content")
-    <section class="container mt-56 mb-80 position-relative">
+    <section class="cart-page container mt-56 mb-80 position-relative">
         <div class="d-flex-center flex-column text-center">
             <h1 class="font-32">{{ trans('update.cart') }}</h1>
             <p class="mt-8 font-16 text-gray-500">{{ handlePrice($calculatePrices["sub_total"], true, true, false, null, true) . ' ' . trans('cart.for_items',['count' => $carts->count()]) }}</p>

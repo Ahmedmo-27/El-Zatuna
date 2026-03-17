@@ -1,5 +1,7 @@
+@use "sass:map";
+
 $textColors: ();
-$textColors: map-merge(
+$textColors: map.merge(
         (
             "gray-300" : 'gray-300',
             "gray-400" : 'gray-400',

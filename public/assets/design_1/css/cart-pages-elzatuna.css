@@ -1,0 +1,73 @@
+.cart-page {
+  --elzatuna-ink: #072923;
+  --elzatuna-cream: #faffe0;
+  --elzatuna-border: rgba(229, 237, 176, 0.9);
+}
+
+.cart-page {
+  background: linear-gradient(180deg, #faffdf 0%, #f3f8d2 100%);
+}
+
+.cart-page a,
+.cart-page .text-primary {
+  color: var(--elzatuna-ink) !important;
+}
+
+.cart-page a:hover {
+  color: #0e4d42 !important;
+}
+
+.cart-page .border-gray-200,
+.cart-page .border-gray-300 {
+  border-color: var(--elzatuna-border) !important;
+}
+
+.cart-page .bg-white {
+  border-color: var(--elzatuna-border) !important;
+}
+
+.cart-page .btn-primary {
+  background: var(--elzatuna-ink) !important;
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.cart-page .btn-primary:hover,
+.cart-page .btn-primary:focus,
+.cart-page .btn-primary:active {
+  background: #0e4d42 !important;
+  border-color: #0e4d42 !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.cart-page .btn-outline-primary {
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-ink) !important;
+}
+
+.cart-page .btn-outline-primary:hover,
+.cart-page .btn-outline-primary:focus,
+.cart-page .btn-outline-primary:active {
+  background: var(--elzatuna-ink) !important;
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.cart-page .bg-primary,
+.cart-page .badge-primary {
+  background: var(--elzatuna-ink) !important;
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.cart-page .text-gray-500,
+.cart-page .text-gray-400 {
+  color: rgba(7, 41, 35, 0.65) !important;
+}
+
+/* Payment gateway selection border uses --primary in minified css */
+.cart-page .payment-channel-card input:checked ~ label .gateway-card,
+.cart-page .payment-channel-card input:checked ~ label .gateway-mask {
+  border-color: var(--elzatuna-ink) !important;
+}
+

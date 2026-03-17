@@ -1,7 +1,9 @@
 // This variable affects the `.h-*` and `.w-*` classes.
+@use "sass:map";
+
 $sizes: () !default;
 // stylelint-disable-next-line scss/dollar-variable-default
-$sizes: map-merge(
+$sizes: map.merge(
                 (
                         25: 25%,
                         50: 50%,
@@ -23,7 +25,7 @@ $sizes: map-merge(
 }
 
 $all-size: ();
-$all-size: map-merge(
+$all-size: map.merge(
         (
             '4':4,
             '9':9,

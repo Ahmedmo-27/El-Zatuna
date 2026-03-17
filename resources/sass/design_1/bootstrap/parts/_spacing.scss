@@ -1,9 +1,10 @@
 // Margin and Padding
+@use "sass:map";
 
 $spacer: 1rem !default;
 $spacers: () !default;
 // stylelint-disable-next-line scss/dollar-variable-default
-$spacers: map-merge(
+$spacers: map.merge(
                 (
                         0: 0,
                         2: 2,
@@ -47,7 +48,7 @@ $spacers: map-merge(
 );
 
 
-@each $breakpoint in map-keys($grid-breakpoints) {
+@each $breakpoint in map.keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
         $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
 

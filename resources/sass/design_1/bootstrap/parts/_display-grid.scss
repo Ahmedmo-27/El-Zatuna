@@ -1,5 +1,7 @@
+@use "sass:map";
+
 $grid-columns: ();
-$grid-columns: map-merge(
+$grid-columns: map.merge(
         (
             '2':2,
             '3':3,
@@ -31,7 +33,7 @@ $grid-columns: map-merge(
 
 
 $gaps: ();
-$gaps: map-merge(
+$gaps: map.merge(
         (
             '2':2,
             '4':4,
@@ -56,7 +58,7 @@ $gaps: map-merge(
         $gaps
 );
 
-@each $breakpoint in map-keys($grid-breakpoints) {
+@each $breakpoint in map.keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
         $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
 

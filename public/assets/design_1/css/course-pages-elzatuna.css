@@ -473,3 +473,76 @@
     margin-bottom: 0;
   }
 }
+
+/* ------------------------------------------------------------
+   ElZatuna palette alignment (course show page only)
+   ------------------------------------------------------------ */
+.course-show-page {
+  --elzatuna-ink: #072923;
+  --elzatuna-cream: #faffe0;
+  --elzatuna-accent: #c8cd06;
+  --elzatuna-accent-2: #edf550;
+  --elzatuna-border: rgba(229, 237, 176, 0.9);
+}
+
+.course-show-page a,
+.course-show-page .text-primary {
+  color: var(--elzatuna-ink) !important;
+}
+
+.course-show-page a:hover {
+  color: #0e4d42 !important;
+}
+
+.course-show-page .border-gray-200,
+.course-show-page .border-gray-300 {
+  border-color: var(--elzatuna-border) !important;
+}
+
+.course-show-page .bg-primary,
+.course-show-page .badge-primary,
+.course-show-page .btn-primary {
+  background: var(--elzatuna-ink) !important;
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.course-show-page .btn-primary:hover,
+.course-show-page .btn-primary:focus,
+.course-show-page .btn-primary:active {
+  background: #0e4d42 !important;
+  border-color: #0e4d42 !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.course-show-page .btn-outline-primary {
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-ink) !important;
+}
+
+.course-show-page .btn-outline-primary:hover,
+.course-show-page .btn-outline-primary:focus,
+.course-show-page .btn-outline-primary:active {
+  background: var(--elzatuna-ink) !important;
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+.course-show-page .bg-primary-20 {
+  background: rgba(200, 205, 6, 0.16) !important;
+}
+
+.course-show-page .text-gray-500,
+.course-show-page .text-gray-400 {
+  color: rgba(7, 41, 35, 0.65) !important;
+}
+
+.course-show-page .nav.nav-tabs .nav-item .nav-link.active,
+.course-show-page .course-tabs-card .navbar-item.active {
+  color: var(--elzatuna-ink) !important;
+}
+
+.course-show-page .course-tab-counter {
+  background: rgba(200, 205, 6, 0.16) !important;
+  color: var(--elzatuna-ink) !important;
+}
