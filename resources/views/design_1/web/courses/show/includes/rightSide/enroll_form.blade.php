@@ -55,7 +55,7 @@
                 // 2) Or user has any learning activity on this course (visited learning page / completed an item)
                 $hasLearningActivity = \App\Models\CourseLearningLastView::query()
                     ->where('user_id', $user->id)
-                    ->where('course_id', $course->id)
+                    ->where('webinar_id', $course->id)
                     ->exists();
 
                 if ($hasPurchasedSection || $hasLearningActivity) {
