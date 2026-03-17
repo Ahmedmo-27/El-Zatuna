@@ -7,7 +7,7 @@
     <style>
         /* El Zatuna Theme Overrides for Auth Pages */
         :root {
-            --primary: #C8CD06;
+            --primary: #FAFFE0;
             --secondary: #072923;
         }
 

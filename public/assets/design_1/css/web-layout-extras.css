@@ -1,6 +1,7 @@
 :root {
     --font-sans: 'Poppins', 'Inter', 'Segoe UI', 'Arial', sans-serif;
     --font-display: 'Playfair Display', 'Georgia', serif;
+    --primary: #FAFFE0;
 }
 
 body, button, input, textarea, select {

@@ -5,7 +5,7 @@
     <style>
         /* El Zatuna Theme Overrides for Profile Page */
         :root {
-            --primary: #C8CD06;
+            --primary: #FAFFE0;
             --secondary: #072923;
         }
         
