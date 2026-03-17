@@ -252,6 +252,11 @@ class Webinar extends Model implements TranslatableContract
         return $this->hasMany('App\Models\WebinarReview', 'webinar_id', 'id');
     }
 
+    public function activeReviews()
+    {
+        return $this->reviews()->where('status', 'active');
+    }
+
     public function visits()
     {
         return $this->morphMany(VisitLog::class, 'targetable');
