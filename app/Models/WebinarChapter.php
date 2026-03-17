@@ -143,6 +143,8 @@ class WebinarChapter extends Model implements TranslatableContract
         }
 
         $time = 0;
+        // Files durations are stored in minutes on the files table.
+        $time += $this->files->where('status', File::$Active)->sum('duration');
         $time += $this->sessions->sum('duration');
         $time += $this->textLessons->sum('study_time');
 

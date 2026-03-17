@@ -2252,6 +2252,37 @@ function calculateCoursePriceBySections(?int $sections): ?int
     return 2000;
 }
 
+/**
+ * Calculate section (chapter) price based on duration in minutes.
+ *
+ * Pricing rules:
+ * - Up to 1 hour (<= 60 min)                => 150
+ * - 1.5 hours and up (>= 90 min)            => 300
+ * - 2.5 hours and up (>= 150 min)           => 450
+ *
+ * Note: For durations between 61 and 89 minutes, we keep the 1-hour tier (150).
+ */
+function calculateChapterPriceByDurationMinutes(?int $minutes): ?int
+{
+    if (is_null($minutes) || $minutes < 0) {
+        return null;
+    }
+
+    if ($minutes <= 60) {
+        return 150;
+    }
+
+    if ($minutes >= 150) {
+        return 450;
+    }
+
+    if ($minutes >= 90) {
+        return 300;
+    }
+
+    return 150;
+}
+
 function addCurrencyToPrice($price, $userCurrencyItem = null)
 {
     if (empty($userCurrencyItem)) {
