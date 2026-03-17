@@ -1134,6 +1134,12 @@ body {
   width: 32px;
   min-width: 32px;
   height: 32px;
+}
+.dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-prev *, .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-next * {
+  position: relative;
+  z-index: 2;
+}
+.dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-prev, .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-next {
   /*&:before {
       content: '';
       position: absolute;
@@ -1143,10 +1149,6 @@ body {
       background-color: var(--info) !important;
       border-radius: inherit; // use parent
   }*/
-}
-.dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-prev *, .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-next * {
-  position: relative;
-  z-index: 2;
 }
 .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-switch {
   width: auto !important;
