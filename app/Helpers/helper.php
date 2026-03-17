@@ -2207,6 +2207,51 @@ function convertPriceToDefaultCurrency($price, $userCurrencyItem = null)
     return $price;
 }
 
+/**
+ * Calculate the course full price (in default currency, e.g. EGP) based on the number of sections.
+ *
+ * Pricing rules:
+ * - Single section (1) => 150
+ * - 2–5 sections      => 150 * number of sections
+ * - 6–8 sections      => 1100
+ * - 9–11 sections     => 1300
+ * - 12–14 sections    => 1750
+ * - 15–18 sections    => 2000
+ *
+ * @param int|null $sections
+ * @return int|null
+ */
+function calculateCoursePriceBySections(?int $sections): ?int
+{
+    if (empty($sections) || $sections <= 0) {
+        return null;
+    }
+
+    // Below 6 sections => 150 * number of sections
+    if ($sections < 6) {
+        return 150 * $sections;
+    }
+
+    if ($sections >= 6 && $sections <= 8) {
+        return 1100;
+    }
+
+    if ($sections >= 9 && $sections <= 11) {
+        return 1300;
+    }
+
+    if ($sections >= 12 && $sections <= 14) {
+        return 1750;
+    }
+
+    if ($sections >= 15 && $sections <= 18) {
+        return 2000;
+    }
+
+    // For courses with more than 18 sections, keep the top tier (2000) unless changed later.
+    return 2000;
+}
+
 function addCurrencyToPrice($price, $userCurrencyItem = null)
 {
     if (empty($userCurrencyItem)) {

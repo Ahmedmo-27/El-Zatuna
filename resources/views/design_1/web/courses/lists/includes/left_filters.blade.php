@@ -30,28 +30,6 @@
             </div>
         @endif
 
-        {{-- Types --}}
-        <div class="accordion card-before-line card-before-line__4-12 pb-16 px-16 border-bottom-gray-100">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersTypes" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    {{ trans('public.type') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersTypes" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersTypes" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach(['webinar','course'] as $typeOption)
-                    <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <input type="checkbox" name="type[]" value="{{ $typeOption }}" id="filter_type_{{ $typeOption }}" class="custom-control-input">
-                        <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_type_{{ $typeOption }}">{{ trans('webinars.'.$typeOption) }}</label>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
         {{-- Category Filters And Options --}}
         @if(!empty($category) and !empty($category->filters))
             @foreach($category->filters as $filter)

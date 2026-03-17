@@ -25,35 +25,41 @@ class ClassesController extends Controller
         $webinarsQuery = Webinar::where('webinars.status', 'active')
             ->where('private', false);
 
-        // Filter courses based on user's university and faculty
-        if (auth()->check()) {
-            $user = auth()->user();
-            $userUniversityId = $user->university_id;
-            $userFacultyId = $user->faculty_id;
+        $user = auth()->user();
 
-            $webinarsQuery->where(function ($query) use ($userUniversityId, $userFacultyId) {
-                // Show courses with matching university and faculty
-                $query->where(function ($q) use ($userUniversityId, $userFacultyId) {
-                    $q->where('university_id', $userUniversityId)
-                      ->where('faculty_id', $userFacultyId);
-                })
-                // OR show public courses (null university_id AND null faculty_id)
-                ->orWhere(function ($q) {
-                    $q->whereNull('university_id')
-                      ->whereNull('faculty_id');
+        // Filter courses based on user's role/university/faculty
+        if (!empty($user)) {
+            // Teachers should only see their own active classes on /classes
+            // (Applied later as well in case query switches to bundles)
+            if (!$user->isTeacher()) {
+                $userUniversityId = $user->university_id;
+                $userFacultyId = $user->faculty_id;
+
+                $webinarsQuery->where(function ($query) use ($userUniversityId, $userFacultyId) {
+                    // Show courses with matching university and faculty
+                    $query->where(function ($q) use ($userUniversityId, $userFacultyId) {
+                        $q->where('university_id', $userUniversityId)
+                            ->where('faculty_id', $userFacultyId);
+                    })
+                        // OR show public courses (null university_id AND null faculty_id)
+                        ->orWhere(function ($q) {
+                            $q->whereNull('university_id')
+                                ->whereNull('faculty_id');
+                        });
                 });
-            });
+            }
         } else {
             // For guests, only show public courses
             $webinarsQuery->whereNull('university_id')
                           ->whereNull('faculty_id');
         }
 
-        $type = $request->get('type');
-        if (!empty($type) and is_array($type) and in_array('bundle', $type)) {
-            $webinarsQuery = Bundle::where('bundles.status', 'active');
-            $this->tableName = 'bundles';
-            $this->columnId = 'bundle_id';
+        // Enforce teacher ownership on /classes (webinars or bundles)
+        if (!empty($user) and $user->isTeacher()) {
+            $webinarsQuery->where(function ($query) use ($user) {
+                $query->where('teacher_id', $user->id)
+                    ->orWhere('creator_id', $user->id);
+            });
         }
 
 
@@ -107,7 +113,6 @@ class ClassesController extends Controller
         $isDownloadable = $request->get('downloadable', null);
         $sort = $request->get('sort', null);
         $filterOptions = $request->get('filter_option', []);
-        $typeOptions = $request->get('type', []);
         $moreOptions = $request->get('moreOptions', []);
         $instructor = $request->get('instructor', null);
 
@@ -131,10 +136,6 @@ class ClassesController extends Controller
 
             if (!empty($isDownloadable) and $isDownloadable == 'on') {
                 $query->where('downloadable', 1);
-            }
-
-            if (!empty($typeOptions) and is_array($typeOptions)) {
-                $query->whereIn("{$this->tableName}.type", $typeOptions);
             }
 
             if (!empty($moreOptions) and is_array($moreOptions)) {

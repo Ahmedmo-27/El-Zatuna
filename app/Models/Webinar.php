@@ -252,6 +252,11 @@ class Webinar extends Model implements TranslatableContract
         return $this->hasMany('App\Models\WebinarReview', 'webinar_id', 'id');
     }
 
+    public function activeReviews()
+    {
+        return $this->reviews()->where('status', 'active');
+    }
+
     public function visits()
     {
         return $this->morphMany(VisitLog::class, 'targetable');
@@ -953,6 +958,20 @@ class Webinar extends Model implements TranslatableContract
     public function getUrl()
     {
         return url('/course/' . $this->slug);
+    }
+
+    /**
+     * Scope: webinars visible in the "upcoming courses" area (pending courses from webinars table).
+     * Shows all pending webinars; for logged-in students the global scope still filters by university/faculty.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\User|null $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeVisibleInUpcomingList($query, $user = null)
+    {
+        $query->where('status', self::$pending);
+        return $query;
     }
 
     public function getLearningPageUrl()

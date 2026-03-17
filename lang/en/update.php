@@ -1175,6 +1175,7 @@ return [
 'buyer_address' => 'Customer Address',
 
 'enroll_on_course' => 'Enroll in Course',
+'coming_soon' => 'Coming soon',
 'course_noticeboard_color_warning' => 'Yellow',
 'course_noticeboard_color_danger' => 'Red',
 'course_noticeboard_color_neutral' => 'Gray',

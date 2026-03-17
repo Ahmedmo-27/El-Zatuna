@@ -4,15 +4,14 @@
         <img src="{{ $upcomingCourse->getImage() }}" alt="" class="img-cover rounded-16">
 
         <div class="bottom-content px-12">
-            @if($upcomingCourse->status == \App\Models\UpcomingCourse::$pending)
-                    <div class="d-inline-flex align-items-center mb-8 px-8 py-4 border-warning bg-warning-20 rounded-16">
-                    <x-iconsax-lin-calendar-2 class="icons text-warning" width="16px" height="16px"/>
-                    <span class="font-14 text-warning ml-4">{{ dateTimeFormat($upcomingCourse->publish_date, 'j M Y H:i') }}</span>
-                </div>
-            @elseif($upcomingCourse->status == \App\Models\UpcomingCourse::$active)
-                    <div class="d-inline-flex align-items-center mb-8 px-8 py-4 border-success bg-success-20 rounded-16">
-                    <x-iconsax-lin-calendar-2 class="icons text-success" width="16px" height="16px"/>
-                    <span class="font-14 text-success ml-4">{{ dateTimeFormat($upcomingCourse->publish_date, 'j M Y H:i') }}</span>
+            @php
+                $displayDate = $upcomingCourse->publish_date ?? $upcomingCourse->created_at ?? null;
+                $isPending = ($upcomingCourse->status === 'pending' || $upcomingCourse->status === \App\Models\UpcomingCourse::$pending);
+            @endphp
+            @if($displayDate)
+                <div class="d-inline-flex align-items-center mb-8 px-8 py-4 rounded-16 {{ $isPending ? 'border-warning bg-warning-20' : 'border-success bg-success-20' }}">
+                    <x-iconsax-lin-calendar-2 class="icons {{ $isPending ? 'text-warning' : 'text-success' }}" width="16px" height="16px"/>
+                    <span class="font-14 ml-4 {{ $isPending ? 'text-warning' : 'text-success' }}">{{ dateTimeFormat($displayDate, 'j M Y H:i') }}</span>
                 </div>
             @endif
 

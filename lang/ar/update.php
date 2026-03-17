@@ -1147,6 +1147,7 @@ return [
 'buyer_address' => 'عنوان العميل',
 
 'enroll_on_course' => 'الالتحاق بالدورة',
+'coming_soon' => 'قريباً',
 'course_noticeboard_color_warning' => 'أصفر',
 'course_noticeboard_color_danger' => 'أحمر',
 'course_noticeboard_color_neutral' => 'رمادي',

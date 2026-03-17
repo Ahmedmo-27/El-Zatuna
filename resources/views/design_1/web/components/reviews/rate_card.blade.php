@@ -19,7 +19,7 @@
 
         @foreach($reviewOptions as $reviewOption)
             @php
-                $optionRate = $itemRow->reviews->avg($reviewOption) ?? 0;
+                $optionRate = $itemRow->activeReviews()->avg($reviewOption) ?? 0;
                 $ratePercent = ($optionRate > 0) ? ($optionRate / 5 * 100) : 0;
                 $rateCount = ($optionRate > 0) ? round($optionRate, 1) : 0;
             @endphp

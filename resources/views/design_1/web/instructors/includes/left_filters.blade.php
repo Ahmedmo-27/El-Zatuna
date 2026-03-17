@@ -67,27 +67,6 @@
     <div class="instructors-lists-filters__mask"></div>
 
     <div id="leftFiltersAccordion2" class="position-relative bg-[#072923] py-16 rounded-24 z-index-2">
-        {{-- Meeting Options --}}
-        <div class="accordion card-before-line card-before-line__4-12 py-16 px-16 pb-4 border-bottom-gray-100">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersMeetingOptions" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    {{ trans('update.meeting_options') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersMeetingOptions" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersMeetingOptions" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach(['available_for_meetings', 'free_meetings', 'meetings_discount'] as $meetingOption)
-                    <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <input type="checkbox" name="meeting_options[]" value="{{ $meetingOption }}" id="filter_meeting_options_{{ $meetingOption }}" class="custom-control-input">
-                        <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_meeting_options_{{ $meetingOption }}">{{ trans('update.'.$meetingOption) }}</label>
-                    </div>
-                @endforeach
-            </div>
-        </div>
         {{-- Other Options --}}
         <div class="accordion card-before-line card-before-line__4-12 py-16 px-16 pb-4 border-bottom-gray-100">
             <div class="accordion__title d-flex align-items-center justify-content-between">
@@ -101,7 +80,7 @@
             </div>
 
             <div id="leftFiltersOtherOptions" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach(['instructor_with_courses', 'verified_instructors_only'] as $otherOption)
+                @foreach(['instructor_with_courses'] as $otherOption)
                     <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
                         <input type="checkbox" name="meeting_options[]" value="{{ $otherOption }}" id="filter_meeting_options_{{ $otherOption }}" class="custom-control-input">
                         <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_meeting_options_{{ $otherOption }}">{{ trans('update.'.$otherOption) }}</label>
