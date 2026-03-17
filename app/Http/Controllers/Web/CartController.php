@@ -521,6 +521,9 @@ class CartController extends Controller
             $user = $cart->file->webinar ? $cart->file->webinar->creator : null;
         } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
             $user = $cart->chapter->webinar ? $cart->chapter->webinar->creator : null;
+        } elseif (!empty($cart->subscribe_id) and !empty($cart->subscribe)) {
+            // Subscription plans are system items (no seller commission here)
+            $user = null;
         } elseif (!empty($cart->reserve_meeting_id)) {
             $user = $cart->reserveMeeting->meeting->creator;
         } elseif (!empty($cart->product_order_id) and !empty($cart->productOrder)) {
@@ -655,6 +658,19 @@ class CartController extends Controller
 
             $commissionPrice += $this->getCommissionPrice('courses', $priceWithoutDiscount, $seller);
 
+            $totalDiscount += $discount;
+            $subTotal += $price;
+        } elseif (!empty($cart->subscribe_id) and !empty($cart->subscribe)) {
+            $price = (float) $cart->subscribe->price;
+            $discount = 0;
+
+            $priceWithoutDiscount = $price - $discount;
+
+            if ($tax > 0 and $priceWithoutDiscount > 0) {
+                $taxPrice += $priceWithoutDiscount * $tax / 100;
+            }
+
+            // No seller commission for subscription packages
             $totalDiscount += $discount;
             $subTotal += $price;
         } elseif (!empty($cart->reserve_meeting_id)) {

@@ -10,6 +10,7 @@ use App\Models\File;
 use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\ReserveMeeting;
+use App\Models\Subscribe;
 use App\Models\Ticket;
 use App\Models\Webinar;
 use App\Models\WebinarChapter;
@@ -39,6 +40,7 @@ class CartManagerController extends Controller
                 ->with([
                     'webinar',
                     'file.webinar',
+                    'subscribe',
                     'bundle',
                     'installmentPayment',
                     'productOrder' => function ($query) {
@@ -127,6 +129,17 @@ class CartManagerController extends Controller
                                 $item->chapter = $chapter;
                                 $carts->add($item);
                             }
+                        } elseif (!empty($cookieCart['item_name']) and $cookieCart['item_name'] == 'subscribe_id') {
+                            $subscribe = Subscribe::where('id', $cookieCart['item_id'])->first();
+
+                            if (!empty($subscribe)) {
+                                $item = new Cart();
+                                $item->uid = $id;
+                                $item->subscribe_id = $subscribe->id;
+                                $item->subscribe = $subscribe;
+
+                                $carts->add($item);
+                            }
                         } elseif (!empty($cookieCart['item_name']) and $cookieCart['item_name'] == 'product_id') {
                             $product = Product::where('id', $cookieCart['item_id'])->first();
 
@@ -174,6 +187,8 @@ class CartManagerController extends Controller
                                     $this->storeUserFileCart($user, $cart);
                                 } elseif ($cart['item_name'] == 'chapter_id') {
                                     $this->storeUserChapterCart($user, $cart);
+                                } elseif ($cart['item_name'] == 'subscribe_id') {
+                                    $this->storeUserSubscribeCart($user, $cart);
                                 }
                             }
                         }
@@ -287,6 +302,34 @@ class CartManagerController extends Controller
             'webinar_id' => null,
             'file_id' => null,
             'created_at' => time()
+        ]);
+
+        return 'ok';
+    }
+
+    public function storeUserSubscribeCart($user, $data)
+    {
+        $subscribeId = $data['item_id'];
+
+        $subscribe = Subscribe::where('id', $subscribeId)->first();
+
+        if (empty($subscribe) || empty($user)) {
+            return back()->with(['toast' => [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('cart.course_not_found'),
+                'status' => 'error'
+            ]]);
+        }
+
+        Cart::updateOrCreate([
+            'creator_id' => $user->id,
+            'subscribe_id' => $subscribe->id,
+        ], [
+            'webinar_id' => null,
+            'bundle_id' => null,
+            'file_id' => null,
+            'chapter_id' => null,
+            'created_at' => time(),
         ]);
 
         return 'ok';
@@ -481,6 +524,8 @@ class CartManagerController extends Controller
                 $result = $this->storeUserFileCart($user, $data);
             } elseif ($item_name == 'chapter_id') {
                 $result = $this->storeUserChapterCart($user, $data);
+            } elseif ($item_name == 'subscribe_id') {
+                $result = $this->storeUserSubscribeCart($user, $data);
             }
 
             if ($result != 'ok') {

@@ -216,50 +216,44 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
-                            <div class="bg-[#FAFFE0] rounded-[28px] border border-[#E4EDAA] p-6 md:p-7 flex flex-col shadow-[0_10px_30px_rgba(7,41,35,0.1)]">
-                                <div class="h-12 w-12 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4 text-2xl">
-                                    <x-iconsax-lin-cup class="w-7 h-7 text-[#072923]"/>
-                                </div>
-                                <h3 class="text-2xl font-bold text-[#072923]">Starter Access</h3>
-                                <p class="mt-1 text-sm text-[#072923]/65">Ideal for beginners eager to start learning.</p>
-                                <div class="mt-4 text-4xl font-bold text-[#072923]">$20</div>
-                                <ul class="mt-4 space-y-2.5 text-sm text-[#072923]/75 flex-1">
-                                    <li>Select top beginner courses and kickstart your learning journey.</li>
-                                    <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/> 15 Days of Subscription</li>
-                                    <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/> 100 Subscriptions</li>
-                                </ul>
-                                <button class="mt-6 w-full bg-[#C8CD06] text-[#072923] font-semibold py-3 rounded-full text-base">Purchase</button>
-                            </div>
+                            @foreach(($subscriptionPlans ?? collect())->take(3) as $plan)
+                                <div class="bg-[#FAFFE0] rounded-[28px] border border-[#E4EDAA] p-6 md:p-7 flex flex-col shadow-[0_10px_30px_rgba(7,41,35,0.1)]">
+                                    <div class="h-12 w-12 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4 text-2xl">
+                                        <x-iconsax-lin-crown class="w-7 h-7 text-[#072923]"/>
+                                    </div>
+                                    <h3 class="text-2xl font-bold text-[#072923]">{{ $plan->title }}</h3>
+                                    @if(!empty($plan->subtitle))
+                                        <p class="mt-1 text-sm text-[#072923]/65">{{ $plan->subtitle }}</p>
+                                    @endif
 
-                            <div class="bg-[#FAFFE0] rounded-[28px] border border-[#E4EDAA] p-6 md:p-7 flex flex-col shadow-[0_10px_30px_rgba(7,41,35,0.1)]">
-                                <div class="h-12 w-12 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4 text-2xl">
-                                    <x-iconsax-lin-crown class="w-7 h-7 text-[#072923]"/>
-                                </div>
-                                <h3 class="text-2xl font-bold text-[#072923]">Pro Plus</h3>
-                                <p class="mt-1 text-sm text-[#072923]/65">Advanced tools for serious learners.</p>
-                                <div class="mt-4 text-4xl font-bold text-[#072923]">$100</div>
-                                <ul class="mt-4 space-y-2.5 text-sm text-[#072923]/75 flex-1">
-                                    <li>In-depth content with exclusive resources and guided progression.</li>
-                                    <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/> 30 Days of Subscription</li>
-                                    <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/> 1000 Subscriptions</li>
-                                </ul>
-                                <button class="mt-6 w-full bg-[#C8CD06] text-[#072923] font-semibold py-3 rounded-full text-base">Purchase</button>
-                            </div>
+                                    <div class="mt-4 text-4xl font-bold text-[#072923]">{{ addCurrencyToPrice(handlePrice($plan->price, true, true, false, null, true)) }}</div>
 
-                            <div class="bg-[#FAFFE0] rounded-[28px] border border-[#E4EDAA] p-6 md:p-7 flex flex-col shadow-[0_10px_30px_rgba(7,41,35,0.1)]">
-                                <div class="h-12 w-12 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4 text-2xl">
-                                    <x-iconsax-lin-star class="w-7 h-7 text-[#072923]"/>
+                                    <ul class="mt-4 space-y-2.5 text-sm text-[#072923]/75 flex-1">
+                                        @if(!empty($plan->description))
+                                            <li>{{ $plan->description }}</li>
+                                        @endif
+                                        <li class="flex items-center gap-2">
+                                            <x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/>
+                                            {{ $plan->days }} Days
+                                        </li>
+                                        <li class="flex items-center gap-2">
+                                            <x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/>
+                                            @if(!empty($plan->infinite_use))
+                                                Unlimited Uses
+                                            @else
+                                                {{ $plan->usable_count }} Uses
+                                            @endif
+                                        </li>
+                                    </ul>
+
+                                    <form class="mt-6" method="post" action="/cart/store">
+                                        @csrf
+                                        <input type="hidden" name="item_name" value="subscribe_id">
+                                        <input type="hidden" name="item_id" value="{{ $plan->id }}">
+                                        <button type="submit" class="w-full bg-[#C8CD06] text-[#072923] font-semibold py-3 rounded-full text-base">Purchase</button>
+                                    </form>
                                 </div>
-                                <h3 class="text-2xl font-bold text-[#072923]">Elite Mastery</h3>
-                                <p class="mt-1 text-sm text-[#072923]/65">Exclusive access for advanced learners.</p>
-                                <div class="mt-4 text-4xl font-bold text-[#072923]">$40</div>
-                                <ul class="mt-4 space-y-2.5 text-sm text-[#072923]/75 flex-1">
-                                    <li>Personalized support and advanced content to accelerate mastery.</li>
-                                    <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/> 30 Days of Subscription</li>
-                                    <li class="flex items-center gap-2"><x-iconsax-lin-tick-circle class="w-4 h-4 text-[#C8CD06]"/> 800 Subscriptions</li>
-                                </ul>
-                                <button class="mt-6 w-full bg-[#C8CD06] text-[#072923] font-semibold py-3 rounded-full text-base">Purchase</button>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>

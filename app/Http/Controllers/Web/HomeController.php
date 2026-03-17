@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Mixins\LandingBuilder\FrontComponentsDataMixins;
 use App\Models\Role;
+use App\Models\Subscribe;
 use App\Models\Webinar;
 use App\User;
 use Illuminate\Http\Request;
@@ -75,6 +76,10 @@ class HomeController extends Controller
             'discountedCourses' => $discountedCourses,
             'upcomingCourses' => $upcomingCourses,
             'freeCourses' => $freeCourses,
+            'subscriptionPlans' => Subscribe::query()
+                ->orderByDesc('is_popular')
+                ->orderBy('price', 'asc')
+                ->get(),
             'instructors' => (clone $instructorsQuery)
                 ->orderBy('created_at', 'desc')
                 ->limit(4)
