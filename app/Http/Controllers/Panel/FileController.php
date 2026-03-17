@@ -61,6 +61,20 @@ class FileController extends Controller
                     'errors' => ['file_upload' => [$message]],
                 ], 422);
             }
+            // Enforce mp4 uploads for course files
+            if (!$r2UploadedFlag && !empty($fileUpload) && $fileUpload->isValid()) {
+                $ext = strtolower($fileUpload->getClientOriginalExtension() ?? '');
+                $mime = strtolower($fileUpload->getClientMimeType() ?? '');
+
+                if ($ext !== 'mp4' || $mime !== 'video/mp4') {
+                    $message = 'Please convert the file to mp4 before uploading';
+                    return response()->json([
+                        'code' => 422,
+                        'msg' => $message,
+                        'errors' => ['file_upload' => [$message]],
+                    ], 422);
+                }
+            }
             // Validate file size (2GB max) before proceeding (direct upload or server upload)
             $sizeToCheck = null;
             if ($r2UploadedFlag && $r2SizeBytes !== null) {

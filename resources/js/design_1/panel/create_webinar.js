@@ -1,6 +1,24 @@
 (function ($) {
     "use strict"
 
+    function isMp4File(file) {
+        if (!file) return true;
+        const name = (file.name || '').toLowerCase();
+        const type = (file.type || '').toLowerCase();
+        return name.endsWith('.mp4') && type === 'video/mp4';
+    }
+
+    function showMp4OnlyMessage() {
+        const msg = 'Please convert the file to mp4 before uploading';
+
+        if (typeof showToast === 'function') {
+            showToast('error', msg);
+            return;
+        }
+
+        alert(msg);
+    }
+
     // =========
     // Actions
     // ======
@@ -285,6 +303,18 @@
         } catch (err) {}
         syncHidden();
     }
+
+    // Enforce mp4-only uploads for course files (UI)
+    $('body').on('change', '.js-ajax-file_upload', function () {
+        const input = this;
+        const file = input.files && input.files.length ? input.files[0] : null;
+        if (!file) return;
+
+        if (!isMp4File(file)) {
+            input.value = '';
+            showMp4OnlyMessage();
+        }
+    });
     $(document).ready(function () { initPanelCategoryInput(); });
 
 

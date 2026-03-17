@@ -245,6 +245,7 @@
                                class="js-ajax-upload-file-input js-ajax-file_upload custom-file-input" 
                                data-upload-name="ajax[{{ !empty($file) ? $file->id : 'new' }}][file_upload]" 
                                id="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}"
+                               accept=".mp4,video/mp4"
                                aria-label="{{ trans('update.choose_file') }}"
                                aria-describedby="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}">
                         <span class="custom-file-text">{{ $hasExistingFile ? getFileNameByPath($file->file) : '' }}</span>
