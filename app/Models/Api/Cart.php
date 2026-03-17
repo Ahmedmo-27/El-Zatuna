@@ -13,6 +13,17 @@ class Cart extends Model
             'id'=>$this->id  ,
             'user'=>$this->user->brief ,
             'webinar'=>($this->webinar_id ? $this->webinar->brief : ($this->chapter_id && $this->chapter && $this->chapter->webinar ? $this->chapter->webinar->brief : null)) ?? null ,
+            'subscribe'=>($this->subscribe_id && $this->subscribe ? [
+                'id' => $this->subscribe->id,
+                'title' => $this->subscribe->title,
+                'subtitle' => $this->subscribe->subtitle,
+                'price' => (float) $this->subscribe->price,
+                'days' => (int) $this->subscribe->days,
+                'usable_count' => (int) $this->subscribe->usable_count,
+                'infinite_use' => (bool) $this->subscribe->infinite_use,
+                'access_all_courses' => (bool) $this->subscribe->access_all_courses,
+                'type' => $this->subscribe->type ?? null,
+            ] : null),
             'price'=>$this->price ,
             'discount'=>$this->discount ,
             'meeting'=>$this->reserveMeeting->details??null
@@ -35,6 +46,9 @@ class Cart extends Model
         }
         if ($this->chapter_id && $this->chapter) {
             return (float) $this->chapter->price;
+        }
+        if ($this->subscribe_id && $this->subscribe) {
+            return (float) $this->subscribe->price;
         }
         if ($this->reserve_meeting_id) {
             return $this->reserveMeeting->paid_amount ;
@@ -61,6 +75,11 @@ class Cart extends Model
     public function ticket()
     {
         return $this->belongsTo('App\Models\Ticket', 'ticket_id', 'id');
+    }
+
+    public function subscribe()
+    {
+        return $this->belongsTo('App\Models\Subscribe', 'subscribe_id', 'id');
     }
 
 }

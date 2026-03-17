@@ -44,6 +44,7 @@ class CartController extends Controller
                 'webinar',
                 'file.webinar',
                 'chapter.webinar',
+                'subscribe',
                 'productOrder' => function ($query) {
                     $query->whereHas('product');
                 }

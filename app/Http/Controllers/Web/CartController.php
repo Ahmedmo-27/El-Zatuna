@@ -29,6 +29,7 @@ class CartController extends Controller
                 'webinar',
                 'file.webinar',
                 'chapter.webinar',
+                'subscribe',
                 'installmentPayment',
                 'reserveMeeting' => function ($query) {
                     $query->with([

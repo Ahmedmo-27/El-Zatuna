@@ -54,6 +54,19 @@
     </div>
 @endif
 
+@if($cartItems->whereNotNull('subscribe_id')->count())
+    <div class="card-before-line px-16 mt-16">
+        <h5 class="font-14">{{ trans('financial.subscribe') }}</h5>
+
+        @foreach($cartItems->whereNotNull('subscribe_id') as $cartItem)
+            @include('design_1.web.cart.drawer.cards.subscribe', [
+                'cartItemInfo' => $cartItem->getItemInfo(),
+                'className' => $loop->first ? 'mt-16' : 'mt-20',
+            ])
+        @endforeach
+    </div>
+@endif
+
 @if($cartItems->whereNotNull('reserve_meeting_id')->count())
     <div class="card-before-line px-16 mt-16">
         <h5 class="font-14">{{ trans('panel.meetings') }}</h5>

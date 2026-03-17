@@ -8,6 +8,7 @@ use App\Models\Cart;
 use App\Models\Api\Product;
 use App\Models\ProductOrder;
 use App\Models\ReserveMeeting;
+use App\Models\Subscribe;
 use App\Models\Ticket;
 use App\Models\Api\Webinar;
 use App\Models\WebinarChapter;
@@ -198,6 +199,38 @@ class AddCartController extends Controller
         return 'ok';
     }
 
+    public function storeUserSubscribeCart($user, $data)
+    {
+        $subscribe_id = $data['item_id'];
+
+        validateParam($data, [
+            'item_id' => Rule::exists('subscribes', 'id'),
+        ]);
+
+        $subscribe = Subscribe::where('id', $subscribe_id)->first();
+
+        if (empty($subscribe)) {
+            return apiResponse2(0, 'not_found', 'Subscription not found');
+        }
+
+        if (empty($user)) {
+            return apiResponse2(0, 'unauthorized', trans('auth.not_login'));
+        }
+
+        Cart::updateOrCreate([
+            'creator_id' => $user->id,
+            'subscribe_id' => $subscribe->id,
+        ], [
+            'webinar_id' => null,
+            'bundle_id' => null,
+            'file_id' => null,
+            'chapter_id' => null,
+            'created_at' => time(),
+        ]);
+
+        return 'ok';
+    }
+
     /**
      * Add item to cart (course, bundle, product, or course section).
      *
@@ -211,7 +244,7 @@ class AddCartController extends Controller
      *         @OA\JsonContent(
      *             required={"item_id","item_name"},
      *             @OA\Property(property="item_id", type="integer", description="Course/bundle/product/section (chapter) ID"),
-     *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product","chapter"}, description="webinar=full course, chapter=paid course section"),
+     *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product","chapter","subscribe"}, description="webinar=full course, chapter=paid course section, subscribe=subscription plan"),
      *             @OA\Property(property="ticket_id", type="integer", nullable=true, description="For webinar only"),
      *             @OA\Property(property="specifications", type="object", nullable=true),
      *             @OA\Property(property="quantity", type="integer", nullable=true)
@@ -227,7 +260,7 @@ class AddCartController extends Controller
         
         validateParam($request->all(), [
             'item_id' => 'required',
-            'item_name' => 'required|in:webinar,bundle,product,chapter',
+            'item_name' => 'required|in:webinar,bundle,product,chapter,subscribe',
             'ticket_id' => 'nullable',
             'specifications' => 'nullable',
             'quantity' => 'nullable'
@@ -251,6 +284,8 @@ class AddCartController extends Controller
             $result = $this->storeUserBundleCart($user, $data);
         } elseif ($item_name == 'chapter') {
             $result = $this->storeUserChapterCart($user, $data);
+        } elseif ($item_name == 'subscribe') {
+            $result = $this->storeUserSubscribeCart($user, $data);
         }
 
         if ($result != 'ok') {

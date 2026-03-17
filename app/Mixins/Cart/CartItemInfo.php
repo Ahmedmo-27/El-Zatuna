@@ -10,6 +10,8 @@ class CartItemInfo
             return $this->getFileInfo($cart, $cart->file);
         } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
             return $this->getChapterInfo($cart, $cart->chapter);
+        } elseif (!empty($cart->subscribe_id) and !empty($cart->subscribe)) {
+            return $this->getSubscribeInfo($cart, $cart->subscribe);
         } elseif (!empty($cart->webinar_id)) {
             $webinar = $cart->webinar;
 
