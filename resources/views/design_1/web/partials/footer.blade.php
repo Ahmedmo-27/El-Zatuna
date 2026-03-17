@@ -9,8 +9,10 @@
                 @auth
                     <li><a href="/classes" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-book class="w-4 h-4"/> Subjects/Courses</a></li>
                 @endauth
-                <li><a href="/register" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-user-add class="w-4 h-4"/> Sign Up</a></li>
-                <li><a href="/login" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-login class="w-4 h-4"/> Log In</a></li>
+                @guest
+                    <li><a href="/register" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-user-add class="w-4 h-4"/> Sign Up</a></li>
+                    <li><a href="/login" class="hover:text-[#C8CD06] transition-colors duration-200 flex items-center gap-2"><x-iconsax-lin-login class="w-4 h-4"/> Log In</a></li>
+                @endguest
             </ul>
         </div>
         <div>
