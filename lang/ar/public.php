@@ -173,6 +173,7 @@ return [
     'quizzes_no_result_hint' => 'من خلال إنشاء الاختبارات ، يمكنك تقييم الطلاب ومنح الشهادات لهم.',
     'agree_rules' => 'أوافق على الشروط والقواعد.',
     'message_to_reviewer' => 'رسالة للمراجع',
+    'save_first_step_to_unlock' => 'احفظ الخطوة الأولى أولاً لفتح باقي الخطوات.',
     'send_for_review' => 'أرسل للمراجعة',
     'save_as_draft' => 'حفظ كمسودة',
     'draft' => 'مسودة',

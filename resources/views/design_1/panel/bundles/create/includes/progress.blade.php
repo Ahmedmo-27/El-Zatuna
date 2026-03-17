@@ -57,7 +57,7 @@
         @endphp
 
         @if($isPreviousStep)
-            <a href="/panel/bundles/{{ $bundle->id }}/step/{{ $key }}" class="create-course-progress-step {{ $isActiveStep ? 'active d-flex' : 'd-none d-lg-flex' }} flex-column align-items-center text-center text-decoration-none cursor-pointer" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" data-tippy-content="{{ trans('public.' . $progressStep['name']) }}">
+            <div class="js-get-next-step create-course-progress-step d-none d-lg-flex flex-column align-items-center text-center cursor-pointer" data-step="{{ $key }}" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" data-tippy-content="{{ trans('public.' . $progressStep['name']) }}">
                 <div class="create-course-progress-step__icon d-flex-center rounded-circle">
                     @svg("iconsax-lin-{$progressStep['icon']}", ['height' => 34, 'width' => 34, 'class' => 'create-course-progress-step__icon-svg'])
                 </div>
@@ -66,9 +66,9 @@
                     <p class="create-course-progress-step__number font-12 mb-0">{{ trans('webinars.progress_step', ['step' => $key,'count' => $stepCount]) }}</p>
                     <h6 class="create-course-progress-step__title font-14 font-weight-bold mt-4 mb-0">{{ trans('public.' . $progressStep['name']) }}</h6>
                 </div>
-            </a>
+            </div>
         @else
-            <div class="{{ !$isLockedStep ? 'js-get-next-step' : '' }} create-course-progress-step {{ $isActiveStep ? 'active d-flex' : 'd-none d-lg-flex' }} {{ $isLockedStep ? 'is-locked' : '' }} flex-column align-items-center text-center {{ !$isLockedStep ? 'cursor-pointer' : '' }}" data-step="{{ $key }}" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" @if(!$isActiveStep and !$isLockedStep) data-tippy-content="{{ trans('public.' . $progressStep['name']) }}" @endif @if($isLockedStep) data-tippy-content="Save the first step first to unlock the rest." @endif>
+            <div class="{{ !$isLockedStep ? 'js-get-next-step' : '' }} create-course-progress-step {{ $isActiveStep ? 'active d-flex' : 'd-none d-lg-flex' }} {{ $isLockedStep ? 'is-locked' : '' }} flex-column align-items-center text-center {{ !$isLockedStep ? 'cursor-pointer' : '' }}" data-step="{{ $key }}" style="--step-color: {{ $progressStep['color'] }}; --step-bg: {{ $progressStep['bg'] }};" @if(!$isActiveStep and !$isLockedStep) data-tippy-content="{{ trans('public.' . $progressStep['name']) }}" @endif @if($isLockedStep) data-tippy-content="{{ trans('public.save_first_step_to_unlock') }}" @endif>
                 <div class="create-course-progress-step__icon d-flex-center rounded-circle">
                     @svg("iconsax-lin-{$progressStep['icon']}", ['height' => 34, 'width' => 34, 'class' => 'create-course-progress-step__icon-svg'])
                 </div>

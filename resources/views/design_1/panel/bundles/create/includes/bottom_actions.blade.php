@@ -14,9 +14,15 @@
             @endif
 
             {{-- Next --}}
-            <div id="getNextStep" class="create-course-nav-btn {{ ($currentStep < $stepCount) ? 'cursor-pointer' : 'create-course-nav-btn--disabled' }} ml-16">
-                @svg("iconsax-lin-arrow-right", ['height' => 20, 'width' => 20, 'class' => 'create-course-nav-btn__icon'])
-            </div>
+            @if($currentStep < $stepCount)
+                <div id="getNextStep" class="create-course-nav-btn cursor-pointer ml-16">
+                    @svg("iconsax-lin-arrow-right", ['height' => 20, 'width' => 20, 'class' => 'create-course-nav-btn__icon'])
+                </div>
+            @else
+                <span class="create-course-nav-btn create-course-nav-btn--disabled ml-16">
+                    @svg("iconsax-lin-arrow-right", ['height' => 20, 'width' => 20, 'class' => 'create-course-nav-btn__icon'])
+                </span>
+            @endif
 
         </div>
 

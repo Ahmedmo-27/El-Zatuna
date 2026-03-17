@@ -98,6 +98,7 @@
   opacity: 0.5;
   cursor: not-allowed;
   box-shadow: none;
+  pointer-events: none;
 }
 .create-course-nav-btn--disabled:hover {
   transform: none;
