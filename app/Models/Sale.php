@@ -284,8 +284,12 @@ class Sale extends Model
     public function getIncomeItem()
     {
         if ($this->payment_method == self::$subscribe) {
-            $used = SubscribeUse::where('webinar_id', $this->webinar_id)
+            $used = SubscribeUse::query()
                 ->where('sale_id', $this->id)
+                ->where(function ($query) {
+                    $query->where('webinar_id', $this->webinar_id)
+                        ->orWhere('chapter_id', $this->chapter_id);
+                })
                 ->first();
 
             if (!empty($used)) {
@@ -309,8 +313,13 @@ class Sale extends Model
     {
         $subscribe = null;
         $use = SubscribeUse::where('sale_id', $this->id)
-            ->where($itemName, $itemId)
             ->where('user_id', $user_id)
+            ->when($itemName === 'webinar_id', function ($query) use ($itemId) {
+                $query->where('webinar_id', $itemId);
+            })
+            ->when($itemName === 'chapter_id', function ($query) use ($itemId) {
+                $query->where('chapter_id', $itemId);
+            })
             ->first();
 
         if (!empty($use)) {

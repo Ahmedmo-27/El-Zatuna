@@ -531,8 +531,14 @@ class Webinar extends Model implements TranslatableContract
 
         if (!empty($user)) {
             $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
-            if (!empty($activeSubscribe) and !empty($activeSubscribe->access_all_courses)) {
-                return true;
+            if (!empty($activeSubscribe) && !empty($activeSubscribe->access_all_courses)) {
+                // If scoped to university/faculty, enforce matching.
+                if (
+                    (!($activeSubscribe->scoped_to_university ?? false) || $this->university_id === $user->university_id) &&
+                    (!($activeSubscribe->scoped_to_faculty ?? false) || $this->faculty_id === $user->faculty_id)
+                ) {
+                    return true;
+                }
             }
 
             $sale = $this->getSaleItem($user);

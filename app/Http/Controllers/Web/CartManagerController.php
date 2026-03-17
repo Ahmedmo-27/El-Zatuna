@@ -268,6 +268,18 @@ class CartManagerController extends Controller
             ]]);
         }
 
+        // If user has an active "10 sections" subscription scoped to their university/faculty,
+        // allow adding to cart (payment amount can be zeroed later when building the order).
+        $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
+        if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
+            if (
+                ($chapter->webinar->university_id === $user->university_id) &&
+                ($chapter->webinar->faculty_id === $user->faculty_id)
+            ) {
+                // Allowed; usage will be consumed on purchase.
+            }
+        }
+
         Cart::updateOrCreate([
             'creator_id' => $user->id,
             'chapter_id' => $chapter->id,

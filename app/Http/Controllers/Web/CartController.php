@@ -435,7 +435,7 @@ class CartController extends Controller
                 $commissionPrice = 0;
             }
 
-            OrderItem::create([
+            $orderItem = OrderItem::create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,
                 'webinar_id' => $cart->webinar_id ?? ($cart->file ? $cart->file->webinar_id : null) ?? ($cart->chapter ? $cart->chapter->webinar_id : null),
@@ -461,6 +461,37 @@ class CartController extends Controller
                 'discount' => $totalDiscount,
                 'created_at' => time(),
             ]);
+
+            // If this order item is a chapter and was fully discounted by the "10 sections" subscription,
+            // record a SubscribeUse entry so the usage counter is correct.
+            if (!empty($cart->chapter_id) && !empty($cart->chapter)) {
+                $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
+                if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
+                    $chapterWebinar = $cart->chapter->webinar;
+                    $originalPrice = (float) $cart->chapter->price;
+
+                    if (
+                        $chapterWebinar &&
+                        $chapterWebinar->university_id === $user->university_id &&
+                        $chapterWebinar->faculty_id === $user->faculty_id &&
+                        $originalPrice > 0 &&
+                        $totalAmount <= 0 && // fully covered by discounts (including subscription)
+                        (
+                            ($activeSubscribe->usable_count > $activeSubscribe->used_count) ||
+                            $activeSubscribe->infinite_use
+                        )
+                    ) {
+                        \App\Models\SubscribeUse::create([
+                            'user_id' => $user->id,
+                            'subscribe_id' => $activeSubscribe->id,
+                            'chapter_id' => $cart->chapter_id,
+                            'item_type' => 'chapter',
+                            'sale_id' => null,
+                            'installment_order_id' => $activeSubscribe->installment_order_id ?? null,
+                        ]);
+                    }
+                }
+            }
         }
 
         return $order;
@@ -596,6 +627,25 @@ class CartController extends Controller
         } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
             $price = (float) $cart->chapter->price;
             $discount = 0;
+
+            // Apply "10 sections" subscription coupon if available and scoped correctly.
+            $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
+            if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
+                $chapterWebinar = $cart->chapter->webinar;
+
+                if (
+                    $chapterWebinar &&
+                    $chapterWebinar->university_id === $user->university_id &&
+                    $chapterWebinar->faculty_id === $user->faculty_id &&
+                    (
+                        ($activeSubscribe->usable_count > $activeSubscribe->used_count) ||
+                        $activeSubscribe->infinite_use
+                    )
+                ) {
+                    // Treat as free section for this order pricing.
+                    $discount = $price;
+                }
+            }
 
             $priceWithoutDiscount = $price - $discount;
 

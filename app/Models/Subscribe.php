@@ -127,6 +127,25 @@ class Subscribe extends Model implements TranslatableContract
             $activePlan->remained_days_percent = $remainedDaysPercent;
 
             $activePlan->expire_at = $expireAt;
+
+            // Expose simple details payload for API/UI
+            $activePlan->details = [
+                'id' => $activePlan->id,
+                'type' => $activePlan->type ?? null,
+                'title' => $activePlan->title,
+                'subtitle' => $activePlan->subtitle,
+                'description' => $activePlan->description,
+                'price' => $activePlan->price,
+                'usable_count' => $activePlan->usable_count,
+                'used_count' => $activePlan->used_count,
+                'infinite_use' => (bool) $activePlan->infinite_use,
+                'access_all_courses' => (bool) $activePlan->access_all_courses,
+                'scoped_to_university' => (bool) ($activePlan->scoped_to_university ?? false),
+                'scoped_to_faculty' => (bool) ($activePlan->scoped_to_faculty ?? false),
+                'remained_days' => $activePlan->remained_days,
+                'remained_days_percent' => $activePlan->remained_days_percent,
+                'expire_at' => $activePlan->expire_at,
+            ];
         }
 
         return $activePlan;
