@@ -957,9 +957,7 @@ class Webinar extends Model implements TranslatableContract
 
     /**
      * Scope: webinars visible in the "upcoming courses" area (pending courses from webinars table).
-     * - Pending status only.
-     * - Guests and teachers: only webinars with "all universities" and "all faculties" (both null).
-     * - Users (students): global scope already filters by their university/faculty.
+     * Shows all pending webinars; for logged-in students the global scope still filters by university/faculty.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param \App\User|null $user
@@ -968,11 +966,6 @@ class Webinar extends Model implements TranslatableContract
     public function scopeVisibleInUpcomingList($query, $user = null)
     {
         $query->where('status', self::$pending);
-
-        if (empty($user) || $user->isTeacher()) {
-            $query->whereNull('university_id')->whereNull('faculty_id');
-        }
-
         return $query;
     }
 

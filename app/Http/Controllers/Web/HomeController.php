@@ -45,17 +45,8 @@ class HomeController extends Controller
             ->take(3)
             ->values();
 
+        // Upcoming courses = only pending webinars (no fallback to active)
         $upcomingCourses = $frontComponentsDataMixins->getUpcomingCoursesData(3);
-        if ($upcomingCourses->isEmpty()) {
-            $upcomingCourses = Webinar::query()
-                ->where('status', Webinar::$active)
-                ->where('private', false)
-                ->where('type', Webinar::$course)
-                ->with('teacher')
-                ->orderBy('updated_at', 'desc')
-                ->limit(3)
-                ->get();
-        }
 
         $freeCourses = $frontComponentsDataMixins->getFreeCoursesData(3);
         if ($freeCourses->isEmpty()) {
