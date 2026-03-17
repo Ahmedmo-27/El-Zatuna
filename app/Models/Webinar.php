@@ -955,6 +955,27 @@ class Webinar extends Model implements TranslatableContract
         return url('/course/' . $this->slug);
     }
 
+    /**
+     * Scope: webinars visible in the "upcoming courses" area (pending courses from webinars table).
+     * - Pending status only.
+     * - Guests and teachers: only webinars with "all universities" and "all faculties" (both null).
+     * - Users (students): global scope already filters by their university/faculty.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\User|null $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeVisibleInUpcomingList($query, $user = null)
+    {
+        $query->where('status', self::$pending);
+
+        if (empty($user) || $user->isTeacher()) {
+            $query->whereNull('university_id')->whereNull('faculty_id');
+        }
+
+        return $query;
+    }
+
     public function getLearningPageUrl()
     {
         return url('/course/learning/' . $this->slug);

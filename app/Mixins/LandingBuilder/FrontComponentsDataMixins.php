@@ -157,7 +157,10 @@ class FrontComponentsDataMixins
 
     public function getUpcomingCoursesData($count = 4)
     {
-        return UpcomingCourse::query()->where('status', Webinar::$active)
+        $user = auth()->user();
+        // Upcoming courses = webinars with status pending
+        return Webinar::query()->visibleInUpcomingList($user)
+            ->where('private', false)
             ->orderBy('created_at', 'desc')
             ->with([
                 'teacher' => function ($qu) {
