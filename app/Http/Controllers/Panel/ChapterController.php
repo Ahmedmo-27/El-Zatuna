@@ -146,7 +146,7 @@ class ChapterController extends Controller
             'webinar_id' => 'required',
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
-            'duration' => 'nullable|numeric|min:0',
+            'duration' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -167,7 +167,7 @@ class ChapterController extends Controller
                 //'type' => $data['type'],
                 'status' => $status,
                 'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
-                'duration' => !empty($data['duration']) ? (int) $data['duration'] : null,
+                'duration' => isset($data['duration']) ? (int) $data['duration'] : 0,
                 // Price is auto-calculated based on duration after save.
                 'price' => 0,
                 'created_at' => time(),
@@ -229,7 +229,7 @@ class ChapterController extends Controller
             'webinar_id' => 'required',
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
-            'duration' => 'nullable|numeric|min:0',
+            'duration' => 'required|numeric|min:0',
             'price' => 'nullable|numeric|min:0',
         ]);
 

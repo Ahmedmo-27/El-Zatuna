@@ -29,7 +29,10 @@
     </div>
 
     <div class="form-group">
-        <label class="form-group-label">{{ trans('public.duration') }} ({{ trans('public.minutes') }})</label>
+        <label class="form-group-label">
+            {{ trans('public.duration') }} ({{ trans('public.minutes') }})
+            <span class="text-danger">*</span>
+        </label>
         <input type="number"
                name="ajax[chapter][duration]"
                class="form-control"
