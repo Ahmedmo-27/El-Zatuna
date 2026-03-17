@@ -28,33 +28,6 @@
         <span class="invalid-feedback"></span>
     </div>
 
-    <div class="form-group">
-        <label class="form-group-label">
-            {{ trans('public.duration') }} ({{ trans('public.minutes') }})
-            <span class="text-danger">*</span>
-        </label>
-        <input type="number"
-               name="ajax[chapter][duration]"
-               class="form-control"
-               min="0"
-               value="{{ !empty($chapter) && !is_null($chapter->duration) ? $chapter->duration : '' }}"
-               placeholder="e.g. 45">
-        <span class="invalid-feedback"></span>
-    </div>
-
-    <div class="form-group">
-        <label class="form-group-label">{{ trans('public.price') }}</label>
-        <input type="number"
-               name="ajax[chapter][price]"
-               class="form-control"
-               min="0"
-               step="0.01"
-               value="{{ isset($chapter->price) ? $chapter->price : '' }}"
-               placeholder="0 = free section">
-        <small class="form-text text-muted">0 = free section. Users who buy the full course get all sections.</small>
-        <span class="invalid-feedback"></span>
-    </div>
-
     <div class="form-group d-flex align-items-center">
         <div class="custom-switch mr-8">
             <input id="statusSwitch" type="checkbox" name="ajax[chapter][status]" class="custom-control-input" {{ (!empty($chapter) and $chapter->status == \App\Models\WebinarChapter::$chapterActive) ? 'checked' :  '' }}>
@@ -66,16 +39,4 @@
         </div>
     </div>
 
-    @if(getFeaturesSettings('sequence_content_status'))
-        <div class="form-group d-flex align-items-center">
-            <div class="custom-switch mr-8">
-                <input id="checkAllContentsPassSwitch_record" type="checkbox" name="ajax[chapter][check_all_contents_pass]" class="custom-control-input" {{ (!empty($chapter) and $chapter->check_all_contents_pass) ? 'checked' :  '' }}>
-                <label class="custom-control-label cursor-pointer" for="checkAllContentsPassSwitch_record"></label>
-            </div>
-
-            <div class="">
-                <label class="cursor-pointer" for="checkAllContentsPassSwitch_record">{{ trans('update.check_all_contents_pass') }}</label>
-            </div>
-        </div>
-    @endif
 </div>

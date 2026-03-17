@@ -146,7 +146,6 @@ class ChapterController extends Controller
             'webinar_id' => 'required',
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
-            'duration' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -167,7 +166,8 @@ class ChapterController extends Controller
                 //'type' => $data['type'],
                 'status' => $status,
                 'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
-                'duration' => isset($data['duration']) ? (int) $data['duration'] : 0,
+                // duration is derived from files; keep null here
+                'duration' => null,
                 // Price is auto-calculated based on duration after save.
                 'price' => 0,
                 'created_at' => time(),
@@ -229,8 +229,6 @@ class ChapterController extends Controller
             'webinar_id' => 'required',
             //'type' => 'required|' . Rule::in(WebinarChapter::$chapterTypes),
             'title' => 'required|max:255',
-            'duration' => 'required|numeric|min:0',
-            'price' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -258,10 +256,8 @@ class ChapterController extends Controller
 
                 $chapter->update([
                     'status' => $status,
+                    // keep existing sequence-content toggle behavior
                     'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
-                    'duration' => !empty($data['duration']) ? (int) $data['duration'] : null,
-                    // Price is auto-calculated based on duration.
-                    'price' => (float) $chapter->price,
                 ]);
 
                 WebinarChapterTranslation::updateOrCreate([

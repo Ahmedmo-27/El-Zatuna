@@ -82,13 +82,16 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-group-label">{{ trans('public.duration') }} ({{ trans('public.minutes') }})</label>
+                    <label class="form-group-label">
+                        {{ trans('public.duration') }} ({{ trans('public.minutes') }})
+                        <span class="text-danger">*</span>
+                    </label>
                     <input type="number"
                            name="ajax[{{ !empty($file) ? $file->id : 'new' }}][duration]"
                            class="form-control"
                            min="0"
                            value="{{ !empty($file) && $file->duration !== null ? $file->duration : '' }}"
-                           placeholder="{{ trans('public.optional') }}">
+                           placeholder="e.g. 45">
                     <div class="invalid-feedback"></div>
                 </div>
 

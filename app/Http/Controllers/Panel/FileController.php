@@ -114,7 +114,7 @@ class FileController extends Controller
             'webinar_id' => 'required',
             'chapter_id' => 'required',
             'title' => 'required|max:255',
-            'duration' => 'nullable|integer|min:0',
+            'duration' => 'required|integer|min:0',
             'accessibility' => 'required|' . Rule::in(File::$accessibility),
             'price' => ['nullable', 'numeric', 'min:0', Rule::requiredIf($data['accessibility'] == 'paid')],
             'file_url' => 'required',
@@ -333,13 +333,13 @@ class FileController extends Controller
                 $volume = !empty($data['volume']) ? $data['volume'] : 0; // input is MB
             }
 
-            $file = File::create([
+                $file = File::create([
                 'creator_id' => $user->id,
                 'webinar_id' => $data['webinar_id'],
                 'chapter_id' => $data['chapter_id'],
                 'file' => $data['file_url'],
                 'volume' => $volume,
-                'duration' => isset($data['duration']) && $data['duration'] !== '' ? (int) $data['duration'] : null,
+                'duration' => isset($data['duration']) && $data['duration'] !== '' ? (int) $data['duration'] : 0,
                 'file_type' => !empty($fileInfos) ? $fileInfos['extension'] : $data['file_type'],
                 'accessibility' => $data['accessibility'],
                 'price' => $data['price'],
@@ -566,7 +566,7 @@ class FileController extends Controller
                     'file_type' => Rule::requiredIf(in_array($data['storage'], $sourceRequiredFileType)),
                     'volume' => Rule::requiredIf(in_array($data['storage'], $sourceRequiredFileVolume)),
                     'description' => 'nullable',
-                    'duration' => 'nullable|integer|min:0',
+                    'duration' => 'required|integer|min:0',
                 ];
 
                 if ($data['storage'] == 'upload_archive') {
