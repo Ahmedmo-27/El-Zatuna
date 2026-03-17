@@ -66,6 +66,11 @@
                         <div class="d-flex align-items-start justify-content-between gap-12">
                             <div class="">
                                 <h3 class="font-16 text-dark">{{ truncate($itemTitle, 46) }}</h3>
+                                @if(!empty($extraTitleLine ?? null))
+                                    <div class="font-12 text-gray-600 mt-4">
+                                        {{ truncate($extraTitleLine, 72) }}
+                                    </div>
+                                @endif
 
                                 @if(!is_null($itemRate))
                                     @include("design_1.web.components.rate", [

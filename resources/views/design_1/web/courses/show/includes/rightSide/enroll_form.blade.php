@@ -38,10 +38,42 @@
             @endif
         </button>
 
-        @if($canSale && $course->chapters && $course->chapters->count() > 0)
-            <a href="{{ auth()->check() ? $course->getLearningPageUrl() : '/login?redirect=' . urlencode($course->getLearningPageUrl()) }}" class="btn btn-outline-primary btn-block btn-lg mt-14">
-                {{ trans('update.check_first_section_for_free') }}
-            </a>
+        @php
+            $showGoToLearning = false;
+            if(auth()->check()) {
+                $user = auth()->user();
+                // 1) User has bought at least one section (chapter) of this course
+                $hasPurchasedSection = \App\Models\Sale::query()
+                    ->where('buyer_id', $user->id)
+                    ->where('type', \App\Models\Sale::$chapter)
+                    ->whereHas('chapter', function ($q) use ($course) {
+                        $q->where('webinar_id', $course->id);
+                    })
+                    ->whereNull('refund_at')
+                    ->exists();
+
+                // 2) Or user has any learning activity on this course (visited learning page / completed an item)
+                $hasLearningActivity = \App\Models\CourseLearningLastView::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->exists();
+
+                if ($hasPurchasedSection || $hasLearningActivity) {
+                    $showGoToLearning = true;
+                }
+            }
+        @endphp
+
+        @if($course->chapters && $course->chapters->count() > 0)
+            @if($showGoToLearning)
+                <a href="{{ auth()->check() ? $course->getLearningPageUrl() : '/login?redirect=' . urlencode($course->getLearningPageUrl()) }}" class="btn btn-outline-primary btn-block btn-lg mt-14">
+                    {{ trans('update.go_to_learning_page') }}
+                </a>
+            @else
+                <a href="{{ auth()->check() ? $course->getLearningPageUrl() : '/login?redirect=' . urlencode($course->getLearningPageUrl()) }}" class="btn btn-outline-primary btn-block btn-lg mt-14">
+                    {{ trans('update.check_first_section_for_free') }}
+                </a>
+            @endif
         @endif
 
         @if($canSale and !empty($course->points))

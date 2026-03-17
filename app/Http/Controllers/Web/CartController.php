@@ -599,6 +599,27 @@ class CartController extends Controller
             $price = $item->price;
             $discount = $item->getDiscount($cart->ticket, $user);
 
+            // If this is a full course (webinar) and the user already purchased some sections (chapters),
+            // subtract the total price of purchased sections from the base course price.
+            if (!empty($cart->webinar_id) && !empty($user)) {
+                $purchasedChaptersTotal = \App\Models\Sale::query()
+                    ->where('buyer_id', $user->id)
+                    ->where('type', \App\Models\Sale::$chapter)
+                    ->whereHas('chapter', function ($q) use ($cart) {
+                        $q->where('webinar_id', $cart->webinar_id);
+                    })
+                    ->whereNull('refund_at')
+                    ->sum('total_amount');
+
+                if ($purchasedChaptersTotal > 0) {
+                    $price = max(0, $price - $purchasedChaptersTotal);
+                    // Ensure we don't discount below this new base
+                    if ($discount > $price) {
+                        $discount = $price;
+                    }
+                }
+            }
+
             $priceWithoutDiscount = $price - $discount;
 
             if ($tax > 0 and $priceWithoutDiscount > 0) {
