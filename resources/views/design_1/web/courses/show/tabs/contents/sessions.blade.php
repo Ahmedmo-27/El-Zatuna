@@ -1,6 +1,8 @@
 @php
     $checkSequenceContent = $session->checkSequenceContent();
     $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
+    $isPreviewSection = (!empty($session->chapter) and $session->chapter->isFirstSection());
+    $canAccessSession = ($hasBought or $isPreviewSection);
 @endphp
 
 <div class="accordion bg-gray-100 border-gray-200 p-16 rounded-12 mt-16">
@@ -24,7 +26,7 @@
                 {!! nl2br(clean($session->description)) !!}
             </div>
 
-            @if(!empty($user) and $hasBought)
+            @if(!empty($user) and $canAccessSession)
                 <div class="d-flex align-items-center form-group mb-0 mt-20">
                     <div class="custom-switch mr-8">
                         <input type="checkbox"
@@ -87,7 +89,7 @@
                         <x-iconsax-lin-login class="icons text-gray-500" width="16px" height="16px"/>
                         <span class="ml-4 text-gray-500">{{ trans('public.go_to_class') }}</span>
                     </button>
-                @elseif($hasBought)
+                @elseif($canAccessSession)
                     @if(!empty($checkSequenceContent) and $sequenceContentHasError)
                         <button
                             type="button"
@@ -106,8 +108,8 @@
                     @endif
                 @else
                     <button type="button" class="btn btn-lg bg-gray-300 disabled not-access-toast">
-                        <x-iconsax-lin-login class="icons text-gray-500" width="16px" height="16px"/>
-                        <span class="ml-4 text-gray-500">{{ trans('public.go_to_class') }}</span>
+                        <x-iconsax-bul-shopping-cart class="icons text-gray-500" width="16px" height="16px"/>
+                        <span class="ml-4 text-gray-500">{{ trans('public.add_to_cart') }}</span>
                     </button>
                 @endif
             </div>

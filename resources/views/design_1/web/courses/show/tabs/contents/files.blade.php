@@ -2,7 +2,8 @@
     $checkSequenceContent = $file->checkSequenceContent();
     $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
     $fileHasBought = (!empty($user)) ? $file->checkUserHasBought($user) : false;
-    $canAccessFile = ($hasBought or $fileHasBought);
+    $isPreviewSection = (!empty($file->chapter) and $file->chapter->isFirstSection());
+    $canAccessFile = ($hasBought or $fileHasBought or $isPreviewSection);
 @endphp
 
 <div class="accordion bg-gray-100 border-gray-200 p-16 rounded-12 mt-16">
@@ -20,7 +21,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-12">
-            @if($file->accessibility == 'free')
+            @if($isPreviewSection)
                 <span class="px-8 py-4 bg-primary-20 text-primary font-12 rounded-8">{{ trans('public.free') }}</span>
             @elseif(!empty($file->price) and $file->price > 0)
                 <span class="px-8 py-4 bg-gray-200 text-gray-600 font-12 rounded-8">{{ handlePrice($file->price) }}</span>
@@ -89,20 +90,8 @@
                         <x-iconsax-lin-play-circle class="icons text-gray-500" width="16px" height="16px"/>
                         <span class="ml-4 text-gray-500">{{ trans('public.play') }}</span>
                     </button>
-                @elseif($file->accessibility == 'paid')
-                    @if(!empty($user) and $canAccessFile)
-                        @if($file->downloadable)
-                            <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download" class="btn btn-lg btn-primary">
-                                <x-iconsax-lin-direct-inbox class="icons text-white" width="16px" height="16px"/>
-                                <span class="ml-4 text-white">{{ trans('home.download') }}</span>
-                            </a>
-                        @else
-                            <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank" class="btn btn-lg btn-primary">
-                                <x-iconsax-lin-play-circle class="icons text-white" width="16px" height="16px"/>
-                                <span class="ml-4 text-white">{{ trans('public.play') }}</span>
-                            </a>
-                        @endif
-                    @else
+                @else
+                    @if(!$canAccessFile)
                         @if(!empty($user) and !empty($file->price) and $file->price > 0)
                             <form action="/cart/store" method="post">
                                 @csrf
@@ -110,23 +99,16 @@
                                 <input type="hidden" name="item_id" value="{{ $file->id }}">
                                 <button type="submit" class="btn btn-lg btn-primary">
                                     <x-iconsax-bul-shopping-cart class="icons text-white" width="16px" height="16px"/>
-                                    <span class="ml-4 text-white">{{ trans('update.buy') }} {{ handlePrice($file->price) }}</span>
+                                    <span class="ml-4 text-white">{{ trans('public.add_to_cart') }} — {{ handlePrice($file->price) }}</span>
                                 </button>
                             </form>
                         @else
                             <button type="button" class="btn btn-lg bg-gray-300 disabled {{ ((empty($user)) ? 'not-login-toast' : 'not-access-toast') }}">
-                                @if($file->downloadable)
-                                    <x-iconsax-lin-direct-inbox class="icons text-gray-500" width="16px" height="16px"/>
-                                    <span class="ml-4 text-gray-500">{{ trans('home.download') }}</span>
-                                @else
-                                    <x-iconsax-lin-play-circle class="icons text-gray-500" width="16px" height="16px"/>
-                                    <span class="ml-4 text-gray-500">{{ trans('public.play') }}</span>
-                                @endif
+                                <x-iconsax-bul-shopping-cart class="icons text-gray-500" width="16px" height="16px"/>
+                                <span class="ml-4 text-gray-500">{{ trans('public.add_to_cart') }}</span>
                             </button>
                         @endif
-                    @endif
-                @else
-                    @if($file->downloadable)
+                    @elseif($file->downloadable)
                         <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download" class="btn btn-lg btn-primary">
                             <x-iconsax-lin-direct-inbox class="icons text-white" width="16px" height="16px"/>
                             <span class="ml-4 text-white">{{ trans('home.download') }}</span>
