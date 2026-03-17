@@ -485,7 +485,6 @@
   --elzatuna-border: rgba(229, 237, 176, 0.9);
 }
 
-.course-show-page a,
 .course-show-page .text-primary {
   color: var(--elzatuna-ink) !important;
 }
