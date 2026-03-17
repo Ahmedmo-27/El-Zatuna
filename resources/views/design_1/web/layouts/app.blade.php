@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="/assets/default/vendors/simplebar/simplebar.css">
     <link rel="stylesheet" href="/assets/design_1/css/app.min.css">
     <link rel="stylesheet" href="/assets/design_1/css/web-layout-extras.css?v={{ @filemtime(public_path('assets/design_1/css/web-layout-extras.css')) }}">
+    <link rel="stylesheet" href="/assets/design_1/css/cart-drawer-elzatuna.css">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>

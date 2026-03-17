@@ -528,6 +528,16 @@
   color: var(--elzatuna-cream) !important;
 }
 
+.course-show-page .course-bottom-fixed-card {
+  background: var(--elzatuna-cream) !important;
+  border-top: 1px solid var(--elzatuna-border);
+}
+
+.course-show-page .course-bottom-fixed-card .text-gray-500,
+.course-show-page .course-bottom-fixed-card .text-gray-400 {
+  color: rgba(7, 41, 35, 0.65) !important;
+}
+
 .course-show-page .bg-primary-20 {
   background: rgba(200, 205, 6, 0.16) !important;
 }

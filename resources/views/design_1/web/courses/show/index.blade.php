@@ -44,10 +44,9 @@
                 </div>
             </div>
         </div>
+        {{-- Bottom Fixed --}}
+        @include("design_1.web.courses.show.includes.bottom_fixed_card")
     </div>
-
-    {{-- Bottom Fixed --}}
-    @include("design_1.web.courses.show.includes.bottom_fixed_card")
 
 @endsection
 

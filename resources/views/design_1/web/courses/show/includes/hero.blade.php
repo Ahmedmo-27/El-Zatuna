@@ -7,10 +7,10 @@
 
     <div class="course-hero__content position-relative z-index-3">
         @if(!empty($course->category))
-            <div class="d-flex align-items-center text-white opacity-50">
-                <a href="/classes" class="text-white">{{ trans('update.courses') }}</a>
-                <x-iconsax-lin-arrow-right-1 class="icons text-white mx-2" width="16px" height="16px"/>
-                <a href="{{ $course->category->getUrl() }}" class="text-white">{{ $course->category->title }}</a>
+            <div class="d-flex align-items-center text-[#FAFFE0]/70">
+                <a href="/classes" class="text-[#FAFFE0]/70 hover:text-[#FAFFE0]">{{ trans('update.courses') }}</a>
+                <x-iconsax-lin-arrow-right-1 class="icons text-[#FAFFE0]/70 mx-2" width="16px" height="16px"/>
+                <a href="{{ $course->category->getUrl() }}" class="text-[#FAFFE0]/70 hover:text-[#FAFFE0]">{{ $course->category->title }}</a>
             </div>
         @endif
 
@@ -42,7 +42,7 @@
         </div>
 
         @if(!empty($course->summary))
-            <div class="mt-8 text-white opacity-50">{!! nl2br($course->summary) !!}</div>
+            <div class="mt-8 text-[#FAFFE0]/70">{!! nl2br($course->summary) !!}</div>
         @endif
 
         <div class="d-flex align-items-center flex-wrap gap-24 mt-12">
@@ -75,7 +75,7 @@
                 </div>
 
                 <div class="ml-8">
-                    <a href="{{ $course->teacher->getProfileUrl() }}" target="_blank" class="font-14 font-weight-bold text-white">{{ $course->teacher->full_name }}</a>
+                    <a href="{{ $course->teacher->getProfileUrl() }}" target="_blank" class="font-14 font-weight-bold text-[#FAFFE0]">{{ $course->teacher->full_name }}</a>
                 </div>
             </div>
         </div>
