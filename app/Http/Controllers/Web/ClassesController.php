@@ -57,8 +57,8 @@ class ClassesController extends Controller
         // Enforce teacher ownership on /classes (webinars or bundles)
         if (!empty($user) and $user->isTeacher()) {
             $webinarsQuery->where(function ($query) use ($user) {
-                $query->where('teacher_id', $user->id)
-                    ->orWhere('creator_id', $user->id);
+                $query->where("{$this->tableName}.teacher_id", $user->id)
+                    ->orWhere("{$this->tableName}.creator_id", $user->id);
             });
         }
 
@@ -167,8 +167,8 @@ class ClassesController extends Controller
 
         if (!empty($instructor)) {
             $query->where(function ($query) use ($instructor) {
-                $query->where('creator_id', $instructor);
-                $query->orWhere('teacher_id', $instructor);
+                $query->where("{$this->tableName}.creator_id", $instructor);
+                $query->orWhere("{$this->tableName}.teacher_id", $instructor);
             });
         }
 
