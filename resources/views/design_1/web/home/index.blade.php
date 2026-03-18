@@ -226,7 +226,7 @@
                                         <p class="mt-1 text-sm text-[#072923]/65">{{ $plan->subtitle }}</p>
                                     @endif
 
-                                    <div class="mt-4 text-4xl font-bold text-[#072923]">{{ addCurrencyToPrice(handlePrice($plan->price, true, true, false, null, true)) }}</div>
+                                    <div class="mt-4 text-4xl font-bold text-[#072923]">{{ handlePrice($plan->price, true, true, false, null, true) }}</div>
 
                                     <ul class="mt-4 space-y-2.5 text-sm text-[#072923]/75 flex-1">
                                         @if(!empty($plan->description))
