@@ -140,7 +140,7 @@ class WebinarController extends Controller
                 },
                 'noticeboards'
             ])
-            //->where('status', 'active')
+            // Status is validated below; keep pending/non-active visible only when allowed.
             ->first();
 
         if (empty($course)) {
@@ -156,6 +156,17 @@ class WebinarController extends Controller
                     'pageRobot' => getPageRobotNoIndex(),
                 ];
                 return view('design_1.web.courses.not_access.index', $data);
+            }
+
+            // Guests may only see fully global courses (all universities & all faculties).
+            if (empty($user)) {
+                if (!is_null($course->university_id) || !is_null($course->faculty_id)) {
+                    $data = [
+                        'pageTitle' => trans('update.access_denied'),
+                        'pageRobot' => getPageRobotNoIndex(),
+                    ];
+                    return view('design_1.web.courses.not_access.index', $data);
+                }
             }
 
             /* Installment Check */

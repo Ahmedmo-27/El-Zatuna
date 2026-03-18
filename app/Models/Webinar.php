@@ -54,36 +54,47 @@ class Webinar extends Model implements TranslatableContract
                 $user = apiAuth();
             }
 
+            // Only scope regular students; admins/teachers/organizations keep full access.
             if (!empty($user) && $user->isUser() && !self::studentWantsAllCourses()) {
                 $table = $builder->getModel()->getTable();
 
-                $builder
+                $builder->where(function ($query) use ($table, $user) {
+                    // University visibility:
+                    // - null => all universities
+                    // - equals user's university_id
+                    $query->where(function ($query) use ($table, $user) {
+                        $query->whereNull("{$table}.university_id")
+                            ->orWhere("{$table}.university_id", $user->university_id);
+                    })
+                    // Faculty visibility:
+                    // - null => all faculties inside the selected university
+                    // - equals user's faculty_id
+                    // - or "all universities for a specific faculty name" (match by faculty name across universities)
                     ->where(function ($query) use ($table, $user) {
-                        $query->where(function ($query) use ($table, $user) {
-                            $query->whereNull("{$table}.university_id")
-                                ->orWhere("{$table}.university_id", $user->university_id);
-                        })
-                        ->where(function ($query) use ($table, $user) {
-                            $query->whereNull("{$table}.faculty_id")
-                                ->orWhere("{$table}.faculty_id", $user->faculty_id)
-                                ->orWhere(function ($q) use ($table, $user) {
-                                    $q->whereNull("{$table}.university_id")
-                                        ->whereNotNull("{$table}.faculty_id");
-                                    if (!empty($user->faculty_id)) {
-                                        $userFacultyName = \App\Models\Faculty::where('id', $user->faculty_id)->value('name');
-                                        if ($userFacultyName !== null && $userFacultyName !== '') {
-                                            $q->whereIn("{$table}.faculty_id", function ($sub) use ($userFacultyName) {
-                                                $sub->select('id')->from('faculties')->where('name', $userFacultyName);
-                                            });
-                                        } else {
-                                            $q->whereRaw('1 = 0');
-                                        }
+                        $query->whereNull("{$table}.faculty_id")
+                            ->orWhere("{$table}.faculty_id", $user->faculty_id)
+                            ->orWhere(function ($q) use ($table, $user) {
+                                $q->whereNull("{$table}.university_id")
+                                    ->whereNotNull("{$table}.faculty_id");
+
+                                if (!empty($user->faculty_id)) {
+                                    $userFacultyName = \App\Models\Faculty::where('id', $user->faculty_id)->value('name');
+
+                                    if ($userFacultyName !== null && $userFacultyName !== '') {
+                                        $q->whereIn("{$table}.faculty_id", function ($sub) use ($userFacultyName) {
+                                            $sub->select('id')->from('faculties')->where('name', $userFacultyName);
+                                        });
                                     } else {
+                                        // No valid faculty name: prevent matching any faculty-scoped courses.
                                         $q->whereRaw('1 = 0');
                                     }
-                                });
-                        });
+                                } else {
+                                    // User has no faculty_id set: do not show faculty-scoped courses.
+                                    $q->whereRaw('1 = 0');
+                                }
+                            });
                     });
+                });
             }
         });
     }
@@ -100,12 +111,8 @@ class Webinar extends Model implements TranslatableContract
             return $request->boolean('show_all');
         }
 
-        return $request->is('classes')
-            || $request->is('categories/*')
-            || $request->is('reward-courses')
-            || $request->is('course/*')
-            || $request->is('cart*')
-            || $request->is('payments*');
+        // By default, always enforce the university/faculty scope for students.
+        return false;
     }
 
     public function getTitleAttribute()

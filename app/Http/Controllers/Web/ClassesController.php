@@ -27,31 +27,11 @@ class ClassesController extends Controller
 
         $user = auth()->user();
 
-        // Filter courses based on user's role/university/faculty
-        if (!empty($user)) {
-            // Teachers should only see their own active classes on /classes
-            // (Applied later as well in case query switches to bundles)
-            if (!$user->isTeacher()) {
-                $userUniversityId = $user->university_id;
-                $userFacultyId = $user->faculty_id;
-
-                $webinarsQuery->where(function ($query) use ($userUniversityId, $userFacultyId) {
-                    // Show courses with matching university and faculty
-                    $query->where(function ($q) use ($userUniversityId, $userFacultyId) {
-                        $q->where('university_id', $userUniversityId)
-                            ->where('faculty_id', $userFacultyId);
-                    })
-                        // OR show public courses (null university_id AND null faculty_id)
-                        ->orWhere(function ($q) {
-                            $q->whereNull('university_id')
-                                ->whereNull('faculty_id');
-                        });
-                });
-            }
-        } else {
-            // For guests, only show public courses
+        // For guests, only show courses that are global to all universities & all faculties.
+        // (Logged-in students are filtered by the Webinar global scope; teachers handled below.)
+        if (empty($user)) {
             $webinarsQuery->whereNull('university_id')
-                          ->whereNull('faculty_id');
+                ->whereNull('faculty_id');
         }
 
         // Enforce teacher ownership on /classes (webinars or bundles)
