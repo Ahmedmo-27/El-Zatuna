@@ -24,11 +24,18 @@ class HomeController extends Controller
 
         $instructorsCount = (clone $instructorsQuery)->count();
 
-        $professionalCoursesCount = Webinar::query()
+        $professionalCoursesQuery = Webinar::query()
             ->where('status', Webinar::$active)
             ->where('private', false)
-            ->where('type', Webinar::$course)
-            ->count();
+            ->where('type', Webinar::$course);
+
+        // Guests should only see global courses in the stats as well.
+        if (!auth()->check()) {
+            $professionalCoursesQuery->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        $professionalCoursesCount = $professionalCoursesQuery->count();
 
         $seoSettings = getSeoMetas('home');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('home.home_title');
@@ -51,13 +58,20 @@ class HomeController extends Controller
 
         $freeCourses = $frontComponentsDataMixins->getFreeCoursesData(3);
         if ($freeCourses->isEmpty()) {
-            $freeCourses = Webinar::query()
+            $fallbackFreeQuery = Webinar::query()
                 ->where('status', Webinar::$active)
                 ->where('private', false)
                 ->where(function ($query) {
                     $query->whereNull('price')->orWhere('price', 0);
                 })
-                ->with('teacher')
+                ->with('teacher');
+
+            if (!auth()->check()) {
+                $fallbackFreeQuery->whereNull('university_id')
+                    ->whereNull('faculty_id');
+            }
+
+            $freeCourses = $fallbackFreeQuery
                 ->orderBy('updated_at', 'desc')
                 ->limit(3)
                 ->get();

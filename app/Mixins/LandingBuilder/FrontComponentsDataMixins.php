@@ -27,8 +27,16 @@ class FrontComponentsDataMixins
 
     public function getNewestCoursesData($count = 4)
     {
-        return Webinar::query()->where('status', 'active')
-            ->where('private', false)
+        $query = Webinar::query()->where('status', 'active')
+            ->where('private', false);
+
+        // Guests only see global courses (all universities & all faculties).
+        if (!auth()->check()) {
+            $query->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        return $query
             ->orderBy('updated_at', 'desc')
             ->with([
                 'teacher' => function ($qu) {
@@ -52,9 +60,16 @@ class FrontComponentsDataMixins
             ->pluck('webinar_id')
             ->toArray();
 
-        return Webinar::query()->whereIn('id', $bestSaleCoursesIds)
+        $query = Webinar::query()->whereIn('id', $bestSaleCoursesIds)
             ->where('status', 'active')
-            ->where('private', false)
+            ->where('private', false);
+
+        if (!auth()->check()) {
+            $query->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        return $query
             ->orderBy('updated_at', 'desc')
             ->with([
                 'teacher' => function ($qu) {
@@ -71,7 +86,7 @@ class FrontComponentsDataMixins
 
     public function getBestRatedCoursesData($count = 3)
     {
-        return Webinar::query()
+        $query = Webinar::query()
             ->join('webinar_reviews', function ($join) {
                 $join->on("webinars.id", '=', "webinar_reviews.webinar_id");
                 $join->where('webinar_reviews.status', 'active');
@@ -79,7 +94,14 @@ class FrontComponentsDataMixins
             ->select('webinars.*', DB::raw('avg(rates) as avg_rates'))
             ->where('webinars.private', false)
             ->where('webinars.status', 'active')
-            ->whereNotNull('webinar_reviews.rates')
+            ->whereNotNull('webinar_reviews.rates');
+
+        if (!auth()->check()) {
+            $query->whereNull('webinars.university_id')
+                ->whereNull('webinars.faculty_id');
+        }
+
+        return $query
             ->groupBy("webinars.id")
             ->orderBy('avg_rates', 'desc')
             ->with([
@@ -118,12 +140,19 @@ class FrontComponentsDataMixins
 
         $webinarIdsHasDiscount = array_merge($specialOffersWebinarIds, $webinarIdsHasDiscount);
 
-        return Webinar::query()->whereIn('id', array_unique($webinarIdsHasDiscount))
+        $query = Webinar::query()->whereIn('id', array_unique($webinarIdsHasDiscount))
             ->where('status', 'active')
             ->where('private', false)
             ->where('type', Webinar::$course)
             ->whereNotNull('price')
-            ->where('price', '>', 0)
+            ->where('price', '>', 0);
+
+        if (!auth()->check()) {
+            $query->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        return $query
             ->with([
                 'teacher' => function ($qu) {
                     $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
@@ -141,12 +170,19 @@ class FrontComponentsDataMixins
 
     public function getFreeCoursesData($count = 4)
     {
-        return Webinar::query()->where('status', Webinar::$active)
+        $query = Webinar::query()->where('status', Webinar::$active)
             ->where('private', false)
             ->where(function ($query) {
                 $query->whereNull('price')
                     ->orWhere('price', '0');
-            })
+            });
+
+        if (!auth()->check()) {
+            $query->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        return $query
             ->orderBy('updated_at', 'desc')
             ->with([
                 'teacher' => function ($qu) {
@@ -166,8 +202,15 @@ class FrontComponentsDataMixins
     {
         $user = auth()->user();
         // Upcoming courses = webinars with status pending
-        return Webinar::query()->visibleInUpcomingList($user)
-            ->where('private', false)
+        $query = Webinar::query()->visibleInUpcomingList($user)
+            ->where('private', false);
+
+        if (!auth()->check()) {
+            $query->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        return $query
             ->orderBy('created_at', 'desc')
             ->with([
                 'teacher' => function ($qu) {
@@ -326,9 +369,16 @@ class FrontComponentsDataMixins
         $courses = collect();
 
         if (!empty($ids)) {
-            $courses = Webinar::query()->whereIn('id', $ids)
+            $query = Webinar::query()->whereIn('id', $ids)
                 ->where('status', Webinar::$active)
-                ->where('private', false)
+                ->where('private', false);
+
+            if (!auth()->check()) {
+                $query->whereNull('university_id')
+                    ->whereNull('faculty_id');
+            }
+
+            $courses = $query
                 ->with([
                     'teacher' => function ($qu) {
                         $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
