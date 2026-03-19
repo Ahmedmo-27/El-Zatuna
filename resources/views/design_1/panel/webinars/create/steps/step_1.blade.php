@@ -4,39 +4,10 @@
 
 <div class="bg-white rounded-16 p-16 mt-32">
 
-    {{-- course_type --}}
-    <div class="form-group mb-0">
-        <h3 class="font-14 font-weight-bold position-relative d-inline-flex is-required">{{ trans('panel.course_type') }}</h3>
-    </div>
+    {{-- Course type is fixed to "course" in the new flow --}}
+    <input type="hidden" name="type" value="{{ !empty($webinar) ? $webinar->type : 'course' }}">
 
-    <div class="d-grid grid-columns-auto grid-lg-columns-3 gap-24 mt-16">
-        @php
-            $coursetypes = [
-                'webinar' => 'video',
-                'course' => 'video-circle',
-                'text_lesson' => 'book',
-            ];
-        @endphp
-        @foreach($coursetypes as $coursetype => $coursetypeIcon)
-            <div class="create-webinar-course-types custom-input-button position-relative">
-                <input type="radio" class="" name="type" id="course_type_{{ $coursetype }}" value="{{ $coursetype }}" {{ (!empty($webinar) and $webinar->type == $coursetype) ? 'checked' : '' }}>
-                <label for="course_type_{{ $coursetype }}" class="position-relative d-flex-center flex-column p-16 p-lg-32 rounded-16 border-gray-200 text-center bg-white">
-                    <div class="create-webinar-course-types__icon-box d-flex-center size-64 rounded-16">
-                        @svg("iconsax-bul-{$coursetypeIcon}", ['height' => 32, 'width' => 32, 'class' => ''])
-                    </div>
-
-                    <div class="mt-12 font-14 font-weight-bold">{{ trans("webinars.{$coursetype}") }}</div>
-                    <p class="mt-4 font-12 text-gray-500">{{ trans("update.create_{$coursetype}_hint") }}</p>
-                </label>
-            </div>
-        @endforeach
-
-        @error('type')
-        <div class="invalid-feedback d-block">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <h3 class="font-14 font-weight-bold mt-24 mb-16">{{ trans('public.basic_information') }}</h3>
+    <h3 class="font-14 font-weight-bold mt-0 mb-16">{{ trans('public.basic_information') }}</h3>
 
 
     @include('design_1.panel.includes.locale.locale_select',[
@@ -66,9 +37,9 @@
     @endif
 
     <div class="form-group">
-        <label class="form-group-label bg-white">{{ trans('update.university') }} ({{ trans('public.optional') }})</label>
-        <select name="university_id" class="select2 @error('university_id')  is-invalid @enderror">
-            <option value="">{{ trans('public.optional') }}</option>
+        <label class="form-group-label bg-white">{{ trans('update.university') }}</label>
+        <select name="university_id" id="university_id" class="select2 @error('university_id')  is-invalid @enderror">
+            <option value="">{{ trans('update.all_universities') }}</option>
             @foreach($universities ?? [] as $university)
                 <option value="{{ $university->id }}" {{ (!empty($webinar) && $webinar->university_id == $university->id) ? 'selected' : (old('university_id') == $university->id ? 'selected' : '') }}>{{ $university->name }}</option>
             @endforeach
@@ -81,13 +52,16 @@
     </div>
 
     <div class="form-group">
-        <label class="form-group-label bg-white">{{ trans('update.faculty') }} ({{ trans('public.optional') }})</label>
-        <select name="faculty_id" class="select2 @error('faculty_id')  is-invalid @enderror">
-            <option value="">{{ trans('public.optional') }}</option>
+        <label class="form-group-label bg-white">{{ trans('update.faculty') }}</label>
+        <select name="faculty_id" id="faculty_id" class="select2 @error('faculty_id')  is-invalid @enderror">
+            <option value="">{{ trans('update.all_faculties') }}</option>
             @foreach($faculties ?? [] as $faculty)
-                <option value="{{ $faculty->id }}" {{ (!empty($webinar) && $webinar->faculty_id == $faculty->id) ? 'selected' : (old('faculty_id') == $faculty->id ? 'selected' : '') }}>{{ $faculty->name }}</option>
+                <option value="{{ $faculty->id }}" data-university-id="{{ $faculty->university_id }}" data-faculty-name="{{ $faculty->name }}" {{ (!empty($webinar) && $webinar->faculty_id == $faculty->id) ? 'selected' : (old('faculty_id') == $faculty->id ? 'selected' : '') }}>{{ $faculty->name }}</option>
             @endforeach
         </select>
+        @if(!empty($facultiesAll))
+        <script>window.allFacultiesForCourse = @json($facultiesAll);</script>
+        @endif
         @error('faculty_id')
         <div class="invalid-feedback d-block">
             {{ $message }}
@@ -119,7 +93,7 @@
     </div>
 
     <div class="form-group mb-0 mt-24">
-        <h3 class="font-14 font-weight-bold position-relative d-inline-flex is-required">{{ trans('update.thumbnail_&_cover') }}</h3>
+        <h3 class="font-14 font-weight-bold position-relative d-inline-flex">{{ trans('update.thumbnail_&_cover') }}</h3>
     </div>
 
     <div class="row">
@@ -173,7 +147,7 @@
                 @enderror
 
                 @if(!empty($webinar) and !empty($webinar->icon))
-                    <a href="{{ url($webinar->icon) }}" target="_blank" class="text-danger mt-4 font-12">{{ trans('update.preview') }}</a>
+                    <a href="{{ $webinar->getIcon() }}" target="_blank" class="text-danger mt-4 font-12">{{ trans('update.preview') }}</a>
                 @endif
             </div>
         </div>
@@ -274,4 +248,59 @@
 
 @push('scripts_bottom')
     <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+    
+    <script>
+        (function($) {
+            "use strict";
+
+            // When no university: show one option per faculty name (unique). When university selected: show faculties for that university.
+            var uniqueFacultyOptions = $('#faculty_id option').clone();
+            var allFacultiesJson = window.allFacultiesForCourse || [];
+
+            function filterFacultiesByUniversity(universityId) {
+                var $facultySelect = $('#faculty_id');
+                var currentValue = $facultySelect.val();
+
+                $facultySelect.find('option:not(:first)').remove();
+
+                if (!universityId) {
+                    uniqueFacultyOptions.each(function() {
+                        if ($(this).val()) {
+                            $facultySelect.append($(this).clone());
+                        }
+                    });
+                } else {
+                    allFacultiesJson.forEach(function(f) {
+                        if (f.university_id == universityId) {
+                            $facultySelect.append($('<option></option>').attr('value', f.id).attr('data-university-id', f.university_id).text(f.name));
+                        }
+                    });
+                }
+
+                if ($facultySelect.hasClass('select2-hidden-accessible')) {
+                    $facultySelect.select2('destroy');
+                }
+                $facultySelect.select2();
+
+                if (currentValue && $facultySelect.find('option[value="' + currentValue + '"]').length) {
+                    $facultySelect.val(currentValue).trigger('change');
+                }
+            }
+            
+            // Handle university change
+            $('#university_id').on('change', function() {
+                var universityId = $(this).val();
+                filterFacultiesByUniversity(universityId);
+            });
+            
+            // Initial filter on page load
+            $(document).ready(function() {
+                var initialUniversityId = $('#university_id').val();
+                if (initialUniversityId) {
+                    filterFacultiesByUniversity(initialUniversityId);
+                }
+            });
+            
+        })(jQuery);
+    </script>
 @endpush

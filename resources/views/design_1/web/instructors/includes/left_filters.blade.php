@@ -17,8 +17,8 @@
 
             <div id="leftFiltersSkills" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
                 <div class="form-group mb-0 mt-24 ">
-                    <label class="form-group-label text-[#FAFFE0]">{{ trans('update.skill_category') }}</label>
-                    <select class="js-skills-select form-control select2">
+                    <label class="form-group-label text-[#FAFFE0]">Course Category</label>
+                    <select class="js-skills-select form-control select2" data-minimum-results-for-search="Infinity">
                         <option value="">{{ trans('update.select_a_category') }}</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}">{{ $category->title }}</option>
@@ -46,18 +46,15 @@
 
             <div id="leftFiltersRatings" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
                 @foreach([5,4,3,2,1] as $rateNum)
-                    <div class="d-flex align-items-center justify-content-between {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <div class="custom-control custom-radio mr-12">
-                            <input type="radio" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="custom-control-input">
-                            <label class="custom-control__label cursor-pointer pl-0 text-[#FAFFE0]" for="rating_{{ $rateNum }}">
+                    <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
+                        <input type="checkbox" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="custom-control-input js-instructors-rating-filter" {{ (string) request()->get('rating') === (string) $rateNum ? 'checked' : '' }}>
+                        <label class="custom-control__label d-flex align-items-center cursor-pointer text-[#FAFFE0]" for="rating_{{ $rateNum }}">
                                 @include('design_1.web.components.rate', [
                                      'rate' => $rateNum,
                                      'rateCount' => false,
                                      'rateClassName' => ''
                                  ])
-                            </label>
-                        </div>
-
+                        </label>
                     </div>
                 @endforeach
             </div>
@@ -70,27 +67,6 @@
     <div class="instructors-lists-filters__mask"></div>
 
     <div id="leftFiltersAccordion2" class="position-relative bg-[#072923] py-16 rounded-24 z-index-2">
-        {{-- Meeting Options --}}
-        <div class="accordion card-before-line card-before-line__4-12 py-16 px-16 pb-4 border-bottom-gray-100">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersMeetingOptions" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    {{ trans('update.meeting_options') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersMeetingOptions" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersMeetingOptions" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach(['available_for_meetings', 'free_meetings', 'meetings_discount'] as $meetingOption)
-                    <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <input type="checkbox" name="meeting_options[]" value="{{ $meetingOption }}" id="filter_meeting_options_{{ $meetingOption }}" class="custom-control-input">
-                        <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_meeting_options_{{ $meetingOption }}">{{ trans('update.'.$meetingOption) }}</label>
-                    </div>
-                @endforeach
-            </div>
-        </div>
         {{-- Other Options --}}
         <div class="accordion card-before-line card-before-line__4-12 py-16 px-16 pb-4 border-bottom-gray-100">
             <div class="accordion__title d-flex align-items-center justify-content-between">
@@ -104,33 +80,12 @@
             </div>
 
             <div id="leftFiltersOtherOptions" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach(['instructor_with_courses', 'verified_instructors_only'] as $otherOption)
+                @foreach(['instructor_with_courses'] as $otherOption)
                     <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
                         <input type="checkbox" name="meeting_options[]" value="{{ $otherOption }}" id="filter_meeting_options_{{ $otherOption }}" class="custom-control-input">
                         <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_meeting_options_{{ $otherOption }}">{{ trans('update.'.$otherOption) }}</label>
                     </div>
                 @endforeach
-            </div>
-        </div>
-        {{-- Organization --}}
-        <div class="accordion card-before-line card-before-line__4-12 pt-16 px-16 pb-4">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersOrganization" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    {{ trans('home.organization') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersOrganization" data-parent="#leftFiltersAccordion2" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersOrganization" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                <div class="form-group mb-0 mt-24">
-                    <label class="form-group-label text-[#FAFFE0]">{{ trans('update.instructor_organization') }}</label>
-                    <select name="organizations[]" class="form-control select2">
-                        <option value=""></option>
-                    </select>
-                </div>
             </div>
         </div>
     </div>

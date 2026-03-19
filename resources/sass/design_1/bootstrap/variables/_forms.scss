@@ -37,6 +37,8 @@ $custom-checkbox-indicator-border-radius: .25rem; // 4px
 $input-box-shadow: none;
 $input-btn-focus-box-shadow: none;
 $custom-control-indicator-size: 1.5rem; // 24px
+@use "sass:map";
+
 $input-btn-focus-box-shadow: 1.5rem; // 24px
 $custom-radio-indicator-icon-checked: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='-4 -4 8 8'><circle r='3' fill='#{$custom-control-indicator-checked-color}'/></svg>") !default;
 $custom-control-indicator-border-color: var(--gray-300);
@@ -52,7 +54,7 @@ $input-transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 
 $form-validation-states: () !default;
 // stylelint-disable-next-line scss/dollar-variable-default
-$form-validation-states: map-merge(
+$form-validation-states: map.merge(
         (
             "valid": (
                 "color": $form-feedback-valid-color,

@@ -58,9 +58,26 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
-        if ($request->is('api/*')) {
-
+        // Swagger docs: use web-style handling (redirect to login, HTML 403) not API JSON
+        $isSwaggerDocs = $request->is('api/documentation') || $request->is('api/docs') || $request->is('api/docs/*');
+        if ($request->is('api/*') && ! $isSwaggerDocs) {
             return $this->renderApi($request, $exception);
+        }
+
+        // Handle 413 (Request Entity Too Large) errors - return JSON for AJAX requests
+        if ($this->isHttpException($exception) && $exception->getStatusCode() === 413) {
+            // Check if this is an AJAX request or expects JSON response
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                $errorMessage = 'The server rejected the upload. This often means the server\'s upload limit is lower than your file (the site supports up to 2GB). If your file is small, increase nginx client_max_body_size and PHP upload_max_filesize/post_max_size on the server.';
+                return response()->json([
+                    'code' => 413,
+                    'msg' => $errorMessage,
+                    'custom_alert' => $errorMessage,
+                    'errors' => [
+                        'file_upload' => [$errorMessage]
+                    ]
+                ], 413);
+            }
         }
 
         // Let Laravel handle these exceptions normally (validation errors, auth redirects, etc.)
@@ -88,6 +105,27 @@ class Handler extends ExceptionHandler
                 $statusCode = 500;
             }
 
+            // Handle 413 errors for non-AJAX requests
+            if ($statusCode === 413) {
+                $share = (new Share());
+                $shareData = $share->getShareData($request);
+
+                // Use 404 error page settings as fallback since 413 doesn't have its own
+                $errorSettings = get404ErrorPageSettings();
+                $pageTitle = !empty($errorSettings['title']) ? $errorSettings['title'] : trans('update.error_page');
+
+                $data = [
+                    "pageTitle" => $pageTitle,
+                    'statusCode' => $statusCode,
+                    'errorSettings' => $errorSettings,
+                    'dontShowCookieSecurity' => true,
+                ];
+
+                $data = array_merge($data, $shareData);
+
+                return response()->view('design_1.web.errors.errors', $data, $statusCode);
+            }
+
             if (in_array($statusCode, [404, 403, 419, 500])) {
                 // Log 500 errors for debugging
                 if ($statusCode == 500) {
@@ -112,6 +150,7 @@ class Handler extends ExceptionHandler
                     'statusCode' => $statusCode,
                     'errorSettings' => $errorSettings,
                     'dontShowCookieSecurity' => true,
+                    'exceptionMessage' => $exception->getMessage(),
                 ];
 
                 $data = array_merge($data, $shareData);
@@ -125,6 +164,18 @@ class Handler extends ExceptionHandler
 
     public function renderApi($request, Throwable $e)
     {
+        // Handle 413 (Request Entity Too Large) errors for API
+        if ($this->isHttpException($e) && $e->getStatusCode() === 413) {
+            $errorMessage = 'The file you are trying to upload is too large. Maximum file size is 2GB. Please try uploading a smaller file or contact support if you need to upload larger files.';
+            return response()->json([
+                'success' => false,
+                'status' => 413,
+                'message' => $errorMessage,
+                'code' => 413,
+                'custom_alert' => $errorMessage,
+            ], 413);
+        }
+
         if ($e instanceof MethodNotAllowedHttpException) {
             $status = Response::HTTP_METHOD_NOT_ALLOWED;
             $e = new MethodNotAllowedHttpException([], 'HTTP_METHOD_NOT_ALLOWED', $e);

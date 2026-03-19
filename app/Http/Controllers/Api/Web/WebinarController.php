@@ -21,8 +21,20 @@ use Illuminate\Support\Facades\DB;
 
 class WebinarController extends Controller
 {
-
-
+    /**
+     * List public courses (webinars).
+     *
+     * @OA\Get(
+     *     path="/v1/courses",
+     *     summary="List courses",
+     *     tags={"Courses"},
+     *     @OA\Response(response=200, description="List of courses", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="retrieved"),
+     *         @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *     ))
+     * )
+     */
     public function index()
     {
         $webinars = Webinar::where('webinars.status', 'active')
@@ -68,6 +80,17 @@ class WebinarController extends Controller
 
     }
 
+    /**
+     * Get course (webinar) details by ID.
+     *
+     * @OA\Get(
+     *     path="/v1/courses/{id}",
+     *     summary="Get course details",
+     *     tags={"Courses"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Course details or invalid (status=invalid). Body: success, status, data (optional).")
+     * )
+     */
     public function show($id)
     {
         $user = apiAuth();
@@ -94,6 +117,17 @@ class WebinarController extends Controller
         return apiResponse2(0, 'invalid', trans('api.public.invalid'));
     }
 
+    /**
+     * Get course content (chapters, files, sessions, text lessons, quizzes).
+     *
+     * @OA\Get(
+     *     path="/v1/courses/{id}/content",
+     *     summary="Get course content",
+     *     tags={"Courses"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Course content (chapters, items, learning status)")
+     * )
+     */
     public function content($id)
     {
         $user = apiAuth();
@@ -172,6 +206,18 @@ class WebinarController extends Controller
         return apiResponse2(0, 'invalid', trans('api.public.invalid'));
     }
 
+    /**
+     * Toggle learning status for a course (auth required).
+     *
+     * @OA\Post(
+     *     path="/v1/courses/{webinar_id}/toggle",
+     *     summary="Toggle course learning status",
+     *     tags={"Courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="webinar_id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Status updated")
+     * )
+     */
     public function learningStatus(Request $request, $webinar_id)
     {
         switch ($request->input('item')) {
@@ -237,6 +283,29 @@ class WebinarController extends Controller
 
     }
 
+    /**
+     * Report a course (auth required).
+     *
+     * @OA\Post(
+     *     path="/v1/courses/{id}/report",
+     *     summary="Report course",
+     *     tags={"Courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"reason_id"},
+     *             @OA\Property(property="reason_id", type="integer"),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Reported", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="reported")
+     *     ))
+     * )
+     */
     public function report(Request $request, $id)
     {
         $user = apiAuth();
@@ -446,7 +515,7 @@ class WebinarController extends Controller
                 'progress' => $progress,
                 //'progressa' => $webinar->$progress,
                 'category' => $webinar->category->title,
-                'video_demo' => $webinar->video_demo,
+                'video_demo' => $webinar->getVideoDemoUrl(),
                 'image' => $webinar->getImage(),
                 'description' => $webinar->description,
                 'isDownloadable' => $webinar->isDownloadable(),

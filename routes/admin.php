@@ -471,6 +471,7 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['admin.auth', 'admin.loca
         Route::post('/', 'CategoryController@store')->name('admin.categories.store');
         Route::post('/store', 'CategoryController@store');
         Route::get('/search', 'CategoryController@search')->name('admin.categories.search');
+        Route::post('/quick-store', 'CategoryController@quickStore')->name('admin.categories.quickStore');
         Route::get('/{id}/edit', 'CategoryController@edit')->name('admin.categories.edit');
         Route::post('/{id}/update', 'CategoryController@update')->name('admin.categories.update');
         Route::delete('/{id}/delete', 'CategoryController@destroy')->name('admin.categories.delete');
@@ -932,6 +933,7 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['admin.auth', 'admin.loca
     */
     Route::group(['prefix' => 'contacts'], function () {
         Route::get('/', 'ContactController@index')->name('admin.contacts');
+        Route::get('/course-requests', 'ContactController@courseRequests')->name('admin.contacts.course_requests');
         Route::get('/{id}/reply', 'ContactController@reply')->name('admin.contacts.reply');
         Route::post('/{id}/reply', 'ContactController@storeReply')->name('admin.contacts.reply.store');
         Route::delete('/{id}/delete', 'ContactController@delete')->name('admin.contacts.delete');

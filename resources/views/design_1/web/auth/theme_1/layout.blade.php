@@ -7,7 +7,7 @@
     <style>
         /* El Zatuna Theme Overrides for Auth Pages */
         :root {
-            --primary: #C8CD06;
+            --primary: #FAFFE0;
             --secondary: #072923;
         }
 
@@ -112,7 +112,7 @@
 @section("content")
     <section class="container mt-96 mb-104 position-relative">
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-lg-10">
                 <div class="auth-page-card position-relative">
                     <div class="auth-page-card__mask"></div>
 

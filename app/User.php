@@ -176,15 +176,9 @@ class User extends Authenticatable
     public function getAvatar($size = 40)
     {
         if (!empty($this->avatar)) {
-            $avatarUrl = $this->avatar;
+            $avatarUrl = $this->resolveProfileAssetUrl($this->avatar);
         } else {
-            $settings = getOthersPersonalizationSettings();
-
-            if (!empty($settings) and !empty($settings['user_avatar_style']) and $settings['user_avatar_style'] == "ui_avatar") {
-                $avatarUrl = "/getDefaultAvatar?item={$this->id}&name={$this->full_name}&size=$size";
-            } else {
-                $avatarUrl = getDefaultAvatarPath();
-            }
+            $avatarUrl = getDefaultAvatarPath($this, (int) $size);
         }
 
         return $avatarUrl;
@@ -195,7 +189,7 @@ class User extends Authenticatable
         $path = null;
 
         if (!empty($this->profile_secondary_image)) {
-            $path = $this->profile_secondary_image;
+            $path = $this->resolveProfileAssetUrl($this->profile_secondary_image);
         } else {
             $settings = getOthersPersonalizationSettings();
 
@@ -210,14 +204,17 @@ class User extends Authenticatable
     public function getCover()
     {
         if (!empty($this->cover_img)) {
-            $path = str_replace('/storage', '', $this->cover_img);
-
-            $imgUrl = url($path);
-        } else {
-            $imgUrl = getThemePageBackgroundSettings('user_cover');
+            return $this->resolveProfileAssetUrl($this->cover_img);
         }
+        return getThemePageBackgroundSettings('user_cover');
+    }
 
-        return $imgUrl;
+    public function getProfileVideoUrl(): ?string
+    {
+        if (empty($this->profile_video)) {
+            return null;
+        }
+        return $this->resolveProfileAssetUrl($this->profile_video);
     }
 
     public function getSignature($justUserMetaValue = false)
@@ -228,7 +225,7 @@ class User extends Authenticatable
             $meta = $this->userMetas->where('name', 'signature')->first();
 
             if ($meta) {
-                $path = $meta->value;
+                $path = $this->resolveProfileAssetUrl($meta->value);
             }
         }
 
@@ -237,6 +234,23 @@ class User extends Authenticatable
         }
 
         return $path;
+    }
+
+    /**
+     * Resolve profile asset path (avatar, cover, signature, etc.) to full URL (R2 or local).
+     */
+    protected function resolveProfileAssetUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'Profile-Assets/')) {
+            return \App\Helpers\R2Helper::getUrl($path) ?: $path;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return url($path);
     }
 
     public function getUsername()

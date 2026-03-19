@@ -13,6 +13,7 @@ use App\Models\UpcomingCourse;
 use App\Models\UpcomingCourseFilterOption;
 use App\Models\UpcomingCourseFollower;
 use App\Models\UpcomingCourseReport;
+use App\Models\Webinar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,7 +23,9 @@ class UpcomingCoursesController extends Controller
 
     public function index(Request $request)
     {
-        $query = UpcomingCourse::query()->where('status', UpcomingCourse::$active);
+        $user = auth()->user();
+        // Upcoming courses = webinars with status pending (from webinars table)
+        $query = Webinar::query()->visibleInUpcomingList($user)->where('private', false);
 
         $filterMaxPrice = (deepClone($query)->max('price') + 10) * 10;
 
@@ -83,10 +86,6 @@ class UpcomingCoursesController extends Controller
             });
         }
 
-        if (!empty($released)) {
-            $query->whereNotNull('webinar_id');
-        }
-
         if (!empty($type) and count($type)) {
             $query->whereIn('type', $type);
         }
@@ -105,7 +104,7 @@ class UpcomingCoursesController extends Controller
             }
 
             if (in_array('quiz_included', $moreOptions)) {
-                $query->where('include_quizzes', true);
+                $query->whereHas('quizzes');
             }
 
             if (in_array('certificate_included', $moreOptions)) {
@@ -113,7 +112,7 @@ class UpcomingCoursesController extends Controller
             }
 
             if (in_array('assignment_included', $moreOptions)) {
-                $query->where('assignments', true);
+                $query->whereHas('assignments');
             }
 
             if (in_array('course_forum_included', $moreOptions)) {
@@ -130,27 +129,16 @@ class UpcomingCoursesController extends Controller
             $query->where('category_id', $categoryId);
         }
 
-        if (!empty($filterOption) and is_array($filterOption)) {
-            $upcomingIdsFilterOptions = UpcomingCourseFilterOption::whereIn('filter_option_id', $filterOption)
-                ->pluck('upcoming_course_id')
-                ->toArray();
-
-            $upcomingIdsFilterOptions = array_unique($upcomingIdsFilterOptions);
-
-            $query->whereIn('id', $upcomingIdsFilterOptions);
-        }
-
-
         if (!empty($sort)) {
             switch ($sort) {
                 case 'newest':
                     $query->orderBy('created_at', 'desc');
                     break;
                 case 'earliest_publish_date':
-                    $query->orderBy('publish_date', 'asc');
+                    $query->orderBy('created_at', 'asc');
                     break;
                 case 'farthest_publish_date':
-                    $query->orderBy('publish_date', 'desc');
+                    $query->orderBy('created_at', 'desc');
                     break;
                 case 'highest_price':
                     $query->orderBy('price', 'desc');
@@ -173,6 +161,12 @@ class UpcomingCoursesController extends Controller
 
         $total = $query->count();
 
+        $query->with([
+            'teacher' => function ($q) {
+                $q->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
+            },
+            'category',
+        ]);
         $query->limit($count);
         $query->offset(($page - 1) * $count);
 
@@ -451,7 +445,7 @@ class UpcomingCoursesController extends Controller
     public function getShareModal($slug)
     {
         $upcomingCourse = UpcomingCourse::query()->where('slug', $slug)
-            ->where('status', 'active')
+            ->where('status', UpcomingCourse::$active)
             ->first();
 
         if (!empty($upcomingCourse)) {
@@ -473,7 +467,7 @@ class UpcomingCoursesController extends Controller
     public function getReportModal($slug)
     {
         $upcomingCourse = UpcomingCourse::query()->where('slug', $slug)
-            ->where('status', 'active')
+            ->where('status', UpcomingCourse::$active)
             ->first();
 
         if (!empty($upcomingCourse)) {

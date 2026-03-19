@@ -120,6 +120,153 @@
     });
 
     /**
+     * Admin category input: search + "Add new category" (same as occupations).
+     */
+    function initAdminCategoryInput() {
+        const $wrapper = $('.js-admin-category-input');
+        if (!$wrapper.length) return;
+
+        const $search = $wrapper.find('.js-admin-category-search');
+        const $dropdown = $wrapper.find('.js-admin-category-dropdown');
+        const $results = $wrapper.find('.js-admin-category-results');
+        const $addNew = $wrapper.find('.js-admin-category-add-new');
+        const $addNewTerm = $wrapper.find('.js-admin-category-add-new-term');
+        const $tagContainer = $wrapper.find('.js-admin-category-tag');
+        const $hidden = $wrapper.find('.js-admin-category-hidden');
+        const searchUrl = $wrapper.data('search-url');
+        const quickStoreUrl = $wrapper.data('quick-store-url');
+
+        let selected = null;
+        let searchTimeout = null;
+
+        function setSelected(item) {
+            selected = item;
+            $hidden.val(selected ? selected.id : '');
+            $hidden.trigger('change');
+            renderTag();
+        }
+
+        function renderTag() {
+            $tagContainer.empty();
+            if (selected) {
+                const textEsc = $('<div>').text(selected.text).html();
+                const $tag = $('<span class="badge badge-primary d-inline-flex align-items-center px-3 py-1">' +
+                    '<span>' + textEsc + '</span>' +
+                    ' <button type="button" class="js-admin-category-remove btn btn-link p-0 ml-1 text-white" style="font-size: 14px; line-height: 1;" data-id="' + selected.id + '">&times;</button>' +
+                    '</span>');
+                $tagContainer.append($tag);
+            }
+        }
+
+        function doSearch(q) {
+            if (!q || q.length < 1) {
+                $results.empty();
+                $addNewTerm.text('');
+                $addNew.addClass('d-none');
+                return;
+            }
+            $addNewTerm.text(q);
+            $addNew.removeClass('d-none');
+            $.get(searchUrl, { term: q }, function (data) {
+                $results.empty();
+                const list = Array.isArray(data) ? data : (data.results || []);
+                if (list.length === 0) {
+                    $results.append($('<div class="p-2 text-muted">No matching category. Use "Add new category" below.</div>'));
+                } else {
+                    list.forEach(function (item) {
+                        const title = item.title || item.text;
+                        const id = item.id;
+                        const textEsc = $('<div>').text(title).html();
+                        const $row = $('<div class="js-admin-category-result p-2 rounded cursor-pointer hover:bg-light" data-id="' + id + '" data-title="' + $('<div>').text(title).html() + '">' + textEsc + '</div>');
+                        $results.append($row);
+                    });
+                }
+            });
+        }
+
+        function showDropdown() {
+            $dropdown.removeClass('d-none');
+        }
+
+        function hideDropdown() {
+            setTimeout(function () { $dropdown.addClass('d-none'); }, 150);
+        }
+
+        $search.on('focus', function () {
+            const q = $.trim($search.val());
+            $addNewTerm.text(q || 'type above first');
+            if (q) {
+                doSearch(q);
+            } else {
+                $results.empty();
+                $results.append($('<div class="p-2 text-muted">Type to search categories.</div>'));
+                $addNew.removeClass('d-none');
+            }
+            showDropdown();
+        });
+
+        $search.on('input', function () {
+            const q = $.trim($search.val());
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function () {
+                doSearch(q);
+                if (q) showDropdown();
+            }, 200);
+        });
+
+        $search.on('blur', function () {
+            hideDropdown();
+        });
+
+        $results.on('click', '.js-admin-category-result', function () {
+            const id = $(this).data('id');
+            const title = $(this).text().trim();
+            setSelected({ id: id, text: title });
+            $search.val('');
+            hideDropdown();
+        });
+
+        $addNew.on('click', function () {
+            const term = $.trim($search.val()) || $.trim($addNewTerm.text());
+            if (!term || term === 'type above first') return;
+            const token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val();
+            $.ajax({
+                url: quickStoreUrl,
+                type: 'POST',
+                data: { title: term, _token: token },
+                success: function (data) {
+                    setSelected({ id: data.id, text: data.title || term });
+                    $search.val('');
+                    hideDropdown();
+                },
+                error: function () {
+                    alert('Failed to create category.');
+                }
+            });
+        });
+
+        $tagContainer.on('click', '.js-admin-category-remove', function (e) {
+            e.preventDefault();
+            setSelected(null);
+        });
+
+        $wrapper.on('click', function (e) {
+            if ($(e.target).closest('.js-admin-category-search, .js-admin-category-dropdown').length) return;
+            hideDropdown();
+        });
+
+        const initial = $wrapper.data('initial') || [];
+        if (Array.isArray(initial) && initial.length && initial[0]) {
+            setSelected({ id: initial[0].id, text: initial[0].text });
+        }
+        renderTag();
+    }
+
+    $(document).ready(function () {
+        initAdminCategoryInput();
+    });
+
+    /**
      * add ticket
      * */
     $('body').on('click', '#webinarAddTicket', function (e) {

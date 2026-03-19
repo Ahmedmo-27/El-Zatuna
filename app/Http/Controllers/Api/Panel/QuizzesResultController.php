@@ -241,7 +241,14 @@ class QuizzesResultController extends Controller
                     }
 
                     if (empty($status)) {
-                        $status = ($totalMark >= $passMark) ? QuizzesResult::$passed : QuizzesResult::$failed;
+                        // Calculate total possible points
+                        $totalPossiblePoints = $quiz->quizQuestions->sum('grade');
+                        
+                        // Calculate percentage score
+                        $percentageScore = $totalPossiblePoints > 0 ? ($totalMark / $totalPossiblePoints) * 100 : 0;
+                        
+                        // Compare percentage with pass mark
+                        $status = ($percentageScore >= $passMark) ? QuizzesResult::$passed : QuizzesResult::$failed;
                     }
 
                     $attempt_count = QuizzesResult::where('quiz_id', $quiz->id)

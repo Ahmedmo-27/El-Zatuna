@@ -1,6 +1,10 @@
 @php
     $checkSequenceContent = $textLesson->checkSequenceContent();
     $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
+    $chapter = $textLesson->chapter ?? null;
+    $isPreviewSection = (!empty($chapter) and $chapter->isFirstSection());
+    $canAccessBySection = (!empty($chapter) and canUserAccessCourseContent($course, $user ?? null, $chapter));
+    $canAccessTextLesson = ($hasBought or $canAccessBySection);
 @endphp
 
 <div class="accordion bg-gray-100 border-gray-200 p-16 rounded-12 mt-16">
@@ -14,7 +18,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-12">
-            @if($textLesson->accessibility == 'free')
+            @if($isPreviewSection)
                 <span class="px-8 py-4 bg-primary-20 text-primary font-12 rounded-8">{{ trans('public.free') }}</span>
             @endif
 
@@ -30,7 +34,7 @@
                 {!! nl2br(clean($textLesson->summary)) !!}
             </div>
 
-            @if(!empty($user) and $hasBought)
+            @if(!empty($user) and $canAccessTextLesson)
                 <div class="d-flex align-items-center form-group mb-0 mt-20">
                     <div class="custom-switch mr-8">
                         <input type="checkbox"
@@ -93,20 +97,13 @@
                         <x-iconsax-lin-book-1 class="icons text-gray-500" width="16px" height="16px"/>
                         <span class="ml-4 text-gray-500">{{ trans('public.read') }}</span>
                     </button>
-                @elseif($textLesson->accessibility == 'paid')
-                    @if(!empty($user) and $hasBought)
-                        <a href="{{ $course->getLearningPageUrl() }}?type=text_lesson&item={{ $textLesson->id }}" target="_blank" class="btn btn-primary btn-lg">
-                            <x-iconsax-lin-book-1 class="icons text-white" width="16px" height="16px"/>
-                            <span class="ml-4 text-white">{{ trans('public.read') }}</span>
-                        </a>
-                    @else
-                        <button type="button" class="btn btn-lg bg-gray-300 disabled {{ ((empty($user)) ? 'not-login-toast' : (!$hasBought ? 'not-access-toast' : '')) }}">
-                            <x-iconsax-lin-book-1 class="icons text-gray-500" width="16px" height="16px"/>
-                            <span class="ml-4 text-gray-500">{{ trans('public.read') }}</span>
-                        </button>
-                    @endif
                 @else
-                    @if(!empty($user) and $hasBought)
+                    @if(!$canAccessTextLesson)
+                        <button type="button" class="btn btn-lg bg-gray-300 disabled not-access-toast">
+                            <x-iconsax-lin-lock-1 class="icons text-gray-500" width="16px" height="16px"/>
+                            <span class="ml-4 text-gray-500">{{ trans('update.content_locked') }}</span>
+                        </button>
+                    @elseif(!empty($user) and $canAccessTextLesson)
                         <a href="{{ $course->getLearningPageUrl() }}?type=text_lesson&item={{ $textLesson->id }}" target="_blank" class="btn btn-primary btn-lg">
                             <x-iconsax-lin-book-1 class="icons text-white" width="16px" height="16px"/>
                             <span class="ml-4 text-white">{{ trans('public.read') }}</span>

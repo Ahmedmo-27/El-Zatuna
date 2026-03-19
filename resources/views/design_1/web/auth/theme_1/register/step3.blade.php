@@ -60,6 +60,42 @@
                     {{ $message }}
                 </div>
                 @enderror
+
+                <!-- Password Requirements -->
+                <div class="password-requirements mt-16">
+                    <div class="requirements-header mb-12">
+                        <svg class="mr-8" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span>Password Requirements</span>
+                    </div>
+                    <div class="requirements-list">
+                        <div class="requirement-item" data-requirement="length">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">At least 8 characters</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="uppercase">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One uppercase letter (A-Z)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="lowercase">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One lowercase letter (a-z)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="number">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One number (0-9)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="special">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">One special character (!@#$%...)</span>
+                        </div>
+                        <div class="requirement-item" data-requirement="username">
+                            <span class="requirement-icon">○</span>
+                            <span class="requirement-text">Not same as username</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -81,37 +117,97 @@
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label class="form-group-label" for="university_id">{{ trans('update.university') }}:</label>
-                <select name="university_id" id="university_id" class="js-university-select form-control @error('university_id') is-invalid @enderror" required>
-                    <option value="" disabled {{ empty(old('university_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
-                    @foreach($universities as $university)
-                        <option value="{{ $university->id }}" {{ (old('university_id') == $university->id) ? 'selected' : '' }}>{{ $university->name }}</option>
-                    @endforeach
-                </select>
-                @error('university_id')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-                @enderror
-            </div>
+            @if(!empty($isTeacher))
+                @php
+                    $occupationsInitial = [];
+                    $occupationsOld = is_array(old('occupations')) ? old('occupations') : [];
+                    $instructorCategoriesList = $instructorCategories ?? [];
+                    foreach ($instructorCategoriesList as $cat) {
+                        if (!empty($cat->subCategories) && count($cat->subCategories)) {
+                            foreach ($cat->subCategories as $sub) {
+                                if (in_array($sub->id, $occupationsOld)) {
+                                    $occupationsInitial[] = ['id' => $sub->id, 'text' => $sub->title];
+                                }
+                            }
+                        } else {
+                            if (in_array($cat->id, $occupationsOld)) {
+                                $occupationsInitial[] = ['id' => $cat->id, 'text' => $cat->title];
+                            }
+                        }
+                    }
+                @endphp
+                <div class="form-group">
+                    <div class="form-group js-occupations-wrapper" data-initial="{{ e(json_encode($occupationsInitial)) }}">
+                        <p class="text-sm text-[#072923]/60 mb-2">Select the subjects or topics you want to teach. Type to search existing ones.</p>
 
-            <div class="form-group">
-                <label class="form-group-label" for="faculty_id">{{ trans('update.faculty') }}:</label>
-                <select name="faculty_id" id="faculty_id" class="js-faculty-select form-control @error('faculty_id') is-invalid @enderror" required>
-                    <option value="" disabled {{ empty(old('faculty_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
-                    @if(!empty($faculties))
-                        @foreach($faculties as $faculty)
-                            <option value="{{ $faculty->id }}" {{ (old('faculty_id') == $faculty->id) ? 'selected' : '' }}>{{ $faculty->name }}</option>
-                        @endforeach
-                    @endif
-                </select>
-                @error('faculty_id')
-                <div class="invalid-feedback">
-                    {{ $message }}
+                        <div class="position-relative">
+                            <input type="text" id="occupationsInput" class="form-control border-[#ECF4B8] focus:border-[#C8CD06] focus:ring-[#C8CD06] js-occupations-input" placeholder="Type a subject name..." autocomplete="off">
+
+                            <div class="js-occupations-dropdown position-absolute bg-white border border-[#ECF4B8] rounded-12 shadow-sm mt-1 d-none" style="top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; z-index: 1050;">
+                                <div class="js-occupations-results p-2"></div>
+                                <div class="js-occupations-add-new border-top border-[#ECF4B8] p-2 text-[#072923]/70 cursor-pointer hover:bg-[#F5F9E8]/50" style="font-size: 13px;">
+                                    <span class="js-add-new-text">Add different subject</span> – <span class="js-add-new-term font-weight-medium text-[#C8CD06]"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="js-occupations-tags mt-8 d-flex flex-wrap gap-2" style="min-height: 24px;"></div>
+
+                        <div class="js-occupations-hidden-container"></div>
+
+                        @error('occupations')
+                        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
+                        @enderror
+                        @error('occupations.*')
+                        <div class="invalid-feedback d-block text-red-600">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
-                @enderror
-            </div>
+
+                <div class="form-group">
+                    <label class="form-group-label" for="description">{{ trans('public.description') }}:</label>
+                    <textarea name="description" id="description" rows="5" class="form-control @error('description') is-invalid @enderror" placeholder="Tell us about your teaching experience and expertise" required>{{ old('description') }}</textarea>
+                    @error('description')
+                    <div class="invalid-feedback d-block">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+            @endif
+
+            @if(empty($isTeacher))
+                <div class="form-group">
+                    <label class="form-group-label" for="university_id">{{ trans('update.university') }}:</label>
+                    <select name="university_id" id="university_id" class="js-university-select form-control @error('university_id') is-invalid @enderror" required>
+                        <option value="" disabled {{ empty(old('university_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
+                        @foreach($universities as $university)
+                            <option value="{{ $university->id }}" {{ (old('university_id') == $university->id) ? 'selected' : '' }}>{{ $university->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('university_id')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label class="form-group-label" for="faculty_id">{{ trans('update.faculty') }}:</label>
+                    <select name="faculty_id" id="faculty_id" class="js-faculty-select form-control @error('faculty_id') is-invalid @enderror" required>
+                        <option value="" disabled {{ empty(old('faculty_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
+                        @if(!empty($faculties))
+                            @foreach($faculties as $faculty)
+                                <option value="{{ $faculty->id }}" {{ (old('faculty_id') == $faculty->id) ? 'selected' : '' }}>{{ $faculty->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                    @error('faculty_id')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+            @endif
 
             @if(!empty($referralSettings) and $referralSettings['status'])
                 <div class="form-group">
@@ -133,7 +229,7 @@
                     <input type="checkbox" name="term" value="1" id="termCheckbox" class="custom-control-input" {{ (old('term') == '1') ? 'checked' : '' }} required>
                     <label class="custom-control__label cursor-pointer" for="termCheckbox">
                         {{ trans('auth.i_agree_with') }}
-                        <a href="/pages/terms" target="_blank" class="font-weight-bold text-dark ml-4">{{ trans('auth.terms_and_rules') }}</a>
+                        <a href="/terms" target="_blank" class="font-weight-bold text-dark ml-4">{{ trans('auth.terms_and_rules') }}</a>
                     </label>
                 </div>
 
@@ -162,41 +258,77 @@
 
 @push('scripts_bottom')
     <script src="{{ getDesign1ScriptPath("forms") }}"></script>
-
+    @if(!empty($isTeacher))
+    <script src="{{ getDesign1ScriptPath("become_instructor_wizard") }}"></script>
+    @endif
     <script>
-        $(document).ready(function() {
-            // Handle university change to load faculties
-            $('#university_id').on('change', function() {
-                const universityId = $(this).val();
-                const facultySelect = $('#faculty_id');
-                
-                facultySelect.html('<option value="" disabled selected>{{ trans('public.loading') }}...</option>');
-                
-                if (universityId) {
-                    $.ajax({
-                        url: '/universities/' + universityId + '/faculties',
-                        method: 'GET',
-                        success: function(response) {
-                            facultySelect.html('<option value="" disabled selected>{{ trans('public.select') }}</option>');
-                            
-                            // Check if response has faculties array
-                            const faculties = response.faculties || response;
-                            
-                            if (faculties && faculties.length > 0) {
-                                faculties.forEach(function(faculty) {
-                                    facultySelect.append('<option value="' + faculty.id + '">' + faculty.name + '</option>');
-                                });
-                            } else {
-                                facultySelect.append('<option value="" disabled>{{ trans('public.no_result') }}</option>');
-                            }
-                        },
-                        error: function(xhr) {
-                            console.error('Error loading faculties:', xhr);
-                            facultySelect.html('<option value="" disabled selected>{{ trans('public.error') }}</option>');
-                        }
-                    });
-                }
-            });
-        });
+        // Preloaded faculties data to avoid AJAX calls
+        window.facultiesByUniversity = @json($facultiesByUniversity ?? []);
+    </script>
+    <script>
+        // Real-time password validation
+        (function() {
+            const passwordInput = document.getElementById('password');
+            const usernameInput = document.getElementById('username');
+            const requirements = document.querySelectorAll('.requirement-item');
+
+            if (!passwordInput) return;
+
+            function validatePassword() {
+                const password = passwordInput.value;
+                const username = usernameInput ? usernameInput.value : '';
+
+                // Check each requirement
+                const checks = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+                    username: !username || password.toLowerCase() !== username.toLowerCase()
+                };
+
+                // Update UI for each requirement
+                requirements.forEach(function(item) {
+                    const requirement = item.getAttribute('data-requirement');
+                    const icon = item.querySelector('.requirement-icon');
+                    const text = item.querySelector('.requirement-text');
+                    
+                    if (checks[requirement]) {
+                        // Requirement met
+                        icon.innerHTML = '✓';
+                        icon.style.color = '#28a745';
+                        icon.style.fontWeight = 'bold';
+                        text.style.color = '#28a745';
+                        item.style.opacity = '1';
+                    } else if (password.length > 0) {
+                        // Requirement not met but user is typing
+                        icon.innerHTML = '○';
+                        icon.style.color = '#dc3545';
+                        icon.style.fontWeight = 'normal';
+                        text.style.color = '#6c757d';
+                        item.style.opacity = '1';
+                    } else {
+                        // No input yet
+                        icon.innerHTML = '○';
+                        icon.style.color = '#6c757d';
+                        icon.style.fontWeight = 'normal';
+                        text.style.color = '#6c757d';
+                        item.style.opacity = '0.7';
+                    }
+                });
+            }
+
+            // Validate on input
+            passwordInput.addEventListener('input', validatePassword);
+            
+            // Also validate when username changes (for username check)
+            if (usernameInput) {
+                usernameInput.addEventListener('input', validatePassword);
+            }
+
+            // Initial validation (in case of back button or autofill)
+            validatePassword();
+        })();
     </script>
 @endpush

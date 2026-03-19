@@ -29,8 +29,8 @@ class WebinarResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'image' => url($this->getImage()),
-            'image_cover' => $this->image_cover ? url($this->image_cover) : null,
+            'image' => $this->getImage(),
+            'image_cover' => $this->getImageCover(),
             'status' => $this->status,
             'title' => $this->title,
             'can' => [
@@ -106,7 +106,7 @@ class WebinarResource extends JsonResource
                     ],
                     'reviews_count' => $this->reviews->pluck('creator_id')->count(),
                     //    'teacher',
-                    'video_demo' => $this->video_demo,
+                    'video_demo' => $this->getVideoDemoUrl(),
 
 
                 ];

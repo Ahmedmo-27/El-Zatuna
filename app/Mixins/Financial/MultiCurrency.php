@@ -42,7 +42,7 @@ class MultiCurrency
 
         $defaultCurrency = new Currency();
 
-        $defaultCurrency->currency = $settings['currency'] ?? 'USD';
+        $defaultCurrency->currency = $settings['currency'] ?? 'EGP';
         $defaultCurrency->currency_position = $settings['currency_position'] ?? 'left';
         $defaultCurrency->currency_separator = $settings['currency_separator'] ?? 'dot';
         $defaultCurrency->currency_decimal = $settings['currency_decimal'] ?? 0;

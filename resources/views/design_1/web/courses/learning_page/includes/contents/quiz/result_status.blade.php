@@ -31,7 +31,7 @@
         </div>
         <div class="ml-8">
             <div class="font-12 text-gray-500">{{ trans('public.pass_mark') }}</div>
-            <div class="font-weight-bold text-gray-500 mt-2">{{  $quiz->pass_mark }}/{{ $quiz->questions_grade }}</div>
+            <div class="font-weight-bold text-gray-500 mt-2">{{  $quiz->pass_mark }}%</div>
         </div>
     </div>
 

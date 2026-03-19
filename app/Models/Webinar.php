@@ -54,20 +54,47 @@ class Webinar extends Model implements TranslatableContract
                 $user = apiAuth();
             }
 
+            // Only scope regular students; admins/teachers/organizations keep full access.
             if (!empty($user) && $user->isUser() && !self::studentWantsAllCourses()) {
                 $table = $builder->getModel()->getTable();
 
-                $builder
+                $builder->where(function ($query) use ($table, $user) {
+                    // University visibility:
+                    // - null => all universities
+                    // - equals user's university_id
+                    $query->where(function ($query) use ($table, $user) {
+                        $query->whereNull("{$table}.university_id")
+                            ->orWhere("{$table}.university_id", $user->university_id);
+                    })
+                    // Faculty visibility:
+                    // - null => all faculties inside the selected university
+                    // - equals user's faculty_id
+                    // - or "all universities for a specific faculty name" (match by faculty name across universities)
                     ->where(function ($query) use ($table, $user) {
-                        $query->where(function ($query) use ($table, $user) {
-                            $query->whereNull("{$table}.university_id")
-                                ->orWhere("{$table}.university_id", $user->university_id);
-                        })
-                        ->where(function ($query) use ($table, $user) {
-                            $query->whereNull("{$table}.faculty_id")
-                                ->orWhere("{$table}.faculty_id", $user->faculty_id);
-                        });
+                        $query->whereNull("{$table}.faculty_id")
+                            ->orWhere("{$table}.faculty_id", $user->faculty_id)
+                            ->orWhere(function ($q) use ($table, $user) {
+                                $q->whereNull("{$table}.university_id")
+                                    ->whereNotNull("{$table}.faculty_id");
+
+                                if (!empty($user->faculty_id)) {
+                                    $userFacultyName = \App\Models\Faculty::where('id', $user->faculty_id)->value('name');
+
+                                    if ($userFacultyName !== null && $userFacultyName !== '') {
+                                        $q->whereIn("{$table}.faculty_id", function ($sub) use ($userFacultyName) {
+                                            $sub->select('id')->from('faculties')->where('name', $userFacultyName);
+                                        });
+                                    } else {
+                                        // No valid faculty name: prevent matching any faculty-scoped courses.
+                                        $q->whereRaw('1 = 0');
+                                    }
+                                } else {
+                                    // User has no faculty_id set: do not show faculty-scoped courses.
+                                    $q->whereRaw('1 = 0');
+                                }
+                            });
                     });
+                });
             }
         });
     }
@@ -84,12 +111,8 @@ class Webinar extends Model implements TranslatableContract
             return $request->boolean('show_all');
         }
 
-        return $request->is('classes')
-            || $request->is('categories/*')
-            || $request->is('reward-courses')
-            || $request->is('course/*')
-            || $request->is('cart*')
-            || $request->is('payments*');
+        // By default, always enforce the university/faculty scope for students.
+        return false;
     }
 
     public function getTitleAttribute()
@@ -234,6 +257,11 @@ class Webinar extends Model implements TranslatableContract
     public function reviews()
     {
         return $this->hasMany('App\Models\WebinarReview', 'webinar_id', 'id');
+    }
+
+    public function activeReviews()
+    {
+        return $this->reviews()->where('status', 'active');
     }
 
     public function visits()
@@ -510,8 +538,14 @@ class Webinar extends Model implements TranslatableContract
 
         if (!empty($user)) {
             $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
-            if (!empty($activeSubscribe) and !empty($activeSubscribe->access_all_courses)) {
-                return true;
+            if (!empty($activeSubscribe) && !empty($activeSubscribe->access_all_courses)) {
+                // If scoped to university/faculty, enforce matching.
+                if (
+                    (!($activeSubscribe->scoped_to_university ?? false) || $this->university_id === $user->university_id) &&
+                    (!($activeSubscribe->scoped_to_faculty ?? false) || $this->faculty_id === $user->faculty_id)
+                ) {
+                    return true;
+                }
             }
 
             $sale = $this->getSaleItem($user);
@@ -896,17 +930,61 @@ class Webinar extends Model implements TranslatableContract
 
     public function getImageCover()
     {
-        return $this->image_cover;
+        return $this->resolveContentAssetUrl($this->image_cover);
     }
 
     public function getImage()
     {
-        return $this->thumbnail;
+        return $this->resolveContentAssetUrl($this->thumbnail);
+    }
+
+    /**
+     * Return the playable URL for the course demo video (R2 Course-Assets or local).
+     *
+     * @return string|null
+     */
+    public function getVideoDemoUrl(): ?string
+    {
+        return $this->resolveContentAssetUrl($this->video_demo);
+    }
+
+    /**
+     * Resolve thumbnail/cover path to full URL (R2 Course-Assets or local).
+     *
+     * @param string|null $path
+     * @return string|null
+     */
+    protected function resolveContentAssetUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'Course-Assets/')) {
+            return \App\Helpers\R2Helper::getUrl($path) ?: $path;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return url($path);
     }
 
     public function getUrl()
     {
         return url('/course/' . $this->slug);
+    }
+
+    /**
+     * Scope: webinars visible in the "upcoming courses" area (pending courses from webinars table).
+     * Shows all pending webinars; for logged-in students the global scope still filters by university/faculty.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\User|null $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeVisibleInUpcomingList($query, $user = null)
+    {
+        $query->where('status', self::$pending);
+        return $query;
     }
 
     public function getLearningPageUrl()
@@ -1391,7 +1469,7 @@ class Webinar extends Model implements TranslatableContract
             $icon = $this->thumbnail;
         }
 
-        return $icon;
+        return $this->resolveContentAssetUrl($icon);
     }
 
 }

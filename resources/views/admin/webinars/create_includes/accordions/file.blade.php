@@ -95,9 +95,16 @@
                                         if (empty($availableSources) || !is_array($availableSources)) {
                                             $availableSources = ['upload', 'youtube', 'vimeo', 'external_link', 'secure_host'];
                                         }
+                                        // Remove s3 and r2: only "Upload" is shown; backend stores to R2 when user chooses Upload
+                                        $availableSources = array_values(array_filter($availableSources, function($source) {
+                                            return $source !== 's3' && $source !== 'r2';
+                                        }));
+                                        if (!in_array('upload', $availableSources)) {
+                                            $availableSources = array_merge(['upload'], $availableSources);
+                                        }
                                     @endphp
                                     @foreach($availableSources as $source)
-                                        <option value="{{ $source }}" @if(!empty($file) and $file->storage == $source) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
+                                        <option value="{{ $source }}" @if((!empty($file) && in_array($file->storage, ['upload', 'r2']) && $source == 'upload') or (!empty($file) && $file->storage == $source && $source != 'upload') or (empty($file) && $source == 'upload')) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -157,7 +164,7 @@
                             </div>
 
 
-                            <div class="form-group js-file-path-input {{ (!empty($file) and $file->storage == 's3') ? 'd-none' : '' }}">
+                            <div class="form-group js-file-path-input">
                                 <div class="local-input input-group">
                                     <div class="input-group-prepend">
                                         <button type="button" class="input-group-text admin-file-manager " data-input="file_path{{ !empty($file) ? $file->id : 'record' }}" data-preview="holder">
@@ -169,20 +176,82 @@
                                 </div>
                             </div>
 
-                            <div class="form-group js-s3-file-path-input {{ (!empty($file) and $file->storage == 's3') ? '' : 'd-none' }}">
-                                <div class="input-group">
+                            <div class="form-group js-s3-file-path-input {{ (!empty($file) and $file->storage == 'r2') ? '' : 'd-none' }}">
+                                <label class="input-label" for="s3File{{ !empty($file) ? $file->id : 'record' }}">
+                                    {{ trans('update.choose_file') }}
+                                    <span class="sr-only">{{ trans('update.drag_drop_or_click_to_upload') }}</span>
+                                </label>
+
+                                {{-- Drag and Drop Zone --}}
+                                <div class="js-file-drag-drop-zone file-drag-drop-zone border-2 border-dashed rounded-12 p-20 text-center mb-12 position-relative" 
+                                     role="region" 
+                                     aria-label="{{ trans('update.file_upload_area') }}"
+                                     tabindex="0"
+                                     data-file-input-id="s3File{{ !empty($file) ? $file->id : 'record' }}">
+                                    <div class="js-drag-drop-content">
+                                        <div class="mb-12">
+                                            <i data-feather="upload" width="48" height="48" class="text-gray-400" aria-hidden="true"></i>
+                                        </div>
+                                        <p class="font-14 text-gray-600 mb-4">
+                                            <span class="js-drag-drop-text">{{ trans('update.drag_drop_files_here') }}</span>
+                                            <span class="sr-only">{{ trans('update.or') }}</span>
+                                        </p>
+                                        <p class="font-12 text-gray-500 mb-0">
+                                            {{ trans('update.or_click_to_browse') }}
+                                        </p>
+                                        <p class="font-12 text-gray-400 mt-8 mb-0">
+                                            {{ trans('update.supported_formats') }}: MP4, AVI, MKV, MOV, PDF, DOC, DOCX
+                                        </p>
+                                    </div>
+                                    <div class="js-drag-drop-overlay d-none position-absolute top-0 start-0 w-100 h-100 bg-primary-10 border-2 border-primary rounded-12 d-flex align-items-center justify-content-center">
+                                        <div class="text-center">
+                                            <i data-feather="upload" width="48" height="48" class="text-primary mb-8" aria-hidden="true"></i>
+                                            <p class="font-14 font-weight-bold text-primary mb-0">{{ trans('update.drop_file_here') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Hidden File Input --}}
+                                <div class="input-group d-none">
                                     <div class="input-group-prepend">
-                                        <button type="button" class="input-group-text">
-                                            <i data-feather="upload" width="18" height="18" class=""></i>
+                                        <button type="button" class="input-group-text" aria-label="{{ trans('update.upload') }}">
+                                            <i data-feather="upload" width="18" height="18" class="" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                     <div class="custom-file js-ajax-s3_file">
-                                        <input type="file" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][s3_file]" class="js-s3-file-input custom-file-input cursor-pointer" id="s3File{{ !empty($file) ? $file->id : 'record' }}">
+                                        <input type="file" 
+                                               name="ajax[{{ !empty($file) ? $file->id : 'new' }}][s3_file]" 
+                                               class="js-s3-file-input custom-file-input cursor-pointer" 
+                                               id="s3File{{ !empty($file) ? $file->id : 'record' }}"
+                                               aria-label="{{ trans('update.choose_file') }}"
+                                               aria-describedby="s3_file_help_{{ !empty($file) ? $file->id : 'record' }}">
                                         <label class="custom-file-label cursor-pointer" for="s3File{{ !empty($file) ? $file->id : 'record' }}">{{ trans('update.choose_file') }}</label>
                                     </div>
-
-                                    <div class="invalid-feedback"></div>
                                 </div>
+
+                                {{-- Selected File Display --}}
+                                <div class="js-selected-file-display d-none mt-12 p-12 bg-gray-50 rounded-8">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center flex-1">
+                                            <i data-feather="file" width="20" height="20" class="text-primary mr-8" aria-hidden="true"></i>
+                                            <div class="flex-1">
+                                                <p class="font-14 font-weight-bold text-dark mb-2 js-selected-file-name"></p>
+                                                <p class="font-12 text-gray-500 mb-0 js-selected-file-size"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button" 
+                                                class="js-remove-file btn btn-sm btn-transparent text-danger p-4" 
+                                                aria-label="{{ trans('update.remove_file') }}">
+                                            <i data-feather="trash-2" width="18" height="18" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="s3_file_help_{{ !empty($file) ? $file->id : 'record' }}" class="font-12 text-gray-500 mt-8">
+                                    {{ trans('update.max_file_size') }}: 2GB
+                                </div>
+
+                                <div class="invalid-feedback"></div>
                             </div>
 
                             <div class="row form-group js-file-type-volume d-none">
@@ -220,15 +289,6 @@
                                 </div>
                             </div>
 
-                            <div class="js-downloadable-input form-group mt-20">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <label class="cursor-pointer input-label" for="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('home.downloadable') }}</label>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][downloadable]" class="custom-control-input" id="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (empty($file) or $file->downloadable) ? 'checked' : ''  }}>
-                                        <label class="custom-control-label" for="downloadableSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div class="form-group mt-20">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -288,6 +348,71 @@
         </div>
     </li>
 
+    @push('styles_top')
+        <style>
+            .file-drag-drop-zone {
+                transition: all 0.3s ease;
+                cursor: pointer;
+                background-color: #f8f9fa;
+                min-height: 180px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .file-drag-drop-zone:hover {
+                background-color: #e9ecef;
+                border-color: #007bff !important;
+            }
+            
+            .file-drag-drop-zone:focus {
+                outline: 2px solid #007bff;
+                outline-offset: 2px;
+            }
+            
+            .file-drag-drop-zone.drag-over {
+                background-color: #e7f3ff;
+                border-color: #007bff !important;
+            }
+            
+            .file-drag-drop-zone .js-drag-drop-overlay {
+                transition: opacity 0.3s ease;
+            }
+            
+            .js-selected-file-display {
+                animation: fadeIn 0.3s ease;
+            }
+            
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .file-drag-drop-zone:focus-visible {
+                outline: 3px solid #007bff;
+                outline-offset: 2px;
+            }
+            
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border-width: 0;
+            }
+        </style>
+    @endpush
+
     @push('scripts_bottom')
         <script>
             var filePathPlaceHolderBySource = {
@@ -298,8 +423,9 @@
                 google_drive: '{{ trans('update.file_source_google_drive_placeholder') }}',
                 dropbox: '{{ trans('update.file_source_dropbox_placeholder') }}',
                 iframe: '{{ trans('update.file_source_iframe_placeholder') }}',
-                s3: '{{ trans('update.file_source_s3_placeholder') }}',
+                r2: '{{ trans('update.file_source_r2_placeholder') ?? 'Enter R2 file path or upload file' }}',
             }
         </script>
+        <script src="/assets/design_1/js/panel/file-drag-drop.js"></script>
     @endpush
 @endif

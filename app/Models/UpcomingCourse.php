@@ -168,7 +168,11 @@ class UpcomingCourse extends Model implements TranslatableContract
 
     public function getUrl()
     {
-        return url('/upcoming_courses/' . $this->slug);
+        if ($this->webinar) {
+            return $this->webinar->getUrl();
+        }
+
+        return url('/course/' . $this->slug);
     }
 
     public function addToCalendarLink()

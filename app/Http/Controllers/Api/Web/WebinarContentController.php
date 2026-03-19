@@ -10,6 +10,17 @@ use Illuminate\Http\Request;
 
 class WebinarContentController extends Controller
 {
+    /**
+     * List quizzes for a course (public course page).
+     *
+     * @OA\Get(
+     *     path="/v1/courses/{id}/quizzes",
+     *     summary="List course quizzes",
+     *     tags={"Courses"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="List of quizzes")
+     * )
+     */
     public function quizzes($webinar_id)
     {
         $quizzes = Quiz::where('webinar_id', $webinar_id)->where('status', 'active')->get();
@@ -17,6 +28,17 @@ class WebinarContentController extends Controller
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), QuizResource::collection($quizzes));
     }
 
+    /**
+     * List certificates available for a course (completion, quiz certificates).
+     *
+     * @OA\Get(
+     *     path="/v1/courses/{id}/certificates",
+     *     summary="List course certificates",
+     *     tags={"Courses"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="List of certificate types/links")
+     * )
+     */
     public function certificates($webinar_id)
     {
         $webinar = Webinar::find($webinar_id);

@@ -1,3 +1,5 @@
+@use "sass:map";
+
 .badge-counter {
     display: flex;
     align-items: center;
@@ -32,7 +34,7 @@
 }
 
 $badge-colors: ();
-$badge-colors: map-merge(
+$badge-colors: map.merge(
         (
             "primary" : 'primary',
             "secondary" : 'secondary',

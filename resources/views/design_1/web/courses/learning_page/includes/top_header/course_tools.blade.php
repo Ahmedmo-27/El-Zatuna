@@ -1,16 +1,26 @@
 <div class="learning-page__dropdown position-relative">
-    <div class="d-flex align-items-center gap-8 p-8 pr-12 rounded-24 bg-gray-100">
-        <div class="d-flex-center size-32 bg-primary rounded-circle">
-            <x-iconsax-bul-teacher class="icons text-white" width="16px" height="16px"/>
+    <div class="learning-page-tools-trigger d-flex align-items-center gap-10 p-8 pr-14 rounded-24 bg-gray-100 cursor-pointer">
+        <div class="learning-page-tools-trigger__icon d-flex-center rounded-circle">
+            <x-iconsax-bul-category class="icons text-white" width="16px" height="16px"/>
         </div>
-        <span class="font-12 text-dark font-weight-bold">{{ trans('update.course_tools') }}</span>
-        <x-iconsax-lin-arrow-down class="icons text-gray-400" width="16px" height="16px"/>
+        <div class="learning-page-tools-trigger__content">
+            <span class="d-block font-12 text-dark font-weight-bold">{{ trans('update.course_tools') }}</span>
+            <span class="d-block font-12 text-gray-500">{{ trans('update.course_page') }}</span>
+        </div>
+        <x-iconsax-lin-arrow-down class="learning-page-tools-trigger__arrow icons text-gray-400" width="16px" height="16px"/>
     </div>
 
     <div class="learning-page__dropdown-menu py-12">
 
+        <div class="learning-page__dropdown-menu__header px-16 pb-8">
+            <div class="font-14 font-weight-bold text-dark">{{ trans('update.course_tools') }}</div>
+            <div class="font-12 text-gray-500">{{ $course->title }}</div>
+        </div>
+
         <ul class="my-8">
             @if(!empty($authUser) and $authUser->isAdmin())
+                {{-- Hidden per request: quizzes and assignments --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="{{ getAdminPanelUrl("/quizzes?webinar_ids[]={$course->id}") }}" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-clipboard-tick class="icons" width="24px" height="24px"/>
@@ -24,6 +34,7 @@
                         <span class="ml-8">{{ trans('update.student_assignments') }}</span>
                     </a>
                 </li>
+                --}}
 
                 @if($course->forum)
                     <li class="learning-page__dropdown-menu__item">
@@ -69,6 +80,8 @@
                     </a>
                 </li>
             @elseif($userIsCourseTeacher)
+                {{-- Hidden per request: quizzes, assignments, and certificates --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="/panel/quizzes/results" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-clipboard-tick class="icons" width="24px" height="24px"/>
@@ -89,6 +102,7 @@
                         <span class="ml-8">{{ trans('update.student_certificates') }}</span>
                     </a>
                 </li>
+                --}}
 
                 @if($course->forum)
                     <li class="learning-page__dropdown-menu__item">
@@ -141,6 +155,8 @@
                     </a>
                 </li>
             @else
+                {{-- Hidden per request: quizzes, assignments, and certificates --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="/panel/quizzes/my-results" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-clipboard-tick class="icons" width="24px" height="24px"/>
@@ -161,6 +177,7 @@
                         <span class="ml-8">{{ trans('panel.certificates') }}</span>
                     </a>
                 </li>
+                --}}
 
                 @if($course->forum)
                     <li class="learning-page__dropdown-menu__item">

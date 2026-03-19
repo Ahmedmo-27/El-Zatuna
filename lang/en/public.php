@@ -191,6 +191,7 @@ return [
 'agree_rules' => 'I agree to the terms and conditions.',
 
 'message_to_reviewer' => 'Message to Reviewer',
+'save_first_step_to_unlock' => 'Save the first step first to unlock the rest.',
 
 'send_for_review' => 'Submit for Review',
 'save_as_draft' => 'Save as Draft',

@@ -36,7 +36,7 @@
 
                 <div id="profileCoverBox" class="user-setting-profile-cover d-flex-center flex-column rounded-15 mt-16 bg-gray-100 w-100">
                     @if(!empty($user->cover_img))
-                        <img src="{{ $user->cover_img }}" alt="" class="img-cover rounded-15">
+                        <img src="{{ $user->getCover() }}" alt="" class="img-cover rounded-15">
                     @else
                         <div class="d-flex-center size-48 rounded-12 bg-primary-30">
                             <x-iconsax-bul-image class="icons text-primary" width="24px" height="24px"/>
@@ -77,7 +77,7 @@
                         <div class="d-flex-center flex-column mt-16">
                             <div id="profileSecondaryImageBox" class="user-setting-profile-video-box d-flex-center position-relative rounded-16 px-16">
                                 @if(!empty($user->profile_secondary_image))
-                                    <img src="{{ $user->profile_secondary_image }}" id="profileSecondaryImage" alt="" class="img-cover mh-100 rounded-16 bg-gray-100">
+                                    <img src="{{ $user->getProfileSecondaryImage() }}" id="profileSecondaryImage" alt="" class="img-cover mh-100 rounded-16 bg-gray-100">
                                 @else
                                     <div class="d-flex-center size-48 rounded-12 bg-primary-30">
                                         <x-iconsax-bul-image class="icons text-primary" width="24px" height="24px"/>
@@ -115,7 +115,7 @@
                         <div class="user-setting-profile-video-box d-flex-center flex-column rounded-15 mt-16 bg-gray-100 w-100">
                             @if(!empty($user->profile_video))
                                 <video class="img-cover rounded-15" data-value-1="1" data-value-2="1.1" autoplay="autoplay" loop="loop" muted="" playsinline="" controls oncontextmenu="return false" preload="auto">
-                                    <source src="{{ $user->profile_video }}" type="video/mp4"/>
+                                    <source src="{{ $user->getProfileVideoUrl() }}" type="video/mp4"/>
                                 </video>
                             @else
                                 <div class="d-flex-center size-48 rounded-12 bg-primary-30">

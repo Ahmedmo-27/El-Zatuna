@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Web\traits\UserFormFieldsTrait;
 use App\Mixins\RegistrationBonus\RegistrationBonusAccounting;
 use App\Models\Affiliate;
+use App\Models\Category;
 use App\Models\Faculty;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\Role;
 use App\Models\University;
+use App\Models\UserOccupation;
 use App\Models\UserMeta;
 use App\Models\RegistrationVerificationToken;
 use App\User;
@@ -81,18 +83,61 @@ class RegisterController extends Controller
 
     public function showStep(Request $request, $step)
     {
-        // Handle GET requests for specific steps
-        if ($step == 3) {
-            // Step 3 requires verification token from session
-            $verificationToken = session('registration_step_3_token');
-            $verified = session('registration_verified');
-            $userId = session('registration_user_id');
+        if ($step == 2) {
+            $email = session('registration_step_2_email');
+            if (empty($email)) {
+                return redirect('/register/step/1')->withErrors(['email' => trans('auth.please_complete_verification_first')]);
+            }
+            $seoSettings = getSeoMetas('register');
+            $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
+            $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
+            $pageRobot = getPageRobot('register');
+            $authTemplate = getThemeAuthenticationPagesStyleName();
+            return view("design_1.web.auth.{$authTemplate}.register.step2", [
+                'pageTitle' => $pageTitle,
+                'pageDescription' => $pageDescription,
+                'pageRobot' => $pageRobot,
+                'email' => $email,
+            ]);
+        }
 
-            if (!$verificationToken || !$verified || !$userId) {
+        if ($step == 3) {
+            // Prefer token from URL (more robust across devices), fallback to session
+            $verificationToken = $request->query('token');
+            $verified = $request->query('verified') ? true : false;
+            $registrationUser = null;
+
+            if (!empty($verificationToken)) {
+                $tokenData = RegistrationVerificationToken::verifyToken($verificationToken);
+
+                if (!empty($tokenData) && !empty($tokenData['step']) && (int)$tokenData['step'] === 3) {
+                    if (!empty($tokenData['user_id'])) {
+                        $registrationUser = User::find($tokenData['user_id']);
+                    } elseif (!empty($tokenData['email'])) {
+                        $registrationUser = User::where('email', $tokenData['email'])->first();
+                    }
+                }
+            }
+
+            // Fallback to session-based flow if no valid token found in URL
+            if (empty($verificationToken) || empty($registrationUser)) {
+                $verificationToken = session('registration_step_3_token');
+                $verified = session('registration_verified');
+                $userId = session('registration_user_id');
+
+                if ($verificationToken && $userId) {
+                    $registrationUser = User::find($userId);
+                }
+            }
+
+            if (empty($verificationToken) || empty($registrationUser)) {
                 return redirect('/register/step/1')->withErrors([
                     'email' => trans('auth.please_complete_verification_first')
                 ]);
             }
+
+            $isTeacher = !empty($registrationUser) && $registrationUser->role_name == Role::$teacher;
+            $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
 
             $seoSettings = getSeoMetas('register');
             $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
@@ -100,17 +145,32 @@ class RegisterController extends Controller
             $pageRobot = getPageRobot('register');
 
             $referralSettings = getReferralSettings();
-            $universities = University::query()->orderBy('name')->get();
+            // Preload universities with their faculties to avoid AJAX calls
+            $universities = University::query()->with('faculties:id,name,university_id')->orderBy('name')->get();
             $referralCode = Cookie::get('referral_code');
+
+            // Build faculties map grouped by university_id for JavaScript
+            $facultiesByUniversity = [];
+            foreach ($universities as $university) {
+                $facultiesByUniversity[$university->id] = $university->faculties->map(function($faculty) {
+                    return [
+                        'id' => $faculty->id,
+                        'name' => $faculty->name,
+                    ];
+                })->sortBy('name')->values()->toArray();
+            }
 
             $data = [
                 'pageTitle' => $pageTitle,
                 'pageDescription' => $pageDescription,
                 'pageRobot' => $pageRobot,
                 'verificationToken' => $verificationToken,
-                'verified' => $verified,
+                'verified' => (bool) $verified,
+                'isTeacher' => $isTeacher,
+                'instructorCategories' => $instructorCategories,
                 'universities' => $universities,
                 'faculties' => collect(),
+                'facultiesByUniversity' => $facultiesByUniversity,
                 'referralSettings' => $referralSettings,
                 'referralCode' => $referralCode,
             ];
@@ -141,10 +201,20 @@ class RegisterController extends Controller
     {
         $data = $request->all();
 
+        $allowedAccountTypes = [Role::$user, Role::$teacher];
+        $accountType = $data['account_type'] ?? Role::$user;
+        if (!in_array($accountType, $allowedAccountTypes)) {
+            $accountType = Role::$user;
+        }
+
+        $roleName = ($accountType == Role::$teacher) ? Role::$teacher : Role::$user;
+        $roleId = ($accountType == Role::$teacher) ? Role::getTeacherRoleId() : Role::getUserRoleId();
+
         // Step 1: Initial registration - collect full_name and email only
         $rules = [
             'full_name' => 'required|string|min:3',
             'email' => 'required|string|email|max:255|unique:users',
+            'account_type' => ['nullable', Rule::in($allowedAccountTypes)],
         ];
 
         // Use different validation for web vs API
@@ -165,6 +235,11 @@ class RegisterController extends Controller
                 }
                 return back()->withErrors(['email' => trans('api.auth.already_registered')])->withInput();
             } else {
+                $userCase->update([
+                    'role_name' => $roleName,
+                    'role_id' => $roleId,
+                ]);
+
                 // User exists but incomplete - generate new token for step 3
                 $tokenData = [
                     'user_id' => $userCase->id,
@@ -183,13 +258,26 @@ class RegisterController extends Controller
                 
                 // For web: redirect to step 3 with token
                 $referralSettings = getReferralSettings();
-                $universities = University::query()->orderBy('name')->get();
+                // Preload universities with their faculties to avoid AJAX calls
+                $universities = University::query()->with('faculties:id,name,university_id')->orderBy('name')->get();
                 $referralCode = Cookie::get('referral_code');
+
+                // Build faculties map grouped by university_id for JavaScript
+                $facultiesByUniversity = [];
+                foreach ($universities as $university) {
+                    $facultiesByUniversity[$university->id] = $university->faculties->map(function($faculty) {
+                        return [
+                            'id' => $faculty->id,
+                            'name' => $faculty->name,
+                        ];
+                    })->sortBy('name')->values()->toArray();
+                }
 
                 $seoSettings = getSeoMetas('register');
                 $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
                 $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
                 $pageRobot = getPageRobot('register');
+                $instructorCategories = Category::query()->whereNull('parent_id')->with('subCategories')->get();
 
                 $authTemplate = getThemeAuthenticationPagesStyleName();
                 return view("design_1.web.auth.{$authTemplate}.register.step3", [
@@ -198,8 +286,11 @@ class RegisterController extends Controller
                     'pageRobot' => $pageRobot,
                     'verificationToken' => $verificationToken,
                     'verified' => false,
+                    'isTeacher' => ($roleName == Role::$teacher),
+                    'instructorCategories' => $instructorCategories,
                     'universities' => $universities,
                     'faculties' => collect(),
+                    'facultiesByUniversity' => $facultiesByUniversity,
                     'referralSettings' => $referralSettings,
                     'referralCode' => $referralCode,
                 ]);
@@ -214,8 +305,8 @@ class RegisterController extends Controller
             $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
             $user = User::create([
-                'role_name' => Role::$user,
-                'role_id' => Role::getUserRoleId(),
+                'role_name' => $roleName,
+                'role_id' => $roleId,
                 'full_name' => $data['full_name'],
                 'email' => $data['email'],
                 'status' => User::$pending,
@@ -239,13 +330,13 @@ class RegisterController extends Controller
             ]);
         }
 
-        // Create user and send email verification
+        // Create user and send email verification (step 2) via Brevo
         $referralSettings = getReferralSettings();
         $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
 
         $user = User::create([
-            'role_name' => Role::$user,
-            'role_id' => Role::getUserRoleId(),
+            'role_name' => $roleName,
+            'role_id' => $roleId,
             'full_name' => $data['full_name'],
             'email' => $data['email'],
             'status' => User::$pending,
@@ -254,160 +345,150 @@ class RegisterController extends Controller
             'created_at' => time()
         ]);
 
-        // Generate token for step 2 (email verification)
+        // Generate verification code for step 2 (email verification)
         $tokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
             'step' => 2,
         ];
-        
-        $expiresAt = now()->addMinutes(60);
-        $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
 
-        // Send verification email
-        $user->notify(new \App\Notifications\VerifyRegistrationEmail($verificationToken, $expiresAt));
+        $expiresAt = now()->addMinutes(60);
+        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
+
+        // Send verification email with code (via Brevo)
+        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
 
         // Return view for web requests, JSON for API
         if ($request->wantsJson()) {
             return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
-                'message' => 'Please check your email to verify your account.',
+                'message' => 'Please check your email for a 6-digit verification code.',
                 'expires_at' => $expiresAt->toIso8601String(),
             ]);
         }
 
         // Web request - show step 2 view
+        session(['registration_step_2_email' => $user->email]);
         $seoSettings = getSeoMetas('register');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.register_page_title');
         $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.register_page_title');
         $pageRobot = getPageRobot('register');
 
-        $data = [
+        $authTemplate = getThemeAuthenticationPagesStyleName();
+        return view("design_1.web.auth.{$authTemplate}.register.step2", [
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
             'email' => $user->email,
-        ];
-
-        $authTemplate = getThemeAuthenticationPagesStyleName();
-        return view("design_1.web.auth.{$authTemplate}.register.step2", $data);
+        ]);
     }
 
     private function stepTwo(Request $request)
     {
         $data = $request->all();
-        
-        // Step 2: Verify email with token
+
         $rules = [
-            'verification_token' => 'required|string',
+            'email' => 'required|email|exists:users,email',
+            'verification_code' => 'required|string|size:6',
         ];
-        
-        // Use different validation for web vs API
+
         if ($request->wantsJson()) {
             validateParam($data, $rules);
         } else {
             $request->validate($rules);
         }
 
-        // Verify the token
-        $tokenData = RegistrationVerificationToken::verifyToken($data['verification_token']);
-        
+        $tokenData = RegistrationVerificationToken::verifyCode($data['email'], $data['verification_code'], 2);
+
         if (!$tokenData) {
-            if ($request->wantsJson()) {
-                return apiResponse2(0, 'invalid_token', 'Verification token is invalid or expired');
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => trans('auth.invalid_verification_code'),
+                    'errors' => ['verification_code' => [trans('auth.invalid_verification_code')]]
+                ], 422);
             }
-            return back()->withErrors(['verification_token' => 'Verification token is invalid or expired'])->withInput();
+            return back()->withErrors(['verification_code' => trans('auth.invalid_verification_code')])->withInput();
         }
 
-        if ($tokenData['step'] !== 2) {
-            if ($request->wantsJson()) {
-                return apiResponse2(0, 'invalid_step', 'This token is not valid for step 2');
-            }
-            return back()->withErrors(['verification_token' => 'This token is not valid for step 2'])->withInput();
-        }
+        $user = User::where('email', $data['email'])->first();
 
-        // Find user
-        $user = User::find($tokenData['user_id']);
-        
         if (!$user) {
-            if ($request->wantsJson()) {
-                return apiResponse2(0, 'user_not_found', 'User not found');
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found',
+                    'errors' => ['verification_code' => ['User not found']]
+                ], 422);
             }
-            return back()->withErrors(['verification_token' => 'User not found'])->withInput();
+            return back()->withErrors(['verification_code' => 'User not found'])->withInput();
         }
 
-        // Mark token as used
-        RegistrationVerificationToken::markAsUsed($data['verification_token']);
+        RegistrationVerificationToken::markCodeAsUsed($data['verification_code'], $data['email']);
 
-        // Mark email as verified
         if (empty($user->email_verified_at)) {
-            $user->update([
-                'email_verified_at' => time(),
-            ]);
+            $user->update(['email_verified_at' => time()]);
         }
 
-        // Generate new token for step 3 (profile completion)
         $newTokenData = [
             'user_id' => $user->id,
             'email' => $user->email,
             'step' => 3,
         ];
-        
-        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60); // 60 minutes
+        $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
+
+        session([
+            'registration_step_3_token' => $verificationToken,
+            'registration_verified' => true,
+            'registration_user_id' => $user->id,
+        ]);
 
         if ($request->wantsJson()) {
             return apiResponse2(1, 'email_verified', trans('api.auth.email_verified'), [
                 'verification_token' => $verificationToken,
                 'expires_at' => now()->addMinutes(60)->toIso8601String(),
-                'message' => 'Email verified successfully. Please complete your profile.'
+                'message' => 'Email verified successfully. Please complete your profile.',
+                'redirect_url' => url('/register/step/3') . '?token=' . $verificationToken . '&verified=true',
             ]);
         }
-        
-        // Web request: This should not be reached as VerifyEmailController handles email verification for web
-        return back()->with('success', 'Email verified successfully');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => trans('auth.email_verified_successfully'),
+                'redirect' => '/register/step/3?token=' . $verificationToken . '&verified=true'
+            ]);
+        }
+
+        return redirect('/register/step/3?token=' . $verificationToken . '&verified=true')
+            ->with('success', trans('auth.email_verified_successfully'));
     }
 
     private function stepThree(Request $request)
     {
         $data = $request->all();
-        
-        // Step 3: Complete profile with username, password, university, faculty, and optional referral code
-        $rules = [
-            'verification_token' => 'required|string',
-            'username' => 'required|string|min:3|max:255|unique:users',
-            'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
-            'password_confirmation' => 'required|same:password',
-            'university_id' => 'required|exists:universities,id',
-            'faculty_id' => [
-                'required',
-                Rule::exists('faculties', 'id')->where(function ($query) use ($data) {
-                    $query->where('university_id', $data['university_id'] ?? null);
-                })
-            ],
-            'referral_code' => 'nullable|exists:affiliates_codes,code'
-        ];
-        
-        // Use different validation for web vs API
-        if ($request->wantsJson()) {
-            validateParam($data, $rules);
-        } else {
-            $request->validate($rules);
+
+        if (empty($data['verification_token'])) {
+            if ($request->wantsJson()) {
+                return apiResponse2(0, 'invalid_token', 'Verification token is required');
+            }
+            return redirect('/register/step/3')->withErrors(['verification_token' => 'Verification token is required'])->withInput();
         }
 
         // Verify the token
         $tokenData = RegistrationVerificationToken::verifyToken($data['verification_token']);
-        
+
         if (!$tokenData) {
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'invalid_token', 'Verification token is invalid or expired');
             }
-            return back()->withErrors(['verification_token' => 'Verification token is invalid or expired'])->withInput();
+            return redirect('/register/step/3?token=' . urlencode($data['verification_token']))->withErrors(['verification_token' => 'Verification token is invalid or expired'])->withInput();
         }
 
         if ($tokenData['step'] !== 3) {
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'invalid_step', 'This token is not valid for step 3');
             }
-            return back()->withErrors(['verification_token' => 'This token is not valid for step 3'])->withInput();
+            return redirect('/register/step/3?token=' . urlencode($data['verification_token']))->withErrors(['verification_token' => 'This token is not valid for step 3'])->withInput();
         }
 
         // Find user by user_id or email from token
@@ -422,17 +503,69 @@ class RegisterController extends Controller
             if ($request->wantsJson()) {
                 return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
             }
-            return back()->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
+            return redirect('/register/step/3?token=' . urlencode($data['verification_token'] ?? ''))->withErrors(['verification_token' => 'User not found. Please complete step 1 first.'])->withInput();
         }
 
-        // Update user profile with username, password, university, and faculty
+        // Ensure email is marked verified (fallback for older flows)
+        if (empty($user->email_verified_at)) {
+            $user->update(['email_verified_at' => time()]);
+        }
+
+        $isTeacher = $user->role_name == Role::$teacher;
+
+        // Step 3: Complete profile with username/password and role-specific fields
+        $rules = [
+            'verification_token' => 'required|string',
+            'username' => 'required|string|min:3|max:255|unique:users',
+            'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
+            'password_confirmation' => 'required|same:password',
+            'university_id' => $isTeacher ? 'nullable' : 'required|exists:universities,id',
+            'faculty_id' => $isTeacher ? 'nullable' : [
+                'required',
+                Rule::exists('faculties', 'id')->where(function ($query) use ($data) {
+                    $query->where('university_id', $data['university_id'] ?? null);
+                })
+            ],
+            'occupations' => $isTeacher ? 'required|array|min:1' : 'nullable',
+            'occupations.*' => $isTeacher ? 'required|integer|exists:categories,id' : 'nullable',
+            'description' => $isTeacher ? 'required|string|min:10' : 'nullable|string',
+            'referral_code' => 'nullable|exists:affiliates_codes,code'
+        ];
+
+        // Use different validation for web vs API
+        if ($request->wantsJson()) {
+            validateParam($data, $rules);
+        } else {
+            $validator = Validator::make($data, $rules);
+            if ($validator->fails()) {
+                $tokenParam = !empty($data['verification_token']) ? '?token=' . urlencode($data['verification_token']) : '';
+                return redirect('/register/step/3' . $tokenParam)->withErrors($validator)->withInput();
+            }
+        }
+
+        // Update user profile
         $user->update([
             'username' => $data['username'],
             'password' => Hash::make($data['password']),
-            'university_id' => $data['university_id'],
-            'faculty_id' => $data['faculty_id'],
+            'university_id' => $isTeacher ? null : ($data['university_id'] ?? null),
+            'faculty_id' => $isTeacher ? null : ($data['faculty_id'] ?? null),
+            'about' => $isTeacher ? ($data['description'] ?? null) : $user->about,
             'status' => User::$active, // Activate user now
         ]);
+
+        if ($isTeacher) {
+            UserOccupation::query()->where('user_id', $user->id)->delete();
+
+            if (!empty($data['occupations']) && is_array($data['occupations'])) {
+                foreach (array_unique($data['occupations']) as $occupationId) {
+                    UserOccupation::query()->create([
+                        'user_id' => $user->id,
+                        'category_id' => $occupationId,
+                        'created_at' => time(),
+                    ]);
+                }
+            }
+        }
 
         // Mark token as used
         RegistrationVerificationToken::markAsUsed($data['verification_token']);
@@ -450,10 +583,11 @@ class RegisterController extends Controller
         if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
             $enableRegistrationBonus = true;
             $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-            
+
             $user->update([
                 'enable_registration_bonus' => $enableRegistrationBonus,
                 'registration_bonus_amount' => $registrationBonusAmount,
+                'status' => User::$active, // Ensure status stays active (in case of any overwrite)
             ]);
         }
 
@@ -465,7 +599,7 @@ class RegisterController extends Controller
         $registrationBonusAccounting = new RegistrationBonusAccounting();
         $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
 
-        // Trigger registered event
+        // Trigger registered event (listeners may send verification email; they do not set user status)
         event(new Registered($user));
 
         // Send notification
@@ -491,6 +625,10 @@ class RegisterController extends Controller
         }
 
         // Web request - login user and show welcome page
+        $user->refresh();
+        if ($user->status !== User::$active) {
+            $user->update(['status' => User::$active]);
+        }
         $this->guard()->login($user);
 
         $seoSettings = getSeoMetas('register');

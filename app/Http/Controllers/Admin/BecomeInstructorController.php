@@ -14,9 +14,19 @@ use Illuminate\Http\Request;
 
 class BecomeInstructorController extends Controller
 {
-    public function index($page)
+    public function index(Request $request, $page = null)
     {
         $this->authorize('admin_become_instructors_list');
+
+        // Determine page type from route or parameter
+        if (empty($page)) {
+            $path = $request->path();
+            if (strpos($path, 'organizations') !== false) {
+                $page = 'organizations';
+            } else {
+                $page = 'instructors';
+            }
+        }
 
         if ($page == 'organizations') {
             $role = Role::$organization;

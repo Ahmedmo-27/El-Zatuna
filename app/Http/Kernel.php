@@ -18,6 +18,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        \App\Http\Middleware\IncreaseUploadLimits::class, // Set upload limits before ValidatePostSize
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
@@ -70,6 +71,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin.auth' => \App\Http\Middleware\AdminAuthenticate::class,
+        'swagger.admin' => \App\Http\Middleware\SwaggerAdminOnly::class,
         'panel.auth' => \App\Http\Middleware\PanelAuthenticate::class,
         'panel' => \App\Http\Middleware\PanelAuthenticate::class,
         'web.auth' => \App\Http\Middleware\WebAuthenticate::class,
@@ -101,5 +103,7 @@ class Kernel extends HttpKernel
         'api.rate-limit-headers' => \App\Http\Middleware\Api\AddRateLimitHeaders::class,
         'api.versioning' => \App\Http\Middleware\Api\ApiVersioning::class,
         'api.version' => \App\Http\Middleware\ApiVersion::class,
+        'video.referrer' => \App\Http\Middleware\ValidateVideoReferrer::class,
+        'block.downloaders' => \App\Http\Middleware\BlockDownloadManagers::class,
     ];
 }

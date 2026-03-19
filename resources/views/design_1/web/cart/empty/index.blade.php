@@ -2,10 +2,11 @@
 
 @push("styles_top")
     <link rel="stylesheet" href="{{ getDesign1StylePath("cart_page") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/cart-pages-elzatuna.css">
 @endpush
 
 @section("content")
-    <section class="container mt-96 mb-104 position-relative">
+    <section class="cart-page container mt-96 mb-104 position-relative">
         <div class="row justify-content-center">
             <div class="col-12 col-lg-8">
                 <div class="cart-empty position-relative">

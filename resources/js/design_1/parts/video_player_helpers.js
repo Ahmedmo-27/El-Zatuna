@@ -23,7 +23,7 @@
         return path;
     }
 
-    window.makeVideoPlayerHtml = function (path, storage, height, tagId, thumbnail = null) {
+    window.makeVideoPlayerHtml = function (path, storage, height, tagId, thumbnail = null, mimeType = null) {
         let html = '';
         let options = {
             autoplay: false,
@@ -74,8 +74,9 @@
         } else if (storage === "secure_host") {
             html = '<iframe src="' + path + '" class="img-cover bg-gray-200" frameborder="0" allowfullscreen="true" ></iframe>';
         } else {
+            const sourceType = mimeType || 'video/mp4';
             html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${height}" data-poster="${thumbnail ?? ''}">
-                <source src="${path}" type="video/mp4"/>
+                <source src="${path}" type="${sourceType}"/>
             </video>`;
         }
 
@@ -98,7 +99,7 @@
 
                 const videoTagId = 'videoPlayer' + fileId;
 
-                const {html, options} = makeVideoPlayerHtml(result.path, storage, height, videoTagId);
+                const {html, options} = makeVideoPlayerHtml(result.path, storage, height, videoTagId, undefined, result.mime_type);
 
                 if ($contentEl) {
                     $contentEl.html(html);

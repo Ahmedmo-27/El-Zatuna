@@ -99,7 +99,7 @@ trait LearningPageItemInfoTrait
         $checkSequenceContent = !empty($file) ? $file->checkSequenceContent() : null;
         $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
 
-        if (!empty($file) and ($file->accessibility == 'free' or $this->checkCourseAccess($course)) and !$sequenceContentHasError) {
+        if (!empty($file) and ($file->accessibility == 'free' or canUserAccessCourseContent($course, $user, $file->chapter)) and !$sequenceContentHasError) {
 
             $filePath = url($file->file);
 
@@ -148,7 +148,7 @@ trait LearningPageItemInfoTrait
         $checkSequenceContent = !empty($session) ? $session->checkSequenceContent() : null;
         $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
 
-        if (!empty($session) and $this->checkCourseAccess($course) and !$sequenceContentHasError) {
+        if (!empty($session) and canUserAccessCourseContent($course, $user, $session->chapter) and !$sequenceContentHasError) {
 
             // Learning Last View
             $this->storeCourseLearningLastView($session->webinar_id, $session->id, 'session');
@@ -266,7 +266,7 @@ trait LearningPageItemInfoTrait
             ])
             ->first();
 
-        if (!empty($quiz) and $this->checkCourseAccess($course)) {
+        if (!empty($quiz) and canUserAccessCourseContent($course, $user, $quiz->chapter)) {
             $quiz = $this->checkQuizResult($quiz);
 
             $canStart = true;
@@ -331,7 +331,7 @@ trait LearningPageItemInfoTrait
         $checkSequenceContent = !empty($textLesson) ? $textLesson->checkSequenceContent() : null;
         $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
 
-        if (!empty($textLesson) and ($textLesson->accessibility == 'free' or $this->checkCourseAccess($course)) and !$sequenceContentHasError) {
+        if (!empty($textLesson) and ($textLesson->accessibility == 'free' or canUserAccessCourseContent($course, $user, $textLesson->chapter)) and !$sequenceContentHasError) {
 
             // Learning Last View
             $this->storeCourseLearningLastView($textLesson->webinar_id, $textLesson->id, 'text_lesson');

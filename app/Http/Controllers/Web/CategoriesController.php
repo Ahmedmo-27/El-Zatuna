@@ -46,6 +46,12 @@ class CategoriesController extends Controller
                         $q->whereHas('category', function ($q) use ($categoryIds) {
                             $q->whereIn('id', $categoryIds);
                         });
+
+                        // For guests, only show global courses (all universities & all faculties).
+                        if (!auth()->check()) {
+                            $q->whereNull('university_id')
+                                ->whereNull('faculty_id');
+                        }
                     })
                     ->with([
                         'webinar' => function ($query) {
@@ -62,6 +68,12 @@ class CategoriesController extends Controller
                 $webinarsQuery = Webinar::where('webinars.status', 'active')
                     ->where('private', false)
                     ->whereIn('category_id', $categoryIds);
+
+                // For guests, only show global courses.
+                if (!auth()->check()) {
+                    $webinarsQuery->whereNull('university_id')
+                        ->whereNull('faculty_id');
+                }
 
                 $filterMaxPrice = $webinarsQuery->max('price') ?? 10000;
 

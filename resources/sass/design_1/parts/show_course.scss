@@ -101,6 +101,7 @@
         width: 100%;
         height: 224px;
         border-radius: 16px 16px 0 0;
+        overflow: hidden;
 
         img {
             border-radius: 16px 16px 0 0;
@@ -151,6 +152,12 @@
         left: 50%;
         transform: translateX(-50%);
         z-index: 2;
+    }
+
+    // Teacher card avatar: consistent circular crop
+    &-section .size-64.rounded-circle {
+        overflow: hidden;
+        flex-shrink: 0;
     }
 
     &__teacher {
@@ -311,6 +318,11 @@
 }
 
 .course-about-instructor-card {
+    // Main instructor avatar: consistent crop in rounded rect
+    .size-80.rounded-12 {
+        overflow: hidden;
+        flex-shrink: 0;
+    }
 
     &__mask {
         position: absolute;
@@ -325,9 +337,17 @@
     &__secondary-img {
         width: 308px;
         height: 316px;
+        min-width: 308px;
+        min-height: 316px;
         bottom: 0;
         top: -40px;
         margin-bottom: -40px;
+        overflow: hidden;
+        border-radius: 12px;
+
+        img {
+            border-radius: 12px;
+        }
 
         @media (max-width: $screen-sm-max) {
             display: none;
@@ -335,10 +355,15 @@
     }
 
     &__details {
-        width: calc(100% - 332px);
+        flex: 1;
+        min-width: 0;
+
+        .course-about-instructor-card--has-secondary & {
+            width: calc(100% - 332px);
+        }
 
         @media (max-width: $screen-sm-max) {
-            width: 100%;
+            width: 100% !important;
         }
     }
 
@@ -478,19 +503,46 @@
     height: 8px;
 }
 
+// About This Course section: consistent inner padding
+.course-about-section {
+    @media (max-width: 576px) {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        padding-top: 20px !important;
+        padding-bottom: 24px !important;
+    }
+}
+
 .course-show-description {
     color: var(--gray-500);
+    line-height: 1.6;
 
     p {
         color: var(--gray-500);
+        margin-bottom: 0.75em;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 
     img {
         max-width: 100% !important;
     }
 
+    ul, ol {
+        padding-left: 1.25em;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+
     li {
         list-style: inherit;
+        margin-bottom: 0.5em;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
 }
 

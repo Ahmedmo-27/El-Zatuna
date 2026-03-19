@@ -2,6 +2,7 @@
 
 @push("styles_top")
     <link rel="stylesheet" href="{{ getDesign1StylePath("instructors_lists") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/list-filters-elzatuna.css">
 @endpush
 
 @php
@@ -64,6 +65,18 @@
 @push('scripts_bottom')
     <script>
         var selectedCloseIcon = `<x-iconsax-lin-add class="icons close-icon" width="16px" height="16px"/>`;
+
+        (function ($) {
+            'use strict';
+
+            $('body').on('change', '.js-instructors-rating-filter', function () {
+                const $current = $(this);
+
+                if ($current.is(':checked')) {
+                    $('.js-instructors-rating-filter').not($current).prop('checked', false);
+                }
+            });
+        })(jQuery);
     </script>
 
     <script src="{{ getDesign1ScriptPath("get_view_data") }}"></script>

@@ -26,6 +26,7 @@
                                 <th class="text-left">{{ trans('admin/main.user_name') }}</th>
                                 <th class="text-left">{{ trans('admin/main.email') }}</th>
                                 <th class="text-center">{{ trans('public.phone') }}</th>
+                                <th class="text-center">Type</th>
                                 <th class="text-left">{{ trans('site.subject') }}</th>
                                 <th class="text-center">{{ trans('site.message') }}</th>
                                 <th class="text-center">{{ trans('admin/main.status') }}</th>
@@ -38,11 +39,37 @@
                                     <td>{{ $contact->name }}</td>
                                     <td class="text-left">{{ $contact->email }}</td>
                                     <td class="text-center">{{ $contact->phone }}</td>
+
+                                    <td class="text-center">
+                                        @if(($contact->contact_type ?? 'message') === 'request_course')
+                                            <span class="badge-status text-warning bg-warning-20">Course Request</span>
+                                        @else
+                                            <span class="badge-status text-primary bg-primary-20">Message</span>
+                                        @endif
+                                    </td>
+
                                     <td class="text-left">{{ $contact->subject }}</td>
 
                                     <td class="text-center">
+                                        @php
+                                            $fullMessage = $contact->message;
+
+                                            if (($contact->contact_type ?? 'message') === 'request_course') {
+                                                $yearSuffixes = [1 => 'st', 2 => 'nd', 3 => 'rd', 4 => 'th', 5 => 'th'];
+                                                $yearLabel = !empty($contact->study_year) ? $contact->study_year . ($yearSuffixes[$contact->study_year] ?? 'th') . ' Year' : '-';
+
+                                                $fullMessage .= "\n\nCourse Request Details:";
+                                                $fullMessage .= "\nUniversity: " . ($contact->university_name ?? '-');
+                                                $fullMessage .= "\nCollege: " . ($contact->college_name ?? '-');
+                                                $fullMessage .= "\nField: " . ($contact->study_field ?? '-');
+                                                $fullMessage .= "\nCourse Name: " . ($contact->course_name ?? '-');
+                                                $fullMessage .= "\nStudy Year: " . $yearLabel;
+                                                $fullMessage .= "\nCan Provide Materials: " . (($contact->can_provide_materials ?? null) === 'yes' ? 'Yes' : ((($contact->can_provide_materials ?? null) === 'no') ? 'No' : '-'));
+                                            }
+                                        @endphp
+
                                         <button type="button" class="js-show-description btn btn-sm btn-outline-primary">{{ trans('admin/main.show') }}</button>
-                                        <input type="hidden" value="{{ nl2br($contact->message) }}">
+                                        <textarea class="js-contact-message d-none" hidden>{{ $fullMessage }}</textarea>
                                     </td>
 
                                     <td class="text-center">
@@ -63,7 +90,7 @@
 
         <div class="dropdown-menu dropdown-menu-right">
             @can('admin_contacts_reply')
-                <a href="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply"
+                <a href="{{ getAdminPanelUrl() }}/contacts/{{ $contact->id }}/reply{{ !empty($isCourseRequestsPage) ? '?return_to=course_requests' : '' }}"
                    class="dropdown-item d-flex align-items-center mb-3 py-3 px-0 gap-4">
                     <x-iconsax-lin-messages-2 class="icons text-gray-500 mr-2" width="18px" height="18px"/>
                     <span class="text-gray-500 font-14">{{ trans('admin/main.reply') }}</span>
@@ -72,7 +99,7 @@
 
             @can('admin_contacts_delete')
                 @include('admin.includes.delete_button',[
-                    'url' => getAdminPanelUrl().'/contacts/'.$contact->id.'/delete',
+                    'url' => getAdminPanelUrl().'/contacts/'.$contact->id.'/delete'.(!empty($isCourseRequestsPage) ? '?return_to=course_requests' : ''),
                     'btnClass' => 'dropdown-item text-danger mb-0 py-3 px-0 font-14',
                     'btnText' => trans('admin/main.delete'),
                     'btnIcon' => 'trash',
@@ -107,7 +134,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="white-space: pre-wrap;">
 
                 </div>
                 <div class="modal-footer">

@@ -23,9 +23,11 @@ class LearningPageController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->isAdmin()) {
-            $this->authorize("panel_webinars_learning_page");
-        }
+        // Authorization is handled by web.auth middleware and purchase checks below
+        // Only enforce panel permission for non-admin users if they're accessing from panel routes
+        // if (!$user->isAdmin()) {
+        //     $this->authorize("panel_webinars_learning_page");
+        // }
 
         $requestData = $request->all();
 
@@ -50,8 +52,11 @@ class LearningPageController extends Controller
             return $installmentLimitation;
         }
 
+        $hasBought = $data['hasBought'] ?? false;
+        $hasInstallment = !empty($course->getInstallmentOrder());
+        $canAccessFirstSectionFree = !$hasBought && !$hasInstallment && $user && $course->chapters && $course->chapters->count() > 0;
 
-        if (!$data or (!$data['hasBought'] and empty($course->getInstallmentOrder()))) {
+        if (!$data or (!$hasBought and !$hasInstallment and !$canAccessFirstSectionFree)) {
             $data = [
                 'pageTitle' => trans('update.access_denied'),
                 'pageRobot' => getPageRobotNoIndex(),

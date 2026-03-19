@@ -1,7 +1,9 @@
 $rounded-pill: 50rem !default;
 
+@use "sass:map";
+
 $borderRadius: ();
-$borderRadius: map-merge(
+$borderRadius: map.merge(
         (
             "0" : 0px,
             "4" : 4px,

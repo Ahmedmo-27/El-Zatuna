@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -122,8 +124,8 @@ button {
     border-color: var(--gray);
 
     &:hover, &:active, &:focus, &:not(:disabled):not(.disabled):active {
-        color: darken($gray, 40%);
-        background-color: darken($gray, 0%);
-        border-color: darken($gray, 3%);
+        color: color.adjust($gray, $lightness: -40%);
+        background-color: color.adjust($gray, $lightness: 0%);
+        border-color: color.adjust($gray, $lightness: -3%);
     }
 }

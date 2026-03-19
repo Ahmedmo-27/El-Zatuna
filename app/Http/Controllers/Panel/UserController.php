@@ -23,6 +23,8 @@ use App\Models\UserSelectedBank;
 use App\Models\UserSelectedBankSpecification;
 use App\Models\UserZoomApi;
 use App\User;
+use App\Helpers\R2Helper;
+use App\Services\R2StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -342,14 +344,32 @@ class UserController extends Controller
 
     private function handleUploadImagesAndFiles(Request $request, $user, $name)
     {
-        $path = $user->{$name};
+        $path = $name === 'signature_img'
+            ? $user->userMetas->where('name', 'signature')->first()?->value
+            : ($user->{$name} ?? null);
+        $profileAssetTypes = ['avatar', 'profile_video', 'cover_img', 'profile_secondary_image', 'signature_img'];
 
         if (!empty($request->file($name))) {
             if (!empty($path)) {
-                $this->removeFile($path);
+                if (str_starts_with((string) $path, 'Profile-Assets/')) {
+                    $r2 = new R2StorageService();
+                    $r2->deleteProfileAsset($path);
+                } else {
+                    $this->removeFile($path);
+                }
             }
 
-            $path = $this->uploadFile($request->file($name), "setting", $name, $user->id);
+            if (R2Helper::isConfigured() && in_array($name, $profileAssetTypes, true)) {
+                $r2 = new R2StorageService();
+                $result = $r2->uploadProfileAsset($request->file($name), (int) $user->id, $name);
+                if ($result['status'] && !empty($result['path'])) {
+                    $path = $result['path'];
+                } else {
+                    $path = $this->uploadFile($request->file($name), "setting", $name, $user->id);
+                }
+            } else {
+                $path = $this->uploadFile($request->file($name), "setting", $name, $user->id);
+            }
         }
 
         return $path;
@@ -563,6 +583,13 @@ class UserController extends Controller
         $items = ['avatar', 'cover_img', 'profile_secondary_image', 'profile_video', 'signature_img'];
 
         if (in_array($type, $items)) {
+            $path = $type === 'signature_img'
+                ? $user->userMetas->where('name', 'signature')->first()?->value
+                : $user->{$type};
+            if (!empty($path) && str_starts_with((string) $path, 'Profile-Assets/')) {
+                $r2 = new R2StorageService();
+                $r2->deleteProfileAsset($path);
+            }
             if ($type == 'signature_img') {
                 $user->userMetas()->where('name', 'signature')->delete();
             } else {

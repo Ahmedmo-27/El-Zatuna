@@ -219,11 +219,13 @@ class UserProfileController extends Controller
      */
     private function getUserCoursesQuery($userId)
     {
-        return Webinar::query()->where('status', Webinar::$active)
-            ->where('private', false)
+        // Qualify columns to avoid ambiguity when joins are added (e.g. webinar_reviews.creator_id).
+        return Webinar::query()
+            ->where('webinars.status', Webinar::$active)
+            ->where('webinars.private', false)
             ->where(function ($query) use ($userId) {
-                $query->where('creator_id', $userId)
-                    ->orWhere('teacher_id', $userId);
+                $query->where('webinars.creator_id', $userId)
+                    ->orWhere('webinars.teacher_id', $userId);
             });
     }
 

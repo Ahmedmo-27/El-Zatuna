@@ -11,6 +11,20 @@ use Illuminate\Http\Request;
 
 class TextLessonController extends Controller
 {
+    /**
+     * Get text lesson content (enrolled users).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/text-lessons/{lesson}",
+     *     summary="Get text lesson",
+     *     tags={"Panel", "My courses"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="lesson", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Text lesson content"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function show($id)
     {
         $textLesson = TextLesson::where('id', $id)

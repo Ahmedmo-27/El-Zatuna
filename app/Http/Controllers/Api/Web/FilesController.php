@@ -29,7 +29,7 @@ class FilesController extends Controller{
         $canAccess = true;
 
         if ($file->accessibility == 'paid') {
-            $canAccess = ($webinar->checkUserHasBought(apiAuth()) or $file->checkUserHasBought(apiAuth()));
+            $canAccess = canUserAccessCourseContent($webinar, apiAuth(), $file->chapter) || $file->checkUserHasBought(apiAuth());
         }
 
         if(!$canAccess){

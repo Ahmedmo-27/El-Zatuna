@@ -1,5 +1,7 @@
+@use "sass:map";
+
 $borderColors: ();
-$borderColors: map-merge(
+$borderColors: map.merge(
         (
             "white" : 'white',
             "gray-100" : 'gray-100',

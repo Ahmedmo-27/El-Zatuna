@@ -18,6 +18,7 @@ class Sale extends Model
     public static $gift = 'gift';
     public static $installmentPayment = 'installment_payment';
     public static $file = 'file';
+    public static $chapter = 'chapter';
 
     public static $credit = 'credit';
     public static $paymentChannel = 'payment_channel';
@@ -42,6 +43,11 @@ class Sale extends Model
     public function file()
     {
         return $this->belongsTo('App\Models\File', 'file_id', 'id');
+    }
+
+    public function chapter()
+    {
+        return $this->belongsTo('App\Models\WebinarChapter', 'chapter_id', 'id');
     }
 
     public function bundle()
@@ -128,6 +134,8 @@ class Sale extends Model
             $orderType = Order::$installmentPayment;
         } elseif (!empty($orderItem->file_id)) {
             $orderType = Order::$file;
+        } elseif (!empty($orderItem->chapter_id)) {
+            $orderType = Order::$chapter;
         }
 
         if (!empty($orderItem->gift_id)) {
@@ -142,6 +150,7 @@ class Sale extends Model
             'order_id' => $orderItem->order_id,
             'webinar_id' => (empty($orderItem->gift_id) and !empty($orderItem->webinar_id)) ? $orderItem->webinar_id : null,
             'file_id' => (empty($orderItem->gift_id) and !empty($orderItem->file_id)) ? $orderItem->file_id : null,
+            'chapter_id' => (empty($orderItem->gift_id) and !empty($orderItem->chapter_id)) ? $orderItem->chapter_id : null,
             'bundle_id' => (empty($orderItem->gift_id) and !empty($orderItem->bundle_id)) ? $orderItem->bundle_id : null,
             'meeting_id' => !empty($orderItem->reserve_meeting_id) ? $orderItem->reserveMeeting->meeting_id : null,
             'meeting_time_id' => !empty($orderItem->reserveMeeting) ? $orderItem->reserveMeeting->meeting_time_id : null,
@@ -172,6 +181,10 @@ class Sale extends Model
             (new \App\Services\TutorRevenueService())->recordFileSale($orderItem, $sale);
         }
 
+        if (!empty($orderItem->chapter_id) && $orderType === Order::$chapter) {
+            (new \App\Services\TutorRevenueService())->recordChapterSale($orderItem, $sale);
+        }
+
         if (!empty($orderItem->product_id)) {
             $buyStoreReward = RewardAccounting::calculateScore(Reward::BUY_STORE_PRODUCT, $orderItem->total_amount);
             RewardAccounting::makeRewardAccounting($orderItem->user_id, $buyStoreReward, Reward::BUY_STORE_PRODUCT, $orderItem->product_id);
@@ -194,6 +207,8 @@ class Sale extends Model
             $title = $orderItem->webinar->title;
         } elseif (!empty($orderItem->file_id) and !empty($orderItem->file)) {
             $title = $orderItem->file->title;
+        } elseif (!empty($orderItem->chapter_id) and !empty($orderItem->chapter)) {
+            $title = $orderItem->chapter->title . ' (Section)';
         } elseif (!empty($orderItem->bundle_id)) {
             $title = $orderItem->bundle->title;
         } else if (!empty($orderItem->meeting_id)) {
@@ -269,8 +284,12 @@ class Sale extends Model
     public function getIncomeItem()
     {
         if ($this->payment_method == self::$subscribe) {
-            $used = SubscribeUse::where('webinar_id', $this->webinar_id)
+            $used = SubscribeUse::query()
                 ->where('sale_id', $this->id)
+                ->where(function ($query) {
+                    $query->where('webinar_id', $this->webinar_id)
+                        ->orWhere('chapter_id', $this->chapter_id);
+                })
                 ->first();
 
             if (!empty($used)) {
@@ -294,8 +313,13 @@ class Sale extends Model
     {
         $subscribe = null;
         $use = SubscribeUse::where('sale_id', $this->id)
-            ->where($itemName, $itemId)
             ->where('user_id', $user_id)
+            ->when($itemName === 'webinar_id', function ($query) use ($itemId) {
+                $query->where('webinar_id', $itemId);
+            })
+            ->when($itemName === 'chapter_id', function ($query) use ($itemId) {
+                $query->where('chapter_id', $itemId);
+            })
             ->first();
 
         if (!empty($use)) {

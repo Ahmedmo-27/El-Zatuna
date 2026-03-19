@@ -17,6 +17,7 @@ use App\Models\ReserveMeeting;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\Sale;
+use App\Models\SubscribeUse;
 use App\Models\TicketUser;
 use App\PaymentChannels\ChannelManager;
 use Illuminate\Http\Request;
@@ -102,7 +103,14 @@ class PaymentController extends Controller
             return Redirect::away($redirect_url);
 
         } catch (\Exception $exception) {
-            //dd($exception->getMessage());
+            // Log the exception for debugging
+            \Log::error('Payment request exception', [
+                'gateway' => $paymentChannel->class_name ?? 'unknown',
+                'order_id' => $order->id ?? 'unknown',
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ]);
 
             $toastData = [
                 'title' => trans('cart.fail_purchase'),
@@ -225,6 +233,19 @@ class PaymentController extends Controller
 
                 // Set Sale After All Accounting
                 $sale = Sale::createSales($orderItem, $order->payment_method);
+
+                // Track "10 sections" subscription coupon usage after Sale exists (sale_id is NOT NULL).
+                if (!empty($orderItem->applied_subscribe_id) && !empty($orderItem->chapter_id)) {
+                    SubscribeUse::query()->create([
+                        'user_id' => $orderItem->user_id,
+                        'subscribe_id' => $orderItem->applied_subscribe_id,
+                        'webinar_id' => $orderItem->webinar_id,
+                        'chapter_id' => $orderItem->chapter_id,
+                        'item_type' => 'chapter',
+                        'sale_id' => $sale->id,
+                        'installment_order_id' => null,
+                    ]);
+                }
 
                 if (!empty($orderItem->reserve_meeting_id)) {
                     $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();

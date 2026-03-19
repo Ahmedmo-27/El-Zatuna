@@ -7,8 +7,7 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(1deg, rgba(18, 31, 62, 0.9) 0%, rgba(18, 31, 62, 0) 100%);
-  -webkit-backdrop-filter: blur(8px);
-          backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   z-index: 1;
 }
 .dark-mode .profile-cover-card:after {
@@ -153,4 +152,43 @@
   background-color: var(--white);
   border: 1px solid var(--gray-200);
   z-index: 1;
+}
+
+.profile-about-me-section {
+  padding: 24px 24px 28px;
+}
+@media (max-width: 576px) {
+  .profile-about-me-section {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 20px;
+    padding-bottom: 24px;
+  }
+}
+
+.profile-about-me-description {
+  color: var(--gray-500);
+  line-height: 1.6;
+}
+.profile-about-me-description p {
+  color: var(--gray-500);
+  margin-bottom: 0.75em;
+}
+.profile-about-me-description p:last-child {
+  margin-bottom: 0;
+}
+.profile-about-me-description img {
+  max-width: 100% !important;
+}
+.profile-about-me-description ul, .profile-about-me-description ol {
+  padding-left: 1.25em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.profile-about-me-description li {
+  list-style: inherit;
+  margin-bottom: 0.5em;
+}
+.profile-about-me-description li:last-child {
+  margin-bottom: 0;
 }

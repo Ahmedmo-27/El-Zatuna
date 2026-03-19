@@ -48,7 +48,7 @@
                     </div>
                     <div class="ml-8">
                         <span class="d-block font-12 text-gray-400">{{ trans('update.pass_grade') }}</span>
-                        <span class="d-block font-12 font-weight-bold text-gray-500 mt-4">{{ $quiz->pass_mark }}/{{ $quiz->quizQuestions->sum('grade') }}</span>
+                        <span class="d-block font-12 font-weight-bold text-gray-500 mt-4">{{ $quiz->pass_mark }}%</span>
                     </div>
                 </div>
 

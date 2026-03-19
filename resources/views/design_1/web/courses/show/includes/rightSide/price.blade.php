@@ -32,7 +32,41 @@
 {{-- Price --}}
 @if($course->price > 0)
     @php
-        $realPrice = handleCoursePagePrice($course->price);
+        $user = auth()->user();
+        $effectivePrice = $course->price;
+
+        if (!empty($user)) {
+            // Include sections the user has via direct purchase OR subscription coupons
+            $chapterIdsFromSales = \App\Models\Sale::query()
+                ->where('buyer_id', $user->id)
+                ->where('type', \App\Models\Sale::$chapter)
+                ->whereHas('chapter', function ($q) use ($course) {
+                    $q->where('webinar_id', $course->id);
+                })
+                ->whereNull('refund_at')
+                ->pluck('chapter_id')
+                ->toArray();
+
+            $chapterIdsFromSubscribes = \App\Models\SubscribeUse::query()
+                ->where('user_id', $user->id)
+                ->where('webinar_id', $course->id)
+                ->pluck('chapter_id')
+                ->toArray();
+
+            $allChapterIds = array_unique(array_filter(array_merge($chapterIdsFromSales, $chapterIdsFromSubscribes)));
+
+            if (!empty($allChapterIds)) {
+                $purchasedChaptersTotal = \App\Models\WebinarChapter::query()
+                    ->whereIn('id', $allChapterIds)
+                    ->sum('price');
+
+                if ($purchasedChaptersTotal > 0) {
+                    $effectivePrice = max(0, $course->price - $purchasedChaptersTotal);
+                }
+            }
+        }
+
+        $realPrice = handleCoursePagePrice($effectivePrice);
     @endphp
 
     <div id="priceBox" class="d-flex align-items-end justify-content-center  mt-20 px-16">
@@ -54,7 +88,7 @@
 
         <div class="d-flex align-items-center text-center">
             <div id="realPrice"
-                 data-value="{{ $course->price }}"
+                 data-value="{{ $effectivePrice }}"
                  data-special-offer="{{ !empty($activeSpecialOffer) ? $activeSpecialOffer->percent : ''}}"
                  class="d-block @if(!empty($activeSpecialOffer)) font-14 text-gray-500 text-decoration-line-through @else font-24 font-weight-bold @endif">
                 {{ $realPrice['price'] }}

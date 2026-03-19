@@ -16,6 +16,26 @@ use Illuminate\Support\Facades\Password;
 class ForgotPasswordController extends Controller
 {
 
+    /**
+     * Start password reset (email or mobile).
+     *
+     * @OA\Post(
+     *     path="/v1/auth/forget-password",
+     *     summary="Forgot password",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"type"},
+     *             @OA\Property(property="type", type="string", enum={"email","mobile"}),
+     *             @OA\Property(property="email", type="string", format="email", description="Required when type=email"),
+     *             @OA\Property(property="country_code", type="string", example="+20", description="Required when type=mobile"),
+     *             @OA\Property(property="mobile", type="string", description="Required when type=mobile")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Success (status=done) or failure (validation/errors). Body: success (boolean), status (string).")
+     * )
+     */
     public function forgot(Request $request)
     {
         $type = $request->get('type');

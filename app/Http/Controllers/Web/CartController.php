@@ -28,6 +28,8 @@ class CartController extends Controller
                 'user',
                 'webinar',
                 'file.webinar',
+                'chapter.webinar',
+                'subscribe',
                 'installmentPayment',
                 'reserveMeeting' => function ($query) {
                     $query->with([
@@ -434,16 +436,18 @@ class CartController extends Controller
                 $commissionPrice = 0;
             }
 
-            OrderItem::create([
+            $orderItem = OrderItem::create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,
-                'webinar_id' => $cart->webinar_id ?? ($cart->file ? $cart->file->webinar_id : null),
+                'webinar_id' => $cart->webinar_id ?? ($cart->file ? $cart->file->webinar_id : null) ?? ($cart->chapter ? $cart->chapter->webinar_id : null),
                 'file_id' => $cart->file_id ?? null,
+                'chapter_id' => $cart->chapter_id ?? null,
                 'bundle_id' => $cart->bundle_id ?? null,
                 'product_id' => (!empty($cart->product_order_id) and !empty($cart->productOrder->product)) ? $cart->productOrder->product->id : null,
                 'product_order_id' => (!empty($cart->product_order_id)) ? $cart->product_order_id : null,
                 'reserve_meeting_id' => $cart->reserve_meeting_id ?? null,
                 'subscribe_id' => $cart->subscribe_id ?? null,
+                'applied_subscribe_id' => null,
                 'promotion_id' => $cart->promotion_id ?? null,
                 'gift_id' => $cart->gift_id ?? null,
                 'installment_payment_id' => $cart->installment_payment_id ?? null,
@@ -459,6 +463,32 @@ class CartController extends Controller
                 'discount' => $totalDiscount,
                 'created_at' => time(),
             ]);
+
+            // If this order item is a chapter and was fully discounted by the "10 sections" subscription,
+            // persist which subscription was applied so we can create SubscribeUse *after* payment when Sale exists.
+            if (!empty($cart->chapter_id) && !empty($cart->chapter)) {
+                $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
+                if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
+                    $chapterWebinar = $cart->chapter->webinar;
+                    $originalPrice = (float) $cart->chapter->price;
+
+                    if (
+                        $chapterWebinar &&
+                        $chapterWebinar->university_id === $user->university_id &&
+                        $chapterWebinar->faculty_id === $user->faculty_id &&
+                        $originalPrice > 0 &&
+                        $totalAmount <= 0 && // fully covered by discounts (including subscription)
+                        (
+                            ($activeSubscribe->usable_count > $activeSubscribe->used_count) ||
+                            $activeSubscribe->infinite_use
+                        )
+                    ) {
+                        $orderItem->update([
+                            'applied_subscribe_id' => $activeSubscribe->id,
+                        ]);
+                    }
+                }
+            }
         }
 
         return $order;
@@ -486,6 +516,11 @@ class CartController extends Controller
             $user = $cart->webinar_id ? $cart->webinar->creator : $cart->bundle->creator;
         } elseif (!empty($cart->file_id) and !empty($cart->file)) {
             $user = $cart->file->webinar ? $cart->file->webinar->creator : null;
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $user = $cart->chapter->webinar ? $cart->chapter->webinar->creator : null;
+        } elseif (!empty($cart->subscribe_id) and !empty($cart->subscribe)) {
+            // Subscription plans are system items (no seller commission here)
+            $user = null;
         } elseif (!empty($cart->reserve_meeting_id)) {
             $user = $cart->reserveMeeting->meeting->creator;
         } elseif (!empty($cart->product_order_id) and !empty($cart->productOrder)) {
@@ -564,6 +599,44 @@ class CartController extends Controller
             $price = $item->price;
             $discount = $item->getDiscount($cart->ticket, $user);
 
+            // If this is a full course (webinar) and the user already has access to some sections (chapters),
+            // via direct purchase OR subscription coupon, subtract the sum of those section prices.
+            if (!empty($cart->webinar_id) && !empty($user)) {
+                // Chapters from direct chapter sales
+                $chapterIdsFromSales = \App\Models\Sale::query()
+                    ->where('buyer_id', $user->id)
+                    ->where('type', \App\Models\Sale::$chapter)
+                    ->whereHas('chapter', function ($q) use ($cart) {
+                        $q->where('webinar_id', $cart->webinar_id);
+                    })
+                    ->whereNull('refund_at')
+                    ->pluck('chapter_id')
+                    ->toArray();
+
+                // Chapters unlocked via subscription (SubscribeUse)
+                $chapterIdsFromSubscribes = \App\Models\SubscribeUse::query()
+                    ->where('user_id', $user->id)
+                    ->where('webinar_id', $cart->webinar_id)
+                    ->pluck('chapter_id')
+                    ->toArray();
+
+                $allChapterIds = array_unique(array_filter(array_merge($chapterIdsFromSales, $chapterIdsFromSubscribes)));
+
+                if (!empty($allChapterIds)) {
+                    $purchasedChaptersTotal = \App\Models\WebinarChapter::query()
+                        ->whereIn('id', $allChapterIds)
+                        ->sum('price');
+
+                    if ($purchasedChaptersTotal > 0) {
+                        $price = max(0, $price - $purchasedChaptersTotal);
+                        // Ensure we don't discount below this new base
+                        if ($discount > $price) {
+                            $discount = $price;
+                        }
+                    }
+                }
+            }
+
             $priceWithoutDiscount = $price - $discount;
 
             if ($tax > 0 and $priceWithoutDiscount > 0) {
@@ -587,6 +660,52 @@ class CartController extends Controller
 
             $commissionPrice += $this->getCommissionPrice('courses', $priceWithoutDiscount, $seller);
 
+            $totalDiscount += $discount;
+            $subTotal += $price;
+        } elseif (!empty($cart->chapter_id) and !empty($cart->chapter)) {
+            $price = (float) $cart->chapter->price;
+            $discount = 0;
+
+            // Apply "10 sections" subscription coupon if available and scoped correctly.
+            $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
+            if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
+                $chapterWebinar = $cart->chapter->webinar;
+
+                if (
+                    $chapterWebinar &&
+                    $chapterWebinar->university_id === $user->university_id &&
+                    $chapterWebinar->faculty_id === $user->faculty_id &&
+                    (
+                        ($activeSubscribe->usable_count > $activeSubscribe->used_count) ||
+                        $activeSubscribe->infinite_use
+                    )
+                ) {
+                    // Treat as free section for this order pricing.
+                    $discount = $price;
+                }
+            }
+
+            $priceWithoutDiscount = $price - $discount;
+
+            if ($tax > 0 and $priceWithoutDiscount > 0) {
+                $taxPrice += $priceWithoutDiscount * $tax / 100;
+            }
+
+            $commissionPrice += $this->getCommissionPrice('courses', $priceWithoutDiscount, $seller);
+
+            $totalDiscount += $discount;
+            $subTotal += $price;
+        } elseif (!empty($cart->subscribe_id) and !empty($cart->subscribe)) {
+            $price = (float) $cart->subscribe->price;
+            $discount = 0;
+
+            $priceWithoutDiscount = $price - $discount;
+
+            if ($tax > 0 and $priceWithoutDiscount > 0) {
+                $taxPrice += $priceWithoutDiscount * $tax / 100;
+            }
+
+            // No seller commission for subscription packages
             $totalDiscount += $discount;
             $subTotal += $price;
         } elseif (!empty($cart->reserve_meeting_id)) {

@@ -83,6 +83,12 @@ class MyPurchasedCoursesController extends Controller
                     $query->whereNotNull('gift_id');
                     $query->whereHas('gift');
                 });
+                // Include section (chapter) purchases and ensure the parent course exists
+                $query->orWhere(function ($query) {
+                    $query->whereNotNull('sales.chapter_id')
+                        ->where('sales.type', 'chapter')
+                        ->whereHas('chapter.webinar');
+                });
             });
     }
 
@@ -119,6 +125,7 @@ class MyPurchasedCoursesController extends Controller
                     $totalCoursesHours += $gift->bundle->getBundleDuration();
                 }
             } else {
+                // Direct course purchase
                 if (!empty($sale->webinar)) {
                     $totalCoursesHours += $sale->webinar->duration;
 
@@ -127,6 +134,17 @@ class MyPurchasedCoursesController extends Controller
                     }
 
                     $purchasedCourseIds[] = $sale->webinar->id;
+                }
+
+                // Section (chapter) purchase – count the parent course
+                if (empty($sale->webinar) && !empty($sale->chapter) && !empty($sale->chapter->webinar)) {
+                    $totalCoursesHours += $sale->chapter->webinar->duration;
+
+                    if ($sale->chapter->webinar->start_date > $time) {
+                        $totalUpcomingCount += 1;
+                    }
+
+                    $purchasedCourseIds[] = $sale->chapter->webinar->id;
                 }
 
                 if (!empty($sale->bundle)) {
@@ -198,7 +216,9 @@ class MyPurchasedCoursesController extends Controller
                             $query->select('id', 'full_name');
                         },
                     ]);
-                }
+                },
+                // Ensure we have access to the parent course for chapter purchases
+                'chapter.webinar',
             ])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -247,6 +267,9 @@ class MyPurchasedCoursesController extends Controller
             $sale->gift_recipient = !empty($gift->receipt) ? $gift->receipt->full_name : $gift->name;
             $sale->gift_sender = $sale->buyer->full_name;
             $sale->gift_date = $gift->date;
+        } elseif (!empty($sale->chapter) && empty($sale->webinar)) {
+            // Normalize chapter purchases so views can treat them like course purchases
+            $sale->webinar = $sale->chapter->webinar ?? null;
         }
 
         return $sale;

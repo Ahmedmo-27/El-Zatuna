@@ -34,7 +34,8 @@ class MyCoursesController extends Controller
 
     public function invitations(Request $request)
     {
-        $this->authorize("panel_webinars_invited_lists");
+        // Users can view their course invitations - no special permission needed
+        // $this->authorize("panel_webinars_invited_lists");
 
         $user = auth()->user();
 

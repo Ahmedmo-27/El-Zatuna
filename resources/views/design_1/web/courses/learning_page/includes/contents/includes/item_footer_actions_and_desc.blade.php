@@ -90,11 +90,11 @@
 
 @if(!empty($itemType) and $itemType == 'text_lesson')
     @if(!empty($item->summary))
-        <div class="mt-16 text-gray-500">{!! nl2br($item->summary) !!}</div>
+        <div class="mt-16 text-gray-500 js-text-lesson-content" data-text-lesson-id="{{ $item->id }}">{!! nl2br($item->summary) !!}</div>
     @endif
 
     @if(!empty($item->content))
-        <div class="mt-16 text-gray-500">{!! nl2br($item->content) !!}</div>
+        <div class="mt-16 text-gray-500 js-text-lesson-content" data-text-lesson-id="{{ $item->id }}">{!! nl2br($item->content) !!}</div>
     @endif
 @else
     @if(!empty($item->description))

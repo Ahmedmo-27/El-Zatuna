@@ -25,6 +25,11 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+        'verify' => env('BREVO_SSL_VERIFY', true), // set to false only if you get cURL error 77 (wrong/missing CA bundle)
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
@@ -56,5 +61,14 @@ return [
         'key' => '', // set from Channel
         'otp_message' => "your verification code: ##OTP##",
         'otp_length' => 5,
+    ],
+
+    // Cloudflare Worker Stream Service (for course videos in R2 under Courses/ only)
+    // When STREAM_WORKER_BASE is set, getFilePath() returns worker URL with token and playFile() redirects to worker.
+    // Course-Assets/ and Profile-Assets/ are never sent to the worker; they use R2_PUBLIC_URL or Laravel proxy (/r2-asset/).
+    'stream' => [
+        'token_secret' => env('STREAM_TOKEN_SECRET'),
+        'worker_base' => env('STREAM_WORKER_BASE'),
+        'token_ttl' => env('STREAM_TOKEN_TTL', 120), // Default 120 seconds (2 minutes)
     ],
 ];

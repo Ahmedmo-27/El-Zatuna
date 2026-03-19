@@ -256,7 +256,7 @@ return [
 'file_source_external_link' => 'رابط خارجي',
 'file_source_google_drive' => 'جوجل درايف',
 'file_source_iframe' => 'آي فريم',
-'file_source_s3' => 'أمازون S3',
+'file_source_r2' => 'Cloudflare R2',
 
 'file_source_upload_placeholder' => 'رفع ملفات من جهاز الكمبيوتر الخاص بك',
 'file_source_youtube_placeholder' => 'الصق رابط يوتيوب',
@@ -264,13 +264,16 @@ return [
 'file_source_external_link_placeholder' => 'الصق الرابط الخارجي',
 'file_source_google_drive_placeholder' => 'رابط معاينة جوجل درايف (تضمين) يبدأ بوسم iframe',
 'file_source_iframe_placeholder' => 'الصق كامل كود الـ iframe',
-'file_source_s3_placeholder' => 'رفع ملفات من جهاز الكمبيوتر الخاص بك إلى S3',
+'file_source_r2_placeholder' => 'رفع ملفات من جهاز الكمبيوتر الخاص بك إلى R2',
 'file_source_upload_archive' => 'رفع',
 'new_interactive_file' => 'SCORM جديد',
 'interactive_feature_toggle' => 'تمكين رفع ملف SCORM',
 'interactive_type' => 'نوع SCORM',
 'scorm_settings' => 'إعدادات SCORM',
 'choose_file' => 'اختر ملفًا',
+'section_has_video_hint' => 'هذا القسم يحتوي بالفعل على فيديو. يمكنك استبداله أدناه أو تعديل الحقول الأخرى والحفظ.',
+'replace_video' => 'استبدال',
+'replace_video_optional' => 'استبدال الفيديو (اختياري)',
 'choose_zip_file' => 'اختر ملف مضغوط',
 'adobe_captivate' => 'Adobe Captivate',
 'i_spring' => 'iSpring',
@@ -439,6 +442,7 @@ return [
 'currency_position_left_with_space' => 'يسار مع مسافة',
 'currency_position_right_with_space' => 'يمين مع مسافة',
 'go_to_learning_page' => 'الذهاب إلى صفحة التعلم',
+'check_first_section_for_free' => 'شاهد القسم الأول مجاناً',
 'meeting_settings' => 'إعدادات الاجتماع',
 'price_range' => 'نطاق السعر',
 'instructor_age' => 'عمر المدرب',
@@ -1143,6 +1147,7 @@ return [
 'buyer_address' => 'عنوان العميل',
 
 'enroll_on_course' => 'الالتحاق بالدورة',
+'coming_soon' => 'قريباً',
 'course_noticeboard_color_warning' => 'أصفر',
 'course_noticeboard_color_danger' => 'أحمر',
 'course_noticeboard_color_neutral' => 'رمادي',
@@ -2450,6 +2455,7 @@ return [
 'restrictions_hint_description_2' => 'يمكنك تحديد نطاق IP وحظر جميع العناوين داخل هذا النطاق بنقرة واحدة',
 'restrictions_hint_title_3' => 'حظر عناوين IP الخاصة بالدول',
 'restrictions_hint_description_3' => 'لدينا قاعدة بيانات لعناوين IP الخاصة بالدول، لذا يمكنك بسهولة حظر نطاقات IP من دول معينة',
+'section_auto_completed_successful' => 'تم إكمال الفصل تلقائياً!',
 
 
 ];

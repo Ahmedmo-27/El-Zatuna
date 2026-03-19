@@ -39,16 +39,4 @@
         </div>
     </div>
 
-    @if(getFeaturesSettings('sequence_content_status'))
-        <div class="form-group d-flex align-items-center">
-            <div class="custom-switch mr-8">
-                <input id="checkAllContentsPassSwitch_record" type="checkbox" name="ajax[chapter][check_all_contents_pass]" class="custom-control-input" {{ (!empty($chapter) and $chapter->check_all_contents_pass) ? 'checked' :  '' }}>
-                <label class="custom-control-label cursor-pointer" for="checkAllContentsPassSwitch_record"></label>
-            </div>
-
-            <div class="">
-                <label class="cursor-pointer" for="checkAllContentsPassSwitch_record">{{ trans('update.check_all_contents_pass') }}</label>
-            </div>
-        </div>
-    @endif
 </div>

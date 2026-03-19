@@ -14,6 +14,12 @@ class RewardCoursesController extends Controller
             ->where('private', false)
             ->whereNotNull('points');
 
+        // For guests, only show global courses (all universities & all faculties).
+        if (!auth()->check()) {
+            $webinarsQuery->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
         $classesController = new ClassesController();
 
 

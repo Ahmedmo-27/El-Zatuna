@@ -405,8 +405,7 @@ body {
   right: 16px;
   border: 1px solid rgba(18, 31, 62, 0.4);
   background: rgba(18, 31, 62, 0.4);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 .upcoming-live-sessions-card:after {
@@ -460,8 +459,7 @@ body {
   transform: translate(-50%, -50%);
   border: 4px solid var(--white);
   background-color: rgba(255, 255, 255, 0.3);
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 .panel-course-card-1__badges {
   position: absolute;
@@ -558,8 +556,7 @@ body {
   transform: translateX(-50%);
   border: 4px solid var(--white);
   background-color: rgba(255, 255, 255, 0.3);
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 .upcoming-panel-course-grid-card__image {
@@ -633,8 +630,7 @@ body {
   transform: translateX(-50%);
   border: 4px solid var(--white);
   background-color: rgba(255, 255, 255, 0.3);
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
   z-index: 2;
 }
 @media (max-width: 991px) {
@@ -724,8 +720,7 @@ body {
   transform: translate(-50%, -50%);
   border: 4px solid var(--white);
   background-color: rgba(255, 255, 255, 0.3);
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 .panel-product-card-1__badges-lists {
   position: absolute;
@@ -919,8 +914,7 @@ body {
   transform: translateX(-50%);
   border: 4px solid var(--white);
   background-color: rgba(255, 255, 255, 0.3);
-  -webkit-backdrop-filter: blur(5px);
-          backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 .ai-content-generator-drawer {
@@ -1140,6 +1134,12 @@ body {
   width: 32px;
   min-width: 32px;
   height: 32px;
+}
+.dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-prev *, .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-next * {
+  position: relative;
+  z-index: 2;
+}
+.dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-prev, .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-next {
   /*&:before {
       content: '';
       position: absolute;
@@ -1149,10 +1149,6 @@ body {
       background-color: var(--info) !important;
       border-radius: inherit; // use parent
   }*/
-}
-.dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-prev *, .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-next * {
-  position: relative;
-  z-index: 2;
 }
 .dashboard-events-calendar .datepicker-plot-area .datepicker-navigator .pwt-btn.pwt-btn-switch {
   width: auto !important;

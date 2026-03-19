@@ -10,8 +10,16 @@ use App\Events\MessageReceived;
 class BroadcastingController extends Controller
 {
     /**
-     * Get WebSocket connection info
+     * Get WebSocket connection info (channels, driver config).
      *
+     * @OA\Get(
+     *     path="/v1/broadcasting/info",
+     *     summary="Get broadcasting connection info",
+     *     tags={"Broadcasting"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Connection info (channels, pusher key/cluster if applicable)"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -48,8 +56,16 @@ class BroadcastingController extends Controller
     }
 
     /**
-     * Test broadcasting by sending a test notification
+     * Send a test broadcast notification to the current user's channel.
      *
+     * @OA\Post(
+     *     path="/v1/broadcasting/test",
+     *     summary="Test broadcast",
+     *     tags={"Broadcasting"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Test notification sent"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -86,8 +102,16 @@ class BroadcastingController extends Controller
     }
 
     /**
-     * Subscribe to events (returns available events)
+     * Get list of available WebSocket events and their payloads.
      *
+     * @OA\Get(
+     *     path="/v1/broadcasting/events",
+     *     summary="Get available broadcast events",
+     *     tags={"Broadcasting"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Events (notification.sent, message.received, course.progress.updated, quiz.graded, meeting.started, support.ticket.replied)"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */

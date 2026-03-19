@@ -25,6 +25,26 @@ class ResetPasswordController extends Controller
 
     //   use ResetsPasswords;
 
+    /**
+     * Complete password reset with token from email.
+     *
+     * @OA\Post(
+     *     path="/v1/auth/reset-password/{token}",
+     *     summary="Reset password",
+     *     tags={"Auth"},
+     *     @OA\Parameter(name="token", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password","password_confirmation"},
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="password", type="string"),
+     *             @OA\Property(property="password_confirmation", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Password reset (status=password_reset) or not found (status=not_found). Body: success, status.")
+     * )
+     */
     public function updatePassword(Request $request,$token)
     {
 
@@ -46,9 +66,9 @@ class ResetPasswordController extends Controller
                 ->update(['password' => Hash::make($data['password'])]);
             DB::table('password_resets')->where(['email' => $data['email']])->delete();
 
-           return apiResponse(1, 'password reset.');
+           return apiResponse2(1, 'password_reset', 'password reset.');
         }
-        return apiResponse(1, 'there is not such request to reset password');
+        return apiResponse2(0, 'not_found', 'there is not such request to reset password');
 
     }
 }

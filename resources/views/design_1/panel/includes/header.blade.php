@@ -1,18 +1,12 @@
 <div class="panel-header d-flex align-items-center bg-white px-24 px-lg-0">
 
-    <div class="panel-header__logo-box">
+    <div class="panel-header__logo-box bg-white" style="border: none;">
         <a href="/" class="panel-header__logo d-inline-flex-center mr-16 mr-lg-0 ml-lg-32">
-            @if(!empty($generalSettings['logo']))
-                <img src="{{ $generalSettings['logo'] }}" class="img-fluid light-only" alt="{{ $generalSettings['site_name'] ?? 'site' }}">
-            @endif
-
-            @if(!empty($generalSettings['dark_mode_logo']))
-                <img src="{{ $generalSettings['dark_mode_logo'] }}" class="img-fluid dark-only" alt="{{ $generalSettings['site_name'] ?? 'site' }}">
-            @endif
+            <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="h-12 md:h-14 lg:h-16 w-auto object-contain" style="height: 3rem; width: auto; object-fit: contain; border: none;">
         </a>
     </div>
 
-    <div class="panel-header__contents d-flex align-items-center justify-content-between h-100 border-bottom-gray-200">
+    <div class="panel-header__contents d-flex align-items-center justify-content-between h-100">
 
         <div class="d-flex align-items-center">
 

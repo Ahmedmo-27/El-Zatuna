@@ -15,6 +15,11 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesTableSeeder::class);
         $this->call(UsersTableSeeder::class);
         $this->call(SectionsTableSeeder::class);
+        $this->call(PermissionsTableSeeder::class);
+
+        $this->call(UniversitiesAndFacultiesTableSeeder::class);
+
+        $this->call(SubjectCategoriesTableSeeder::class);
 
         $this->call(PaymentChannelsTableSeeder::class);
 
@@ -25,6 +30,11 @@ class DatabaseSeeder extends Seeder
         $this->call(DefaultThemeSeeder::class);
 
         $this->call(HomeLandingSeeder::class);
+
+        $this->call(DiscountedCoursesSeeder::class);
+
+        $this->call(FreeCoursesSeeder::class);
+        $this->call(FreeCoursesContentSeeder::class);
 
         // $this->call(DemoDataSeeder::class);
     }

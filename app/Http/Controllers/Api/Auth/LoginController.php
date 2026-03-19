@@ -22,6 +22,24 @@ class LoginController extends Controller
     |
     */
 
+    /**
+     * Authenticate with email and password; returns JWT and session data.
+     *
+     * @OA\Post(
+     *     path="/v1/auth/login",
+     *     summary="Login",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="ahmed@example.com"),
+     *             @OA\Property(property="password", type="string", example="Str0ngPassw0rd!")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login success (status=login, data with tokens) or invalid credentials (status=incorrect). Body: success, status, data (optional).")
+     * )
+     */
     public function login(Request $request)
     {
         $rules = [
@@ -79,7 +97,7 @@ class LoginController extends Controller
             auth('api')->logout();
             //  dd(apiAuth());
             $verificationController = new VerificationController();
-            $checkConfirmed = $verificationController->checkConfirmed($user, 'email', $request->input('email'));
+            $checkConfirmed = $verificationController->checkConfirmed('email', $request->input('email'), $user);
 
             if ($checkConfirmed['status'] == 'send') {
 
@@ -102,7 +120,7 @@ class LoginController extends Controller
             return apiResponse2(0, 'inactive_account', trans('auth.inactive_account'));
         }
         
-        // Check device limit BEFORE device registration
+        // Check device/session limit BEFORE device registration (non-teacher roles only)
         $checkLoginDeviceLimit = $this->checkLoginDeviceLimit($user);
         if ($checkLoginDeviceLimit != "ok") {
             \auth('api')->logout();
@@ -133,7 +151,12 @@ class LoginController extends Controller
             // Device NOT registered - check if user has reached the registered devices limit
             $registeredDevicesCount = \App\Models\UserRegisteredDevice::where('user_id', $user->id)->count();
             $allowedDevices = $user->allowed_devices ?? getGeneralSettings('login_device_limit') ?? 1;
-            
+
+            // Teachers (role "teacher") are allowed unlimited registered devices
+            if ($user->isTeacher()) {
+                $allowedDevices = PHP_INT_MAX;
+            }
+
             if ($registeredDevicesCount >= $allowedDevices) {
                 // User has reached max registered devices limit - BLOCK login
                 \auth('api')->logout();
@@ -187,6 +210,26 @@ class LoginController extends Controller
 
     }
 
+    /**
+     * Invalidate the current JWT (and optionally a specific session).
+     *
+     * @OA\Post(
+     *     path="/v1/logout",
+     *     summary="Logout",
+     *     tags={"Auth"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="session_token", type="string", description="Optional session token to invalidate")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Logout success", @OA\JsonContent(
+     *         @OA\Property(property="success", type="boolean", example=true),
+     *         @OA\Property(property="status", type="string", example="logout")
+     *     )),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function logout(Request $request)
     {
         $user = auth('api')->user();
@@ -231,6 +274,11 @@ class LoginController extends Controller
     }
     private function checkLoginDeviceLimit($user)
     {
+        // Teachers are allowed unlimited active login sessions
+        if ($user->isTeacher()) {
+            return 'ok';
+        }
+
         // Check if user has a custom allowed_devices value
         $limitCount = !empty($user->allowed_devices) ? $user->allowed_devices : 1;
 

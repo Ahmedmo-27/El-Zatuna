@@ -81,6 +81,7 @@ class SubscribeController extends Controller
                 'user_id' => $user->id,
                 'subscribe_id' => $subscribe->id,
                 $itemName => $item->id,
+                'item_type' => $itemName == 'webinar_id' ? 'webinar' : 'bundle',
                 'sale_id' => $sale->id,
                 'installment_order_id' => $subscribe->installment_order_id ?? null,
             ]);

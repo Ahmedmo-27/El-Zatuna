@@ -3,7 +3,7 @@
 
     <div class="position-relative d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-20 bg-[#072923] text-[#FAFFE0] px-24 py-12 rounded-24 z-index-2">
         <div class="d-flex align-items-center flex-wrap gap-48">
-            @foreach(['upcoming', 'free', 'discount', 'downloadable'] as $topFilter1)
+            @foreach(['upcoming', 'free', 'discount'] as $topFilter1)
                 <div class="form-group mb-0 d-flex align-items-center">
                     <div class="custom-switch mr-8">
                         <input id="top_filter_{{ $topFilter1 }}" type="checkbox" name="{{ $topFilter1 }}" value="on" class="custom-control-input">

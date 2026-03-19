@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="{{ getDesign1StylePath("buy_with_points") }}">
     <link rel="stylesheet" href="{{ getDesign1StylePath("reviews_and_comments") }}">
     <link rel="stylesheet" href="{{ getDesign1StylePath("show_course") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/course-pages-elzatuna.css">
 @endpush
 
 
 @section("content")
-    <div class="w-full bg-[#FAFFE0] text-[#072923] min-h-screen pt-40 pb-40">
+    <div class="course-show-page w-full bg-[#FAFFE0] text-[#072923] min-h-screen pt-40 pb-40">
         <div class="container position-relative mt-40 pb-120">
 
             {{-- Special Offer --}}
@@ -43,10 +44,9 @@
                 </div>
             </div>
         </div>
+        {{-- Bottom Fixed --}}
+        @include("design_1.web.courses.show.includes.bottom_fixed_card")
     </div>
-
-    {{-- Bottom Fixed --}}
-    @include("design_1.web.courses.show.includes.bottom_fixed_card")
 
 @endsection
 

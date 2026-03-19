@@ -10,6 +10,9 @@
                 <p class="text-lg md:text-xl text-[#072923]/70 max-w-3xl mx-auto">
                     Your trusted platform for quality education and skill development
                 </p>
+                <div class="mt-10 flex justify-center">
+                    <img src="/assets/design_1/img/no-result/instructors.svg" alt="Instructors" class="w-72 md:w-96 lg:w-[520px] opacity-90" />
+                </div>
             </div>
         </section>
 

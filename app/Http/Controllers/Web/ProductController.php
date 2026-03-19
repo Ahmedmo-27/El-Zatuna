@@ -67,6 +67,8 @@ class ProductController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/products'),
+            'pageOgType' => 'website',
             'productCategories' => $categories,
             'filterMaxPrice' => $filterMaxPrice,
             'seoSettings' => $seoSettings,
@@ -457,6 +459,20 @@ class ProductController extends Controller
             'pageDescription' => $product->seo_description,
             'pageRobot' => $pageRobot,
             'pageMetaImage' => $product->thumbnail,
+            'pageCanonicalUrl' => url('/products/' . $product->slug),
+            'pageOgType' => 'product',
+            'pageSchema' => [
+                '@context' => 'https://schema.org',
+                '@type' => 'Product',
+                'name' => $product->title,
+                'description' => $product->seo_description,
+                'image' => url($product->thumbnail),
+                'url' => url('/products/' . $product->slug),
+                'brand' => [
+                    '@type' => 'Organization',
+                    'name' => getGeneralSettings('site_name') ?? config('app.name'),
+                ],
+            ],
             'product' => $product,
             'user' => $user,
             'selectableSpecifications' => $selectableSpecifications,
@@ -477,6 +493,16 @@ class ProductController extends Controller
             'productReviews' => $productReviews,
             'productAvailability' => $product->getAvailability(),
         ];
+
+        if (!empty($product->price) and $product->price > 0) {
+            $data['pageSchema']['offers'] = [
+                '@type' => 'Offer',
+                'price' => (float)$product->price,
+                'priceCurrency' => 'EGP',
+                'availability' => 'https://schema.org/InStock',
+                'url' => url('/products/' . $product->slug),
+            ];
+        }
 
         return view("design_1.web.products.show.index", $data);
     }

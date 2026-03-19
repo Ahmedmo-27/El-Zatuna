@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $gray-100: #FAFCFF;
 $gray-200: #F0F4F9;
 $gray-300: #E9EDF3;
@@ -41,7 +43,7 @@ $yiq-contrasted-threshold: 250 !default;
 
 
 $theme-colors: ();
-$theme-colors: map-merge(
+$theme-colors: map.merge(
         (
             "gray-100" : $gray-100,
             "gray-200" : $gray-200,
@@ -71,7 +73,7 @@ $theme-colors: map-merge(
 
 
 $socialColors: ();
-$socialColors: map-merge(
+$socialColors: map.merge(
         (
             "whatsapp" : $whatsapp,
             "twitter" : $twitter,

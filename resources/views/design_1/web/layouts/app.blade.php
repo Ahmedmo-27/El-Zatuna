@@ -5,11 +5,18 @@
     $rtlLanguages = !empty($generalSettings['rtl_languages']) ? $generalSettings['rtl_languages'] : [];
     $isRtl = ((in_array(mb_strtoupper(app()->getLocale()), $rtlLanguages)) or (!empty($generalSettings['rtl_layout']) and $generalSettings['rtl_layout'] == 1));
     $themeCustomCssAndJs = getThemeCustomCssAndJs();
+    $showPageLoader = !isset($generalSettings['preloading']) || !empty($generalSettings['preloading']);
 @endphp
 
 <head>
     @include('design_1.web.includes.metas')
     <title>{{ $pageTitle ?? '' }}{{ !empty($generalSettings['site_name']) ? (' | '.$generalSettings['site_name']) : '' }}</title>
+
+    @if($showPageLoader)
+        <script>
+            document.documentElement.classList.add('js-enabled');
+        </script>
+    @endif
 
     <!-- General CSS File -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,6 +24,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/default/vendors/simplebar/simplebar.css">
     <link rel="stylesheet" href="/assets/design_1/css/app.min.css">
+    <link rel="stylesheet" href="/assets/design_1/css/web-layout-extras.css?v={{ @filemtime(public_path('assets/design_1/css/web-layout-extras.css')) }}">
+    <link rel="stylesheet" href="/assets/design_1/css/cart-drawer-elzatuna.css">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -44,83 +53,21 @@
         {!! getThemeFontsSettings() !!}
 
         {!! getThemeColorsSettings() !!}
-
-        :root {
-            --font-sans: 'Poppins', 'Inter', 'Segoe UI', 'Arial', sans-serif;
-            --font-display: 'Playfair Display', 'Georgia', serif;
-        }
-
-        body, button, input, textarea, select {
-            font-family: var(--font-sans);
-        }
-
-        h1, h2, h3, h4, h5, h6, .font-display {
-            font-family: var(--font-display);
-        }
-
-        .home-page {
-            font-size: 20px;
-        }
-
-        @media (min-width: 1024px) {
-            .home-page {
-                font-size: 21px;
-            }
-        }
-
-        .home-page .text-xs {
-            font-size: 1.05rem;
-        }
-
-        .home-page .text-sm {
-            font-size: 1.2rem;
-        }
-
-        .home-page .text-base {
-            font-size: 1.35rem;
-        }
-
-        .home-page .text-lg {
-            font-size: 1.6rem;
-        }
-
-        .marquee-divider {
-            position: relative;
-            overflow: hidden;
-            border-top: 1px solid rgba(7, 41, 35, 0.15);
-            border-bottom: 1px solid rgba(7, 41, 35, 0.15);
-            background: rgba(200, 205, 6, 0.12);
-        }
-
-        .marquee-divider__track {
-            display: inline-flex;
-            align-items: center;
-            white-space: nowrap;
-            gap: 2rem;
-            padding: 1rem 0;
-            animation: marquee-scroll 18s linear infinite;
-        }
-
-        .marquee-divider__text {
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(7, 41, 35, 0.75);
-        }
-
-        @keyframes marquee-scroll {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
-        }
     </style>
 
 </head>
 
 <body class="bg-[#FAFFE0] text-[#072923] {{ $isRtl ? 'rtl' : '' }} {{ "{$userThemeColorMode}-mode" }}">
+
+@if($showPageLoader)
+    <div id="pageLoader" class="page-loader" role="status" aria-live="polite" aria-label="{{ trans('update.loading_data,_please_wait') }}">
+        <div class="page-loader__inner">
+            <img src="/assets/design_1/img/logozatuna.png" alt="Elzatuna" class="page-loader__logo" />
+            <div class="page-loader__box"></div>
+            <div class="page-loader__text">{{ trans('update.loading_data,_please_wait') }}</div>
+        </div>
+    </div>
+@endif
 
 <div id="app">
 
@@ -191,6 +138,30 @@
 <script type="text/javascript" src="/assets/design_1/js/app.min.js"></script>
 <script type="text/javascript" src="/assets/default/vendors/simplebar/simplebar.min.js"></script>
 <script defer src="/assets/design_1/js/parts/content_delete.min.js"></script>
+<script defer src="/assets/design_1/js/parts/web-layout-extras.js?v={{ @filemtime(public_path('assets/design_1/js/parts/web-layout-extras.js')) }}"></script>
+<script defer src="/assets/design_1/js/parts/mobile-menu.js?v={{ @filemtime(public_path('assets/design_1/js/parts/mobile-menu.js')) }}"></script>
+
+@if($showPageLoader)
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            if (window.ElzatunaUI && typeof window.ElzatunaUI.initPageLoader === 'function') {
+                window.ElzatunaUI.initPageLoader();
+            }
+
+            if (window.ElzatunaUI && typeof window.ElzatunaUI.initMobileMenu === 'function') {
+                window.ElzatunaUI.initMobileMenu();
+            }
+        });
+    </script>
+@else
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            if (window.ElzatunaUI && typeof window.ElzatunaUI.initMobileMenu === 'function') {
+                window.ElzatunaUI.initMobileMenu();
+            }
+        });
+    </script>
+@endif
 
 @if(empty($justMobileApp) and checkShowCookieSecurityDialog() and empty($dontShowCookieSecurity))
     @include('design_1.web.includes.cookie_security.cookie-security')

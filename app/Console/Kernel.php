@@ -33,6 +33,21 @@ class Kernel extends ConsoleKernel
         $schedule->command('sessions:sync-counts --cleanup --inactive-minutes=120')
             ->daily()
             ->at('02:00');
+
+        // Clean up debugbar storage files to prevent performance issues
+        $schedule->call(function () {
+            $debugbarPath = storage_path('debugbar');
+            if (is_dir($debugbarPath)) {
+                $files = glob($debugbarPath . '/*');
+                $now = time();
+                foreach ($files as $file) {
+                    // Delete files older than 7 days
+                    if (is_file($file) && ($now - filemtime($file) > 7 * 24 * 3600)) {
+                        @unlink($file);
+                    }
+                }
+            }
+        })->daily()->at('03:00');
     }
 
     /**

@@ -6,6 +6,28 @@
     <link rel="stylesheet" href="{{ getDesign1StylePath("learning_page_noticeboards") }}">
     <link rel="stylesheet" href="{{ getDesign1StylePath("learning_page") }}">
     <link rel="stylesheet" href="/assets/design_1/css/panel-elzatuna.css">
+    <link rel="stylesheet" href="/assets/design_1/css/course-pages-elzatuna.css">
+
+    <style>
+        .learning-page__file-player-card {
+            max-width: 1120px;
+            margin-left: auto;
+            margin-right: auto;
+            height: min(68vh, 620px);
+        }
+
+        .learning-page__file-player-card video,
+        .learning-page__file-player-card .plyr__video-wrapper video {
+            object-fit: contain;
+            background-color: #000;
+        }
+
+        @media (max-width: 991px) {
+            .learning-page__file-player-card {
+                height: min(52vh, 360px);
+            }
+        }
+    </style>
 @endpush
 
 @section('content')

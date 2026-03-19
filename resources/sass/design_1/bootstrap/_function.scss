@@ -1,4 +1,7 @@
 @use "sass:math";
+@use "sass:meta";
+@use "sass:map";
+@use "sass:string";
 
 $yiq-contrasted-threshold:  150 !default;
 
@@ -18,7 +21,7 @@ $yiq-contrasted-threshold:  150 !default;
 }
 
 @function theme-color($key: "primary") {
-    @return map-get($theme-colors, $key);
+    @return map.get($theme-colors, $key);
 }
 
 // Return valid calc
@@ -31,29 +34,33 @@ $yiq-contrasted-threshold:  150 !default;
         @return $value1;
     }
 
-    @if type-of($value1) == number and type-of($value2) == number and comparable($value1, $value2) {
+    @if meta.type-of($value1) == number and meta.type-of($value2) == number and math.compatible($value1, $value2) {
         @return $value1 + $value2;
     }
 
-    @return if($return-calc == true, calc(#{$value1} + #{$value2}), $value1 + unquote(" + ") + $value2);
+    @if $return-calc == true {
+        @return calc(#{$value1} + #{$value2});
+    }
+
+    @return $value1 + unquote(" + ") + $value2;
 }
 
 @function str-replace($string, $search, $replace: "") {
-    $index: str-index($string, $search);
+    $index: string.index($string, $search);
 
     @if $index {
-        @return str-slice($string, 1, $index - 1) + $replace + str-replace(str-slice($string, $index + str-length($search)), $search, $replace);
+        @return string.slice($string, 1, $index - 1) + $replace + str-replace(string.slice($string, $index + string.length($search)), $search, $replace);
     }
 
     @return $string;
 }
 
 @function escape-svg($string) {
-    @if str-index($string, "data:image/svg+xml") {
+    @if string.index($string, "data:image/svg+xml") {
         @each $char, $encoded in $escaped-characters {
             // Do not escape the url brackets
-            @if str-index($string, "url(") == 1 {
-                $string: url("#{str-replace(str-slice($string, 6, -3), $char, $encoded)}");
+            @if string.index($string, "url(") == 1 {
+                $string: url("#{str-replace(string.slice($string, 6, -3), $char, $encoded)}");
             } @else {
                 $string: str-replace($string, $char, $encoded);
             }
@@ -76,9 +83,13 @@ $yiq-contrasted-threshold:  150 !default;
         @return $value1;
     }
 
-    @if type-of($value1) == number and type-of($value2) == number and comparable($value1, $value2) {
+    @if meta.type-of($value1) == number and meta.type-of($value2) == number and math.compatible($value1, $value2) {
         @return $value1 - $value2;
     }
 
-    @return if($return-calc == true, calc(#{$value1} - #{$value2}), $value1 + unquote(" - ") + $value2);
+    @if $return-calc == true {
+        @return calc(#{$value1} - #{$value2});
+    }
+
+    @return $value1 + unquote(" - ") + $value2;
 }

@@ -7,8 +7,7 @@
   inset: 0;
   z-index: 1;
   background: linear-gradient(1deg, rgba(18, 31, 62, 0.9) 0%, rgba(18, 31, 62, 0) 100%);
-  -webkit-backdrop-filter: blur(12px);
-          backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 .dark-mode .blog-show-hero__mask {
   background: linear-gradient(1deg, rgba(170, 184, 197, 0.9) 0%, rgba(170, 184, 197, 0) 100%);
@@ -66,9 +65,16 @@
 .post-author-info-card__secondary-img {
   width: 308px;
   height: 316px;
+  min-width: 308px;
+  min-height: 316px;
   bottom: 0;
   top: -40px;
   margin-bottom: -40px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.post-author-info-card__secondary-img img {
+  border-radius: 12px;
 }
 @media (max-width: 991px) {
   .post-author-info-card__secondary-img {

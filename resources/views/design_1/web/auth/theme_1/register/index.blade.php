@@ -200,7 +200,7 @@
                     <input type="checkbox" name="term" value="1" id="termCheckbox" class="custom-control-input" {{ (old('term') == '1') ? 'checked' : '' }}>
                     <label class="custom-control__label cursor-pointer" for="termCheckbox">
                         {{ trans('auth.i_agree_with') }}
-                        <a href="pages/terms" target="_blank" class="font-weight-bold text-dark ml-4">{{ trans('auth.terms_and_rules') }}</a>
+                        <a href="/terms" target="_blank" class="font-weight-bold text-dark ml-4">{{ trans('auth.terms_and_rules') }}</a>
                     </label>
                 </div>
 

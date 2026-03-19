@@ -29,6 +29,18 @@ class UsersController extends Controller
 
 {
 
+    /**
+     * Get current user profile/settings.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/profile-setting",
+     *     summary="Get profile",
+     *     tags={"Panel", "Profile"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="User details (profile)"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function setting()
     {
         $user = apiAuth();
@@ -41,6 +53,29 @@ class UsersController extends Controller
 
     }
 
+    /**
+     * Upload profile picture, cover (identity_scan), or certificate.
+     *
+     * @OA\Post(
+     *     path="/v1/panel/profile-setting/images",
+     *     summary="Upload profile/cover images",
+     *     tags={"Panel", "Profile"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="profile_image", type="string", format="binary", description="Profile/avatar image"),
+     *                 @OA\Property(property="identity_scan", type="string", format="binary", description="Identity document (e.g. for instructor)"),
+     *                 @OA\Property(property="certificate", type="string", format="binary", description="Certificate file")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Updated"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function updateImages(Request $request)
     {
         $user = apiAuth();
@@ -79,6 +114,33 @@ class UsersController extends Controller
     }
 
 
+    /**
+     * Update profile (name, email, mobile, bio, timezone, address, etc.).
+     *
+     * @OA\Put(
+     *     path="/v1/panel/profile-setting",
+     *     summary="Update profile",
+     *     tags={"Panel", "Profile"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="full_name", type="string"),
+     *             @OA\Property(property="language", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="mobile", type="string"),
+     *             @OA\Property(property="timezone", type="string"),
+     *             @OA\Property(property="about", type="string"),
+     *             @OA\Property(property="bio", type="string"),
+     *             @OA\Property(property="country_id", type="integer"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="newsletter", type="boolean"),
+     *             @OA\Property(property="public_message", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Updated"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function update(Request $request)
     {
         $available_inputs = [
@@ -206,6 +268,26 @@ class UsersController extends Controller
         }
     }
 
+    /**
+     * Change password.
+     *
+     * @OA\Put(
+     *     path="/v1/panel/profile-setting/password",
+     *     summary="Update password",
+     *     tags={"Panel", "Profile"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"current_password","new_password"},
+     *             @OA\Property(property="current_password", type="string"),
+     *             @OA\Property(property="new_password", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Updated"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function updatePassword(Request $request)
     {
         $user = apiAuth();

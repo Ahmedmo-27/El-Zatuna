@@ -360,13 +360,33 @@ class UpcomingCoursesController extends Controller
             $data['downloadable'] = (!empty($data['downloadable']) and $data['downloadable'] == "on");
             $data['forum'] = (!empty($data['forum']) and $data['forum'] == "on");
             $data['assignments'] = (!empty($data['assignments']) and $data['assignments'] == "on");
-            $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
 
+            // Automatic pricing based on sections count
+            $autoPrice = null;
+            if (isset($data['sections'])) {
+                $sectionsCount = (int) $data['sections'];
+                if ($sectionsCount > 0 && function_exists('calculateCoursePriceBySections')) {
+                    $autoPrice = calculateCoursePriceBySections($sectionsCount);
+                }
+            }
 
-            UpcomingCourseFilterOption::where('upcoming_course_id', $upcomingCourse->id)->delete();
+            if (!is_null($autoPrice)) {
+                // Use auto-calculated price in default currency (e.g. EGP)
+                $data['price'] = $autoPrice;
+            } else {
+                // Fallback to manual price input if provided
+                $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
+            }
 
             $filters = $request->get('filters', null);
-            if (!empty($filters) and is_array($filters)) {
+            $filtersProvided = $request->has('filters') and is_array($filters);
+            $categoryChanged = ((int)$data['category_id'] !== (int)$upcomingCourse->category_id);
+
+            if ($filtersProvided or $categoryChanged) {
+                UpcomingCourseFilterOption::where('upcoming_course_id', $upcomingCourse->id)->delete();
+            }
+
+            if ($filtersProvided and !empty($filters)) {
                 foreach ($filters as $filter) {
                     UpcomingCourseFilterOption::create([
                         'upcoming_course_id' => $upcomingCourse->id,

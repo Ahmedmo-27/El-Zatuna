@@ -769,19 +769,22 @@
         });
 
         const uploadFiles = $form.find('.js-ajax-upload-file-input');
-
+        let totalUploadBytes = 0;
+       
         if (uploadFiles.length) {
             for (const uploadFileEl of uploadFiles) {
                 const uploadFile = $(uploadFileEl);
+                const file = uploadFile.prop('files') && uploadFile.prop('files')[0];
 
-                if (uploadFile && uploadFile.prop('files') && uploadFile.prop('files')[0]) {
-                    const name = uploadFile.attr('data-upload-name') ? uploadFile.attr('data-upload-name') : 'upload_file';
-
-                    formData.append(name, uploadFile.prop('files')[0]);
+                if (uploadFile.length && file) {
+                    const name = uploadFile.attr('data-upload-name') || uploadFile.attr('name') || 'upload_file';
+                    formData.append(name, file);
+                    if (typeof file.size === 'number') {
+                        totalUploadBytes += file.size;
+                    }
                 }
             }
         }
-
 
         const images = $form.find('.js-create-property-images');
         for (const image of images) {
@@ -792,6 +795,12 @@
             }
         }
 
+        // Upload progress bar (for panel course file uploads to R2)
+        const hasFileUploads = uploadFiles.length > 0;
+        const isPanelFileRequest = typeof action === 'string' && action.indexOf('/panel/files/') !== -1;
+        const $progressContainer = (hasFileUploads && isPanelFileRequest) ? $form.find('.progress').first() : null;
+        const $progressBar = ($progressContainer && $progressContainer.length) ? $progressContainer.find('.progress-bar') : null;
+
         $.ajax({
             url: action,
             type: 'POST',
@@ -799,13 +808,67 @@
             processData: false,
             contentType: false,
             cache: false,
+            xhr: function () {
+                const xhr = $.ajaxSettings.xhr();
+
+                if (xhr.upload && $progressContainer && $progressBar && $progressBar.length) {
+                    $progressContainer.removeClass('d-none');
+                    $progressBar
+                        .css('width', '0%')
+                        .attr('aria-valuenow', 0);
+
+                    xhr.upload.addEventListener('progress', function (e) {
+                        let percent = 0;
+
+                        if (e.lengthComputable && e.total > 0) {
+                            percent = Math.round((e.loaded / e.total) * 100);
+                        } else if (totalUploadBytes > 0) {
+                            // Fallback: use known file size to approximate progress
+                            percent = Math.round((e.loaded / totalUploadBytes) * 100);
+                        } else {
+                            // As a last resort, show a minimal indeterminate-style bump
+                            percent = parseInt($progressBar.attr('aria-valuenow') || '0', 10) + 1;
+                        }
+
+                        // Keep a little room for server-side processing; complete to 100% on success
+                        if (percent > 99) {
+                            percent = 99;
+                        } else if (percent < 1) {
+                            percent = 1;
+                        }
+
+                        $progressBar
+                            .css('width', percent + '%')
+                            .attr('aria-valuenow', percent);
+                    }, false);
+                }
+
+                return xhr;
+            },
             success: function (result) {
                 if (result && result.code === 200) {
-                    //window.location.reload();
+                    if ($progressContainer && $progressBar && $progressBar.length) {
+                        $progressBar
+                            .css('width', '100%')
+                            .attr('aria-valuenow', 100);
+                    }
+
+                    // Panel file upload: only treat as success when file was actually stored (must have path)
+                    const isPanelFileUpload = typeof action === 'string' && action.indexOf('/panel/files/') !== -1;
+                    const hasStoredFile = result.path && (result.path + '').length > 0;
+                    if (isPanelFileUpload && !hasStoredFile) {
+                        $this.removeClass('loadingbar').prop('disabled', false);
+                        if (typeof showToast === 'function') {
+                            showToast('error', 'Upload failed', 'File was not uploaded. Please choose a file and try again.');
+                        }
+                        return;
+                    }
+
                     const dontReloadPage = (typeof result.dont_reload !== "undefined" && result.dont_reload);
 
-                    const title = result.title ?? requestSuccessLang;
-                    const msg = result.msg ?? saveSuccessLang;
+                    const isCartStore = (typeof action === 'string' && action.indexOf('/cart/store') !== -1);
+                    const title = isCartStore ? 'Cart' : (result.title ?? requestSuccessLang);
+                    const msg = isCartStore ? 'Course added successfully!' : (result.msg ?? saveSuccessLang);
 
                     showToast('success', title, msg);
 
@@ -828,7 +891,89 @@
             },
             error: function (err) {
                 $this.removeClass('loadingbar').prop('disabled', false);
-                var errors = err.responseJSON;
+                
+                if ($progressContainer && $progressBar && $progressBar.length) {
+                    $progressBar
+                        .addClass('bg-danger')
+                        .removeClass('bg-primary')
+                        .css('width', '100%')
+                        .attr('aria-valuenow', 100);
+
+                    setTimeout(function () {
+                        $progressContainer.addClass('d-none');
+                        $progressBar
+                            .removeClass('bg-danger')
+                            .addClass('bg-primary')
+                            .css('width', '0%')
+                            .attr('aria-valuenow', 0);
+                    }, 1500);
+                }
+                
+                // Safely parse response JSON - handle cases where response might be HTML or invalid JSON
+                var errors = {};
+                try {
+                    if (err.responseJSON) {
+                        errors = err.responseJSON;
+                    } else if (err.responseText) {
+                        // Try to parse as JSON if it's not already an object
+                        var parsed = typeof err.responseText === 'string' ? JSON.parse(err.responseText) : err.responseText;
+                        if (parsed && typeof parsed === 'object') {
+                            errors = parsed;
+                        }
+                    }
+                } catch (e) {
+                    // If parsing fails, errors remains empty object
+                    errors = {};
+                }
+                
+                var status = err.status || 0;
+                var statusText = err.statusText || '';
+                var errorMessage = err.responseText || '';
+
+                // Handle 413 (Content Too Large) errors specifically
+                // Check status code, status text, or error message for 413/Content Too Large
+                var is413Error = status === 413 || 
+                                statusText.toLowerCase().indexOf('content too large') !== -1 ||
+                                statusText.toLowerCase().indexOf('request entity too large') !== -1 ||
+                                errorMessage.toLowerCase().indexOf('413') !== -1 ||
+                                errorMessage.toLowerCase().indexOf('content too large') !== -1 ||
+                                errorMessage.toLowerCase().indexOf('request entity too large') !== -1 ||
+                                (status === 0 && err.responseText && err.responseText.toLowerCase().indexOf('413') !== -1);
+
+                if (is413Error) {
+                    const errorMessage = 'The server rejected the upload. This often means the server\'s upload limit is lower than your file size (the site supports up to 2GB). If your file is small (e.g. under 100MB), ask your administrator to increase the server limit: nginx uses client_max_body_size; PHP uses upload_max_filesize and post_max_size.';
+                    
+                    // Show custom alert if available
+                    if ($customAlertEl.length > 0) {
+                        $customAlertEl.removeClass("d-none").addClass("d-flex");
+                        $customAlertEl.find("span").text(errorMessage);
+                    } else {
+                        // Fallback to toast notification
+                        showToast('error', 'File Upload Error', errorMessage);
+                    }
+                    
+                    // Try to find file upload input and show error
+                    const $fileInput = $form.find('.js-ajax-upload-file-input');
+                    if ($fileInput.length) {
+                        $fileInput.addClass('is-invalid');
+                        const $formGroup = $fileInput.closest('.form-group');
+                        if ($formGroup.length) {
+                            let $feedback = $formGroup.find('.invalid-feedback');
+                            if (!$feedback.length) {
+                                $feedback = $('<div class="invalid-feedback"></div>');
+                                $formGroup.append($feedback);
+                            }
+                            $feedback.text(errorMessage);
+                        }
+                    }
+                    
+                    // Refresh Captcha if needed
+                    if ($form.find(".js-ajax-captcha").length) {
+                        refreshCaptcha();
+                    }
+                    
+                    return;
+                }
 
                 if (errors && errors.errors) {
                     Object.keys(errors.errors).forEach((key) => {
@@ -857,14 +1002,14 @@
                     }
                 }
 
-                // Custom Alert
-                if (errors.custom_alert && $customAlertEl.length > 0) {
+                // Custom Alert - Check if errors exists and has custom_alert property before accessing
+                if (errors && typeof errors === 'object' && errors.custom_alert && $customAlertEl.length > 0) {
                     $customAlertEl.removeClass("d-none").addClass("d-flex")
                     $customAlertEl.find("span").text(errors.custom_alert)
                 }
 
-                // toast
-                if (errors.toast_alert) {
+                // toast - Check if errors exists before accessing properties
+                if (errors && errors.toast_alert) {
                     showToast('error', errors.toast_alert.title, errors.toast_alert.msg)
                 }
 

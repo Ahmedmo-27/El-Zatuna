@@ -3,6 +3,35 @@
 @push('styles_top')
     <link rel="stylesheet" href="{{ getDesign1StylePath("create-course") }}">
     <link rel="stylesheet" href="/assets/design_1/css/panel-elzatuna.css">
+    <style>
+        .create-course-progress-step.cursor-pointer {
+            transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+        }
+
+        .create-course-progress-step.cursor-pointer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(7, 41, 35, 0.08);
+        }
+
+        .create-course-nav-btn.cursor-pointer {
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .create-course-nav-btn.cursor-pointer:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(7, 41, 35, 0.1);
+        }
+
+        #saveAsDraft {
+            cursor: pointer;
+            transition: color .2s ease, opacity .2s ease;
+        }
+
+        #saveAsDraft:hover {
+            color: #072923 !important;
+            opacity: 1;
+        }
+    </style>
 @endpush
 
 @section('content')

@@ -2,6 +2,20 @@
 
 use Illuminate\Support\Facades\Route;
 
+// TEMPORARY: Include Geidea diagnostic routes (REMOVE AFTER TESTING)
+if (file_exists(__DIR__ . '/web-geidea-test.php')) {
+    require __DIR__ . '/web-geidea-test.php';
+}
+if (file_exists(__DIR__ . '/geidea-debug.php')) {
+    require __DIR__ . '/geidea-debug.php';
+}
+if (file_exists(__DIR__ . '/geidea-diagnostic.php')) {
+    require __DIR__ . '/geidea-diagnostic.php';
+}
+if (file_exists(__DIR__ . '/geidea-return.php')) {
+    require __DIR__ . '/geidea-return.php';
+}
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -26,9 +40,18 @@ Route::group(['prefix' => 'api_sessions'], function () {
 
 });
 
+// R2 Course-Assets proxy (thumbnail, cover, icon, demo video) when R2_PUBLIC_URL is not set
+Route::get('/r2-asset/{path}', 'Web\R2AssetController@show')->where('path', '.*')->name('r2.asset');
+
 Route::get('/mobile-app', 'Web\MobileAppController@index')->middleware(['share', 'impersonate'])->name('mobileAppRoute');
 Route::get('/maintenance', 'Web\MaintenanceController@index')->middleware(['share', 'impersonate'])->name('maintenanceRoute');
 Route::get('/restriction', 'Web\RestrictionController@index')->middleware(['share', 'impersonate'])->name('restrictionRoute');
+Route::get('/sitemap.xml', 'Web\SitemapController@index')->name('sitemap.index');
+Route::get('/sitemaps/main.xml', 'Web\SitemapController@main')->name('sitemap.main');
+Route::get('/sitemaps/courses.xml', 'Web\SitemapController@courses')->name('sitemap.courses');
+Route::get('/sitemaps/blog.xml', 'Web\SitemapController@blog')->name('sitemap.blog');
+Route::get('/sitemaps/products.xml', 'Web\SitemapController@products')->name('sitemap.products');
+Route::get('/sitemaps/teachers.xml', 'Web\SitemapController@teachers')->name('sitemap.teachers');
 
 Route::group(['prefix' => 'cookie-security', 'middleware' => ['share', 'impersonate']], function () {
     Route::post('/all', 'Web\CookieSecurityController@setAll');
@@ -121,9 +144,12 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::post('/getFilePath', 'WebinarController@getFilePath');
         Route::get('/{slug}/file/{file_id}/play', 'WebinarController@playFile');
         Route::get('/{slug}/free', 'WebinarController@free');
-        Route::post('/{id}/report', 'WebinarController@reportWebinar');
-        Route::post('/{slug}/learningStatus', 'WebinarController@learningStatus');
         Route::get('/{slug}/learning-status-completed-modal', 'WebinarController@learningStatusCompletedModal');
+        
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::post('/{id}/report', 'WebinarController@reportWebinar');
+            Route::post('/{slug}/learningStatus', 'WebinarController@learningStatus');
+        });
         Route::get('/{slug}/share-modal', 'WebinarController@getShareModal');
         Route::get('/{slug}/report-modal', 'WebinarController@getReportModal');
 
@@ -149,6 +175,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/learning/{slug}/itemSequenceContentInfo', 'LearningPageController@getItemSequenceContentInfo');
             Route::get('/learning/{slug}/noticeboards', 'LearningPageController@noticeboards');
             Route::post('/learning/{slug}/track-time', 'LearningPageController@trackSpentTime');
+            Route::post('/learning/{slug}/autoMarkComplete', 'WebinarController@autoMarkComplete');
             Route::get('/learning/{slug}', 'LearningPageController@index');
 
 
@@ -203,18 +230,23 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
 
     Route::group(['prefix' => 'cart'], function () {
-        Route::post('/store', 'CartManagerController@store');
-        Route::post('/{id}/quantity', 'CartManagerController@quantity');
-        Route::get('/{id}/delete', 'CartManagerController@destroy');
         Route::get('/get-drawer-info', 'CartManagerController@getDrawerInfo');
-    });
-
-    Route::group(['middleware' => 'web.auth'], function () {
-
-        Route::group(['prefix' => 'laravel-filemanager'], function () {
-            \UniSharp\LaravelFilemanager\Lfm::routes();
+        
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::post('/store', 'CartManagerController@store');
+            Route::post('/{id}/quantity', 'CartManagerController@quantity');
+            Route::get('/{id}/delete', 'CartManagerController@destroy');
         });
-
+    });
+    
+    // Subject search/create (used by registration step 3 and become-instructor; no auth required)
+    Route::group(['prefix' => 'become-instructor'], function () {
+        Route::get('/search-subjects', 'BecomeInstructorController@searchSubjects');
+        Route::post('/create-subject', 'BecomeInstructorController@createSubject');
+    });
+    
+    Route::group(['middleware' => 'web.auth'], function () {
+        
         Route::group(['prefix' => 'reviews'], function () {
             Route::post('/store', 'WebinarReviewController@store');
             Route::post('/store-reply-comment', 'WebinarReviewController@storeReplyComment');
@@ -274,10 +306,12 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::post('/{username}/get-topics', 'UserProfileController@getUserForumTopics');
         Route::post('/{username}/get-instructors', 'UserProfileController@getOrganizationInstructors');
         Route::post('/{username}/availableTimes', 'UserProfileController@availableTimes');
-        Route::get('/{username}/get-send-message-form', 'UserProfileController@getSendMessageForm');
-        Route::post('/{username}/send-message', 'UserProfileController@sendMessage');
-
         Route::post('/search', 'UserController@search');
+
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::get('/{username}/get-send-message-form', 'UserProfileController@getSendMessageForm');
+            Route::post('/{username}/send-message', 'UserProfileController@sendMessage');
+        });
 
         /*********
          * Meeting Routes
@@ -285,8 +319,11 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::group(['prefix' => '{username}/meetings'], function () {
             Route::get('/', 'MeetingController@index');
             Route::get('/overview', 'MeetingController@overview');
-            Route::post('/reserve', 'MeetingController@reserve');
             Route::post('/get-amount', 'MeetingController@getMeetingAmount');
+
+            Route::group(['middleware' => 'web.auth'], function () {
+                Route::post('/reserve', 'MeetingController@reserve');
+            });
         });
 
     });
@@ -300,7 +337,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/chapa/callback/{reference}', 'PaymentController@chapaPaymentVerify')->name('chapa.callback');
     });
 
-    Route::group(['prefix' => 'subscribes'], function () {
+    Route::group(['prefix' => 'subscribes', 'middleware' => 'web.auth'], function () {
         Route::get('/apply/bundle/{bundleSlug}', 'SubscribeController@bundleApply');
         Route::get('/apply/{webinarSlug}', 'SubscribeController@apply');
     });
@@ -345,6 +382,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         return view('design_1.web.pages.privacy');
     });
 
+    Route::get('/cookie', function () {
+        return view('design_1.web.pages.cookie');
+    });
+
     Route::get('/faq', function () {
         return view('design_1.web.pages.faq');
     });
@@ -385,22 +426,22 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::group(['prefix' => 'products'], function () {
         Route::get('/', 'ProductController@index');
         Route::get('/{slug}', 'ProductController@show');
-        Route::post('/{slug}/points/apply', 'ProductController@buyWithPoint');
         Route::get('/{slug}/files', 'ProductController@showFiles');
 
         /* Review Load More */
         Route::post('/{slug}/reviews/load-more', 'ProductReviewController@getReviewsByCourseSlug');
-
-        Route::group(['prefix' => 'reviews'], function () {
-            Route::post('/store', 'ProductReviewController@store');
-            Route::post('/store-reply-comment', 'ProductReviewController@storeReplyComment');
-            Route::get('/{id}/delete', 'ProductReviewController@destroy');
-            Route::get('/{id}/delete-comment/{commentId}', 'ProductReviewController@destroy');
-        });
-
+        
         Route::group(['middleware' => 'web.auth'], function () {
+            Route::post('/{slug}/points/apply', 'ProductController@buyWithPoint');
             Route::get('/{slug}/installments', 'ProductController@getInstallmentsByProduct');
             Route::post('/direct-payment', 'ProductController@directPayment');
+
+            Route::group(['prefix' => 'reviews'], function () {
+                Route::post('/store', 'ProductReviewController@store');
+                Route::post('/store-reply-comment', 'ProductReviewController@storeReplyComment');
+                Route::get('/{id}/delete', 'ProductReviewController@destroy');
+                Route::get('/{id}/delete-comment/{commentId}', 'ProductReviewController@destroy');
+            });
         });
     });
 
@@ -409,21 +450,21 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::group(['prefix' => 'bundles'], function () {
         Route::get('/', 'BundleController@index');
         Route::get('/{slug}', 'BundleController@show');
-        Route::get('/{slug}/free', 'BundleController@free');
-
-        /* Course Points */
-        Route::group(['prefix' => '/{slug}/points'], function () {
-            Route::get('/apply', 'BundleController@buyWithPoint');
-            Route::get('/get-modal', 'BundleController@getBuyWithPointModal');
-        });
-
         Route::get('/{slug}/share-modal', 'BundleController@getShareModal');
 
         /* Review Load More */
         Route::post('/{slug}/reviews/load-more', 'BundleReviewController@getReviewsByBundleSlug');
 
         Route::group(['middleware' => 'web.auth'], function () {
+            Route::get('/{slug}/free', 'BundleController@free');
             Route::get('/{slug}/favorite', 'BundleController@favoriteToggle');
+            Route::post('/direct-payment', 'BundleController@directPayment');
+
+            /* Course Points */
+            Route::group(['prefix' => '/{slug}/points'], function () {
+                Route::get('/apply', 'BundleController@buyWithPoint');
+                Route::get('/get-modal', 'BundleController@getBuyWithPointModal');
+            });
 
             Route::group(['prefix' => 'reviews'], function () {
                 Route::post('/store', 'BundleReviewController@store');
@@ -431,50 +472,47 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
                 Route::get('/{id}/delete', 'BundleReviewController@destroy');
                 Route::get('/{id}/delete-comment/{commentId}', 'BundleReviewController@destroy');
             });
-
-            Route::post('/direct-payment', 'BundleController@directPayment');
         });
     });
 
     Route::group(['prefix' => 'forums'], function () {
         Route::get('/', 'ForumController@index');
-        Route::get('/create-topic', 'ForumController@createTopic');
-        Route::post('/create-topic', 'ForumController@storeTopic');
         Route::get('/search', 'ForumController@search');
-        Route::get('/attachments/{attachment_id}/delete', 'ForumController@deleteTopicAttachment');
+
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::get('/create-topic', 'ForumController@createTopic');
+            Route::post('/create-topic', 'ForumController@storeTopic');
+            Route::get('/attachments/{attachment_id}/delete', 'ForumController@deleteTopicAttachment');
+        });
 
         Route::group(['prefix' => '/{slug}/topics'], function () {
             Route::get('/', 'ForumController@topics');
-            Route::post('/{topic_slug}/likeToggle', 'ForumController@topicLikeToggle');
-            Route::get('/{topic_slug}/edit', 'ForumController@topicEdit');
-            Route::post('/{topic_slug}/edit', 'ForumController@topicUpdate');
-            Route::post('/{topic_slug}/bookmark', 'ForumController@topicBookmarkToggle');
             Route::get('/{topic_slug}/downloadAttachment/{attachment_id}', 'ForumController@topicDownloadAttachment');
+
+            Route::group(['middleware' => 'web.auth'], function () {
+                Route::post('/{topic_slug}/likeToggle', 'ForumController@topicLikeToggle');
+                Route::get('/{topic_slug}/edit', 'ForumController@topicEdit');
+                Route::post('/{topic_slug}/edit', 'ForumController@topicUpdate');
+                Route::post('/{topic_slug}/bookmark', 'ForumController@topicBookmarkToggle');
+            });
 
             Route::group(['prefix' => '/{topic_slug}/posts'], function () {
                 Route::get('/', 'ForumTopicPostsController@posts');
-                Route::post('/', 'ForumTopicPostsController@storePost');
                 Route::get('/report-modal', 'ForumTopicPostsController@getReportModal');
-                Route::post('/report', 'ForumTopicPostsController@storeTopicReport');
-                Route::get('/{post_id}/edit', 'ForumTopicPostsController@postEdit');
-                Route::post('/{post_id}/edit', 'ForumTopicPostsController@postUpdate');
-                Route::post('/{post_id}/likeToggle', 'ForumTopicPostsController@postLikeToggle');
-                Route::post('/{post_id}/pin-toggle', 'ForumTopicPostsController@postPinToggle');
                 Route::get('/{post_id}/downloadAttachment', 'ForumTopicPostsController@postDownloadAttachment');
+
+                Route::group(['middleware' => 'web.auth'], function () {
+                    Route::post('/', 'ForumTopicPostsController@storePost');
+                    Route::post('/report', 'ForumTopicPostsController@storeTopicReport');
+                    Route::get('/{post_id}/edit', 'ForumTopicPostsController@postEdit');
+                    Route::post('/{post_id}/edit', 'ForumTopicPostsController@postUpdate');
+                    Route::post('/{post_id}/likeToggle', 'ForumTopicPostsController@postLikeToggle');
+                    Route::post('/{post_id}/pin-toggle', 'ForumTopicPostsController@postPinToggle');
+                });
             });
         });
     });
 
-
-    Route::group(['prefix' => 'upcoming_courses'], function () {
-        Route::get('/', 'UpcomingCoursesController@index');
-        Route::get('{slug}', 'UpcomingCoursesController@show');
-        Route::get('{slug}/toggleFollow', 'UpcomingCoursesController@toggleFollow');
-        Route::get('{slug}/favorite', 'UpcomingCoursesController@favorite');
-        Route::post('{id}/report', 'UpcomingCoursesController@report');
-        Route::get('/{slug}/share-modal', 'UpcomingCoursesController@getShareModal');
-        Route::get('/{slug}/report-modal', 'UpcomingCoursesController@getReportModal');
-    });
 
     Route::group(['prefix' => 'installments'], function () {
         Route::group(['middleware' => 'web.auth'], function () {
@@ -504,6 +542,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     /* Landings */
     Route::group(['prefix' => 'landings'], function () {
         Route::get('/{landing_url}', 'LandingController@index');
+    });
+
+    Route::fallback(function () {
+        abort(404);
     });
 });
 

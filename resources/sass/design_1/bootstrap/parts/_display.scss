@@ -3,9 +3,11 @@
 // Utilities for common `display` values
 //
 
+@use "sass:map";
+
 $displays: none, inline, inline-block, block, flex, inline-flex !default; // table, table-row, table-cell,
 
-@each $breakpoint in map-keys($grid-breakpoints) {
+@each $breakpoint in map.keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
         $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
 

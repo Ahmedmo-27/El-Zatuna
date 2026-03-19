@@ -18,6 +18,44 @@ use Illuminate\Validation\Rule;
 
 class ChapterController extends Controller
 {
+    protected function recalculateWebinarChapterPricing(Webinar $webinar): void
+    {
+        $chapters = WebinarChapter::query()
+            ->where('webinar_id', $webinar->id)
+            ->where('status', WebinarChapter::$chapterActive)
+            ->orderByRaw('COALESCE(`order`, 999999) ASC')
+            ->orderBy('id')
+            ->get();
+
+        $totalPrice = 0.0;
+
+        foreach ($chapters as $index => $chapter) {
+            $price = 0.0; // first active section is free
+
+            if ($index !== 0) {
+                $minutes = $chapter->duration;
+
+                if (is_null($minutes)) {
+                    $chapter->loadMissing(['files', 'sessions', 'textLessons']);
+                    $minutes = (int) $chapter->getDuration();
+                }
+
+                $calculated = function_exists('calculateChapterPriceByDurationMinutes')
+                    ? calculateChapterPriceByDurationMinutes((int) $minutes)
+                    : null;
+
+                $price = !is_null($calculated) ? (float) $calculated : 0.0;
+            }
+
+            if ((float) $chapter->price !== $price) {
+                $chapter->update(['price' => $price]);
+            }
+
+            $totalPrice += $price;
+        }
+
+        $webinar->update(['price' => $totalPrice]);
+    }
 
     public function getForm(Request $request)
     {
@@ -87,6 +125,7 @@ class ChapterController extends Controller
                         'status' => $chapter->status,
                         'title' => $chapter->title,
                         'type' => $chapter->type,
+                        'price' => isset($chapter->price) ? (float) $chapter->price : 0,
                         'created_at' => $chapter->created_at,
                     ];
                 }
@@ -127,6 +166,10 @@ class ChapterController extends Controller
                 //'type' => $data['type'],
                 'status' => $status,
                 'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
+                // duration is derived from files; keep null here
+                'duration' => null,
+                // Price is auto-calculated based on duration after save.
+                'price' => 0,
                 'created_at' => time(),
             ]);
 
@@ -139,6 +182,9 @@ class ChapterController extends Controller
                 ], [
                     'title' => $data['title'],
                 ]);
+
+                $this->recalculateWebinarDuration($webinar);
+                $this->recalculateWebinarChapterPricing($webinar);
             }
 
             return response()->json([
@@ -210,6 +256,7 @@ class ChapterController extends Controller
 
                 $chapter->update([
                     'status' => $status,
+                    // keep existing sequence-content toggle behavior
                     'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == 'on'),
                 ]);
 
@@ -219,6 +266,9 @@ class ChapterController extends Controller
                 ], [
                     'title' => $data['title'],
                 ]);
+
+                $this->recalculateWebinarDuration($webinar);
+                $this->recalculateWebinarChapterPricing($webinar);
 
                 return response()->json([
                     'code' => 200
@@ -241,7 +291,15 @@ class ChapterController extends Controller
 
             if ($chapter->user_id == $user->id or (!empty($webinar) and $webinar->canAccess($user))) {
 
+                $webinarId = $chapter->webinar_id;
                 $chapter->delete();
+
+                if (!empty($webinarId)) {
+                    if ($webinar = Webinar::find($webinarId)) {
+                        $this->recalculateWebinarDuration($webinar);
+                        $this->recalculateWebinarChapterPricing($webinar);
+                    }
+                }
 
                 return response()->json([
                     'code' => 200
@@ -327,5 +385,16 @@ class ChapterController extends Controller
         return response()->json([
             'code' => 200
         ], 200);
+    }
+
+    protected function recalculateWebinarDuration(Webinar $webinar): void
+    {
+        $totalMinutes = $webinar->chapters()
+            ->where('status', WebinarChapter::$chapterActive)
+            ->sum('duration');
+
+        $webinar->update([
+            'duration' => (int) $totalMinutes,
+        ]);
     }
 }

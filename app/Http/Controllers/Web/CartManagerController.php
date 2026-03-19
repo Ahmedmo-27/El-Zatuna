@@ -10,8 +10,10 @@ use App\Models\File;
 use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\ReserveMeeting;
+use App\Models\Subscribe;
 use App\Models\Ticket;
 use App\Models\Webinar;
+use App\Models\WebinarChapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 
@@ -38,6 +40,7 @@ class CartManagerController extends Controller
                 ->with([
                     'webinar',
                     'file.webinar',
+                    'subscribe',
                     'bundle',
                     'installmentPayment',
                     'productOrder' => function ($query) {
@@ -113,6 +116,30 @@ class CartManagerController extends Controller
 
                                 $carts->add($item);
                             }
+                        } elseif (!empty($cookieCart['item_name']) and $cookieCart['item_name'] == 'chapter_id') {
+                            $chapter = WebinarChapter::where('id', $cookieCart['item_id'])
+                                ->where('status', WebinarChapter::$chapterActive)
+                                ->with('webinar')
+                                ->first();
+
+                            if (!empty($chapter) and !empty($chapter->webinar) and (float) $chapter->price > 0) {
+                                $item = new Cart();
+                                $item->uid = $id;
+                                $item->chapter_id = $chapter->id;
+                                $item->chapter = $chapter;
+                                $carts->add($item);
+                            }
+                        } elseif (!empty($cookieCart['item_name']) and $cookieCart['item_name'] == 'subscribe_id') {
+                            $subscribe = Subscribe::where('id', $cookieCart['item_id'])->first();
+
+                            if (!empty($subscribe)) {
+                                $item = new Cart();
+                                $item->uid = $id;
+                                $item->subscribe_id = $subscribe->id;
+                                $item->subscribe = $subscribe;
+
+                                $carts->add($item);
+                            }
                         } elseif (!empty($cookieCart['item_name']) and $cookieCart['item_name'] == 'product_id') {
                             $product = Product::where('id', $cookieCart['item_id'])->first();
 
@@ -158,6 +185,10 @@ class CartManagerController extends Controller
                                     $this->storeUserBundleCart($user, $cart);
                                 } elseif ($cart['item_name'] == 'file_id') {
                                     $this->storeUserFileCart($user, $cart);
+                                } elseif ($cart['item_name'] == 'chapter_id') {
+                                    $this->storeUserChapterCart($user, $cart);
+                                } elseif ($cart['item_name'] == 'subscribe_id') {
+                                    $this->storeUserSubscribeCart($user, $cart);
                                 }
                             }
                         }
@@ -208,6 +239,100 @@ class CartManagerController extends Controller
             'status' => 'error'
         ];
         return back()->with(['toast' => $toastData]);
+    }
+
+    public function storeUserChapterCart($user, $data)
+    {
+        $chapter_id = $data['item_id'];
+
+        $chapter = WebinarChapter::where('id', $chapter_id)
+            ->where('status', WebinarChapter::$chapterActive)
+            ->with('webinar')
+            ->first();
+
+        if (empty($chapter) || empty($chapter->webinar) || empty($user)) {
+            return back()->with(['toast' => [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('cart.course_not_found'),
+                'status' => 'error'
+            ]]);
+        }
+
+        if ($chapter->isFirstSection() || (float) $chapter->price <= 0) {
+            return back()->with(['toast' => [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('cart.course_not_free'),
+                'status' => 'error'
+            ]]);
+        }
+
+        // User who paid full course (e.g. 2000) already has all sections — do not allow buying a section again
+        if ($chapter->webinar->checkUserHasBought($user) || $chapter->checkUserHasBought($user)) {
+            return back()->with(['toast' => [
+                'title' => trans('cart.fail_purchase'),
+                'msg' => trans('site.you_bought_webinar'),
+                'status' => 'error'
+            ]]);
+        }
+
+        if ($chapter->webinar->creator_id == $user->id) {
+            return back()->with(['toast' => [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('cart.cant_purchase_your_course'),
+                'status' => 'error'
+            ]]);
+        }
+
+        // If user has an active "10 sections" subscription scoped to their university/faculty,
+        // allow adding to cart (payment amount can be zeroed later when building the order).
+        $activeSubscribe = \App\Models\Subscribe::getActiveSubscribe($user->id);
+        if (!empty($activeSubscribe) && ($activeSubscribe->type ?? null) === 'university_10_sections') {
+            if (
+                ($chapter->webinar->university_id === $user->university_id) &&
+                ($chapter->webinar->faculty_id === $user->faculty_id)
+            ) {
+                // Allowed; usage will be consumed on purchase.
+            }
+        }
+
+        Cart::updateOrCreate([
+            'creator_id' => $user->id,
+            'chapter_id' => $chapter->id,
+        ], [
+            'webinar_id' => null,
+            'file_id' => null,
+            'created_at' => time()
+        ]);
+
+        return 'ok';
+    }
+
+    public function storeUserSubscribeCart($user, $data)
+    {
+        $subscribeId = $data['item_id'];
+
+        $subscribe = Subscribe::where('id', $subscribeId)->first();
+
+        if (empty($subscribe) || empty($user)) {
+            return back()->with(['toast' => [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('cart.course_not_found'),
+                'status' => 'error'
+            ]]);
+        }
+
+        Cart::updateOrCreate([
+            'creator_id' => $user->id,
+            'subscribe_id' => $subscribe->id,
+        ], [
+            'webinar_id' => null,
+            'bundle_id' => null,
+            'file_id' => null,
+            'chapter_id' => null,
+            'created_at' => time(),
+        ]);
+
+        return 'ok';
     }
 
     public function storeUserBundleCart($user, $data)
@@ -397,6 +522,10 @@ class CartManagerController extends Controller
                 $result = $this->storeUserBundleCart($user, $data);
             } elseif ($item_name == 'file_id') {
                 $result = $this->storeUserFileCart($user, $data);
+            } elseif ($item_name == 'chapter_id') {
+                $result = $this->storeUserChapterCart($user, $data);
+            } elseif ($item_name == 'subscribe_id') {
+                $result = $this->storeUserSubscribeCart($user, $data);
             }
 
             if ($result != 'ok') {

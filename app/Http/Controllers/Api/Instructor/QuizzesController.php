@@ -18,6 +18,33 @@ use Illuminate\Support\Facades\Validator;
 class QuizzesController extends Controller
 {
 
+    /**
+     * Create a quiz (course section). Teacher only.
+     *
+     * @OA\Post(
+     *     path="/v1/instructor/quizzes",
+     *     summary="Create quiz",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","pass_mark"},
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="webinar_id", type="integer", nullable=true),
+     *             @OA\Property(property="chapter_id", type="integer", nullable=true),
+     *             @OA\Property(property="pass_mark", type="integer"),
+     *             @OA\Property(property="attempt", type="integer", nullable=true),
+     *             @OA\Property(property="time", type="integer", nullable=true),
+     *             @OA\Property(property="active", type="boolean"),
+     *             @OA\Property(property="certificate", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Quiz created"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher only")
+     * )
+     */
     public function store(Request $request)
     {
 
@@ -69,6 +96,35 @@ class QuizzesController extends Controller
 
     }
 
+    /**
+     * Update a quiz. Teacher only.
+     *
+     * @OA\Put(
+     *     path="/v1/instructor/quizzes/{id}",
+     *     summary="Update quiz",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","pass_mark"},
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="webinar_id", type="integer", nullable=true),
+     *             @OA\Property(property="chapter_id", type="integer", nullable=true),
+     *             @OA\Property(property="pass_mark", type="integer"),
+     *             @OA\Property(property="attempt", type="integer", nullable=true),
+     *             @OA\Property(property="time", type="integer", nullable=true),
+     *             @OA\Property(property="active", type="boolean"),
+     *             @OA\Property(property="certificate", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Updated"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher only"),
+     *     @OA\Response(response=404, description="Quiz not found")
+     * )
+     */
     public function update(Request $request, $id)
     {
         $quiz = Quiz::find($id);
@@ -122,6 +178,21 @@ class QuizzesController extends Controller
         return apiResponse2(1, 'updated', trans('public.updated'));
     }
 
+    /**
+     * Delete a quiz. Teacher only.
+     *
+     * @OA\Delete(
+     *     path="/v1/instructor/quizzes/{id}",
+     *     summary="Delete quiz",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Deleted"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher only"),
+     *     @OA\Response(response=404, description="Quiz not found")
+     * )
+     */
     public function destroy(Request $request, $id)
     {
         $user_id = auth()->id();
@@ -334,7 +405,14 @@ class QuizzesController extends Controller
                     }
 
                     if (empty($status)) {
-                        $status = ($totalMark >= $passMark) ? QuizzesResult::$passed : QuizzesResult::$failed;
+                        // Calculate total possible points
+                        $totalPossiblePoints = $quiz->quizQuestions->sum('grade');
+                        
+                        // Calculate percentage score
+                        $percentageScore = $totalPossiblePoints > 0 ? ($totalMark / $totalPossiblePoints) * 100 : 0;
+                        
+                        // Compare percentage with pass mark
+                        $status = ($percentageScore >= $passMark) ? QuizzesResult::$passed : QuizzesResult::$failed;
                     }
 
                     $results["attempt_number"] = $request->get('attempt_number');
@@ -509,23 +587,23 @@ class QuizzesController extends Controller
             $quizzesResults = $quizzesResults->toArray();
             foreach($quizzesResults as &$quiz){
                 if (isset($quiz["quiz"]["webinar"])){
-                    $quiz["quiz"]["webinar"]["thumbnail"] = url($quiz["quiz"]["webinar"]["thumbnail"]);
-                    $quiz["quiz"]["webinar"]["image_cover"] = url($quiz["quiz"]["webinar"]["image_cover"]);
-                    $quiz["quiz"]["webinar"]["video_demo"] = url($quiz["quiz"]["webinar"]["video_demo"]);
+                    $quiz["quiz"]["webinar"]["thumbnail"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["thumbnail"] ?? null);
+                    $quiz["quiz"]["webinar"]["image_cover"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["image_cover"] ?? null);
+                    $quiz["quiz"]["webinar"]["video_demo"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["quiz"]["webinar"]["video_demo"] ?? null);
                 }
                 if (isset($quiz["user"])){
-                    $quiz["user"]["avatar"] = url($quiz["user"]["avatar"]);
-                    $quiz["user"]["cover_img"] = url($quiz["user"]["cover_img"]);
-                    $quiz["user"]["identity_scan"] = url($quiz["user"]["identity_scan"]);
-                    $quiz["user"]["certificate"] = url($quiz["user"]["certificate"]);
+                    $quiz["user"]["avatar"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["avatar"] ?? null);
+                    $quiz["user"]["cover_img"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["cover_img"] ?? null);
+                    $quiz["user"]["identity_scan"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["identity_scan"] ?? null);
+                    $quiz["user"]["certificate"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["user"]["certificate"] ?? null);
                 }
             }
             $quizzes = $quizzes->toArray();
             foreach($quizzes as &$quiz){
                 if (isset($quiz["webinar"])){
-                    $quiz["webinar"]["thumbnail"] = url($quiz["webinar"]["thumbnail"]);
-                    $quiz["webinar"]["image_cover"] = url($quiz["webinar"]["image_cover"]);
-                    $quiz["webinar"]["video_demo"] = url($quiz["webinar"]["video_demo"]);
+                    $quiz["webinar"]["thumbnail"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["webinar"]["thumbnail"] ?? null);
+                    $quiz["webinar"]["image_cover"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["webinar"]["image_cover"] ?? null);
+                    $quiz["webinar"]["video_demo"] = \App\Helpers\R2Helper::resolveContentAssetUrl($quiz["webinar"]["video_demo"] ?? null);
                 }
             }
 

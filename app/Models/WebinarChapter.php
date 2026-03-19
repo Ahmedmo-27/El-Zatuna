@@ -71,12 +71,81 @@ class WebinarChapter extends Model implements TranslatableContract
         return $this->belongsTo('App\Models\Webinar', 'webinar_id', 'id');
     }
 
+    /**
+     * Whether this chapter is the first section (by order) of the course — free for everyone.
+     */
+    public function isFirstSection(): bool
+    {
+        $first = static::query()
+            ->where('webinar_id', $this->webinar_id)
+            ->where('status', self::$chapterActive)
+            ->orderByRaw('COALESCE(`order`, 999999) ASC')
+            ->orderBy('id')
+            ->first();
+
+        return $first && (int) $first->id === (int) $this->id;
+    }
+
+    /**
+     * Check if user has purchased this section (chapter).
+     */
+    public function checkUserHasBought($user = null): bool
+    {
+        if (empty($user) && auth()->check()) {
+            $user = auth()->user();
+        }
+        if (empty($user)) {
+            $user = function_exists('apiAuth') ? apiAuth() : null;
+        }
+        if (empty($user)) {
+            return false;
+        }
+
+        return \App\Models\Sale::query()
+            ->where('buyer_id', $user->id)
+            ->where('chapter_id', $this->id)
+            ->where('type', \App\Models\Sale::$chapter)
+            ->whereNull('refund_at')
+            ->where('access_to_purchased_item', true)
+            ->exists();
+    }
+
+    /**
+     * Get the sale record if user purchased this chapter.
+     */
+    public function getSaleItem($user = null)
+    {
+        if (empty($user) && auth()->check()) {
+            $user = auth()->user();
+        }
+        if (empty($user)) {
+            $user = function_exists('apiAuth') ? apiAuth() : null;
+        }
+        if (empty($user)) {
+            return null;
+        }
+
+        return \App\Models\Sale::query()
+            ->where('buyer_id', $user->id)
+            ->where('chapter_id', $this->id)
+            ->where('type', \App\Models\Sale::$chapter)
+            ->whereNull('refund_at')
+            ->where('access_to_purchased_item', true)
+            ->orderBy('created_at', 'desc')
+            ->first();
+    }
+
     public function getDuration()
     {
+        // If a manual duration is set on the chapter, prefer that.
+        if (!is_null($this->duration)) {
+            return (int) $this->duration;
+        }
+
         $time = 0;
-
+        // Files durations are stored in minutes on the files table.
+        $time += $this->files->where('status', File::$Active)->sum('duration');
         $time += $this->sessions->sum('duration');
-
         $time += $this->textLessons->sum('study_time');
 
         return $time;

@@ -25,11 +25,21 @@ class ClassesController extends Controller
         $webinarsQuery = Webinar::where('webinars.status', 'active')
             ->where('private', false);
 
-        $type = $request->get('type');
-        if (!empty($type) and is_array($type) and in_array('bundle', $type)) {
-            $webinarsQuery = Bundle::where('bundles.status', 'active');
-            $this->tableName = 'bundles';
-            $this->columnId = 'bundle_id';
+        $user = auth()->user();
+
+        // For guests, only show courses that are global to all universities & all faculties.
+        // (Logged-in students are filtered by the Webinar global scope; teachers handled below.)
+        if (empty($user)) {
+            $webinarsQuery->whereNull('university_id')
+                ->whereNull('faculty_id');
+        }
+
+        // Enforce teacher ownership on /classes (webinars or bundles)
+        if (!empty($user) and $user->isTeacher()) {
+            $webinarsQuery->where(function ($query) use ($user) {
+                $query->where("{$this->tableName}.teacher_id", $user->id)
+                    ->orWhere("{$this->tableName}.creator_id", $user->id);
+            });
         }
 
 
@@ -64,6 +74,8 @@ class ClassesController extends Controller
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'pageCanonicalUrl' => url('/classes'),
+            'pageOgType' => 'website',
             'pageBasePath' => $request->getPathInfo(),
             'filterMaxPrice' => ($filterMaxPrice > 1000) ? $filterMaxPrice : 1000,
             'coursesRatingsCount' => $coursesRatingsCount,
@@ -81,7 +93,6 @@ class ClassesController extends Controller
         $isDownloadable = $request->get('downloadable', null);
         $sort = $request->get('sort', null);
         $filterOptions = $request->get('filter_option', []);
-        $typeOptions = $request->get('type', []);
         $moreOptions = $request->get('moreOptions', []);
         $instructor = $request->get('instructor', null);
 
@@ -105,10 +116,6 @@ class ClassesController extends Controller
 
             if (!empty($isDownloadable) and $isDownloadable == 'on') {
                 $query->where('downloadable', 1);
-            }
-
-            if (!empty($typeOptions) and is_array($typeOptions)) {
-                $query->whereIn("{$this->tableName}.type", $typeOptions);
             }
 
             if (!empty($moreOptions) and is_array($moreOptions)) {
@@ -140,8 +147,8 @@ class ClassesController extends Controller
 
         if (!empty($instructor)) {
             $query->where(function ($query) use ($instructor) {
-                $query->where('creator_id', $instructor);
-                $query->orWhere('teacher_id', $instructor);
+                $query->where("{$this->tableName}.creator_id", $instructor);
+                $query->orWhere("{$this->tableName}.teacher_id", $instructor);
             });
         }
 

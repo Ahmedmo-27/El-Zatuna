@@ -1,114 +1,240 @@
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+    <link rel="stylesheet" href="/assets/default/vendors/sortable/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/assets/vendors/summernote/summernote-bs4.min.css">
+    <style>
+        /* Chapter and content styling */
+        .chapter-section {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 32px;
+        }
+        
+        .chapter-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px dashed #dee2e6;
+        }
+        
+        .chapter-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .chapter-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background-color: rgba(0, 123, 255, 0.2);
+            border-radius: 12px;
+            margin-right: 8px;
+        }
+        
+        .add-chapter-btn {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #007bff;
+        }
+        
+        .add-chapter-btn:hover {
+            opacity: 0.8;
+        }
+        
+        /* Content accordion styling */
+        .content-accordion {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            padding: 12px;
+            margin-top: 16px;
+        }
+        
+        .content-accordion-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .content-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 32px;
+            text-align: center;
+        }
+        
+        .empty-state-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background-color: rgba(0, 123, 255, 0.3);
+            margin-bottom: 12px;
+        }
+        
+        /* Add content dropdown */
+        .add-content-dropdown {
+            position: relative;
+        }
+        
+        .add-content-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            min-width: 220px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            margin-top: 8px;
+        }
+        
+        .add-content-menu.show {
+            display: block;
+        }
+        
+        .add-content-menu-item {
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        
+        .add-content-menu-item:hover,
+        .add-content-menu-item:focus {
+            background-color: #f8f9fa;
+            outline: none;
+        }
+        
+        .add-content-menu-item:active {
+            background-color: #e9ecef;
+        }
+        
+        .add-content-menu-item-icon {
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        
+        /* Smooth animations */
+        .fade-in {
+            animation: fadeInSlide 0.4s ease;
+        }
+        
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Remove visibility: collapse from .collapse */
+        .collapse {
+            visibility: visible !important;
+        }
+    </style>
 @endpush
 
-<div class="bg-white rounded-16 p-16 mt-32">
-
-    {{-- Pricing Options --}}
-    <h3 class="font-14 font-weight-bold mb-24">{{ trans('update.pricing_options') }}</h3>
-
-    <div class="form-group">
-        <label class="form-group-label">{{ trans('public.price') }}</label>
-        <span class="has-translation bg-gray-100 text-gray-500">{{ $currency }}</span>
-        <input type="text" name="price" class="form-control @error('price')  is-invalid @enderror" value="{{ (!empty($webinar) and !empty($webinar->price)) ? convertPriceToUserCurrency($webinar->price) : old('price') }}" placeholder="{{ trans('public.0_for_free') }}" oninput="validatePrice(this)"/>
-        <div class="invalid-feedback d-block">@error('price') {{ $message }} @enderror</div>
-    </div>
-
-    @if($authUser->isOrganization() and $authUser->id == $webinar->creator_id)
-        <div class="form-group">
-            <label class="form-group-label">{{ trans('update.organization_price') }}</label>
-            <span class="has-translation bg-gray-100 text-gray-500">{{ $currency }}</span>
-            <input type="text" name="organization_price" class="form-control @error('organization_price')  is-invalid @enderror" value="{{ (!empty($webinar) and $webinar->organization_price) ? convertPriceToUserCurrency($webinar->organization_price) : old('organization_price') }}" placeholder="" oninput="validatePrice(this)"/>
-            <div class="invalid-feedback d-block">@error('organization_price') {{ $message }} @enderror</div>
-
-            <p class="font-12 text-gray-500 mt-8">- {{ trans('update.organization_price_hint') }}</p>
-        </div>
-    @endif
-
-
-    <div class="form-group">
-        <label class="form-group-label">{{ trans('update.access_days') }} ({{ trans('public.optional') }})</label>
-        <span class="has-translation bg-gray-100 text-gray-500 w-auto px-8">{{ trans('public.days') }}</span>
-        <input type="number" name="access_days" class="form-control @error('access_days') is-invalid @enderror" value="{{ !empty($webinar) ? $webinar->access_days : old('access_days') }}"/>
-
-        @error('access_days')
-        <div class="invalid-feedback">
-            {{ $message }}
-        </div>
-        @enderror
-
-        <p class="font-12 text-gray-500 mt-8">- {{ trans('update.access_days_input_hint') }}</p>
-    </div>
-
-    <div class="form-group">
-        <div class="d-flex align-items-center">
-            <div class="custom-switch mr-8">
-                <input id="subscribeSwitch" type="checkbox" name="subscribe" class="custom-control-input" {{ (!empty($webinar) and $webinar->subscribe) ? 'checked' :  '' }}>
-                <label class="custom-control-label cursor-pointer" for="subscribeSwitch"></label>
+<div class="chapter-section">
+    <div class="chapter-header">
+        <div class="chapter-info">
+            <div class="chapter-icon">
+                <x-iconsax-bul-category-2 class="icons text-primary" width="24px" height="24px"/>
             </div>
-
-            <div class="">
-                <label class="cursor-pointer" for="subscribeSwitch">{{ trans('update.include_subscribe') }}</label>
+            <div>
+                <h5 class="font-14 font-weight-bold mb-0">{{ trans('public.chapters') }}</h5>
+                <p class="font-12 text-gray-500 mb-0 mt-4">{{ trans('update.define_different_sections_and_organize_the_content_inside_them') }}</p>
             </div>
         </div>
-
-        <p class="font-12 text-gray-500 mt-8">- {{ trans('forms.subscribe_hint') }}</p>
-    </div>
-
-    {{-- Pricing Plans --}}
-
-    <div class="d-flex align-items-center justify-content-between mt-32 p-12 rounded-16 border-gray-300 border-dashed">
-        <div class="d-flex align-items-center">
-            <div class="d-flex-center size-48 bg-primary-20 rounded-12">
-                <x-iconsax-bul-moneys class="icons text-primary" width="24px" height="24px"/>
-            </div>
-
-            <div class="ml-8">
-                <h5 class="font-14 font-weight-bold">{{ trans('update.pricing_plans') }}</h5>
-                <p class="mt-4 font-12 text-gray-500">{{ trans('update.create_different_pricing_plans_and_present_your_course_in_different_prices') }}</p>
-            </div>
+        <div class="js-add-chapter add-chapter-btn" data-webinar-id="{{ $webinar->id }}">
+            <x-iconsax-lin-add class="icons text-primary" width="16px" height="16px"/>
+            <span class="text-primary ml-4">{{ trans('public.new_chapter') }}</span>
         </div>
     </div>
 
-    <div class="mt-16 p-16 rounded-16 bg-gray-100 border-gray-300">
-        <p class="font-12 text-gray-500">- {{ trans('webinars.sale_plans_hint_1') }}</p>
-        <p class="font-12 text-gray-500 mt-12">- {{ trans('webinars.sale_plans_hint_2') }}</p>
-        <p class="font-12 text-gray-500 mt-12">- {{ trans('webinars.sale_plans_hint_3') }}</p>
+    {{-- Chapter Items --}}
+    @include('design_1.panel.webinars.create.includes.chapter_contents')
+</div>
+
+{{-- Hidden Forms for New Content --}}
+@if($webinar->isWebinar())
+    <div id="newSessionForm" class="d-none">
+        @include('design_1.panel.webinars.create.includes.accordions.session',['webinar' => $webinar])
     </div>
+@endif
 
-    {{-- Pricing Plans Form --}}
-    <div class="row">
-        <div class="col-lg-6">
-            @include('design_1.panel.webinars.create.includes.accordions.price_plan')
-        </div>
+<div id="newFileForm" class="d-none">
+    @include('design_1.panel.webinars.create.includes.accordions.file',['webinar' => $webinar])
+</div>
 
-        @if(!empty($webinar->tickets) and count($webinar->tickets))
-            <div class="col-lg-6 mt-20 mt-lg-16">
-                <div class="p-16 rounded-16 border-gray-200">
-                    <h3 class="font-14 font-weight-bold">{{ trans('update.pricing_plans') }}</h3>
-
-                    <ul class="draggable-content-lists price-plan-draggable-lists" data-path="/panel/tickets/orders" data-drag-class="price-plan-draggable-lists">
-                        @foreach($webinar->tickets as $pricePlan)
-                            @include('design_1.panel.webinars.create.includes.accordions.price_plan',['plan' => $pricePlan])
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        @else
-            <div class="col-lg-6 d-flex-center flex-column px-32 py-120 text-center">
-                <div class="d-flex-center size-64 rounded-12 bg-primary-30">
-                    <x-iconsax-bul-receipt-2 class="icons text-primary" width="32px" height="32px"/>
-                </div>
-                <h3 class="font-16 font-weight-bold mt-12">{{ trans('public.ticket_no_result') }}</h3>
-                <p class="mt-4 font-12 text-gray-500">{!! trans('public.ticket_no_result_hint') !!}</p>
-            </div>
-        @endif
+@if(getFeaturesSettings('new_interactive_file'))
+    <div id="newInteractiveFileForm" class="d-none">
+        @include('design_1.panel.webinars.create.includes.accordions.interactive_file',['webinar' => $webinar])
     </div>
+@endif
 
+<div id="newTextLessonForm" class="d-none">
+    @include('design_1.panel.webinars.create.includes.accordions.text_lesson',['webinar' => $webinar])
+</div>
 
+@if(getFeaturesSettings('webinar_assignment_status'))
+    <div id="newAssignmentForm" class="d-none">
+        @include('design_1.panel.webinars.create.includes.accordions.assignment',['webinar' => $webinar])
+    </div>
+@endif
+
+<div id="newQuizForm" class="d-none">
+    @include('design_1.panel.webinars.create.includes.accordions.quiz',['webinar' => $webinar, 'quizInfo' => null, 'webinarChapterPages' => true])
+</div>
+
+<div id="changeChapterModalHtml" class="d-none">
+    @include("design_1.panel.webinars.create.modals.change_chapter")
 </div>
 
 @push('scripts_bottom')
+    <script>
+        var newChapterLang = '{{ trans('public.new_chapter') }}';
+        var editChapterLang = '{{ trans('public.edit_chapter') }}';
+        var saveLang = '{{ trans('public.save') }}';
+        var closeLang = '{{ trans('public.close') }}';
+        var saveSuccessLang = '{{ trans('webinars.success_store') }}';
+        var quizzesSectionLang = '{{ trans('quiz.quizzes_section') }}';
+        var newQuestionLang = '{{ trans('update.new_question') }}';
+        var editQuestionLang = '{{ trans('update.edit_question') }}';
+        var changeChapterLang = '{{ trans('update.change_chapter') }}';
+    </script>
+
     <script src="/assets/default/vendors/moment.min.js"></script>
     <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
+    <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
+    <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+    <script src="/assets/design_1/js/panel/quiz_create.min.js"></script>
+    <script src="/assets/design_1/js/panel/file-drag-drop.js"></script>
 @endpush

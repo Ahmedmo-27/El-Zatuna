@@ -2,6 +2,7 @@
 
 @push("styles_top")
     <link rel="stylesheet" href="{{ getDesign1StylePath("cart_page") }}">
+    <link rel="stylesheet" href="/assets/design_1/css/cart-pages-elzatuna.css">
 @endpush
 
 @php
@@ -11,7 +12,7 @@
 @endphp
 
 @section("content")
-    <section class="container my-56 position-relative">
+    <section class="cart-page container my-56 position-relative">
         <div class="d-flex-center flex-column text-center">
             <h1 class="font-32">{{ trans('update.checkout') }}</h1>
             <p class="mt-8 font-16 text-gray-500">{{ handlePrice($calculatePrices["total"], true, true, false, null, true) . ' ' . trans('cart.for_items',['count' => $count]) }}</p>

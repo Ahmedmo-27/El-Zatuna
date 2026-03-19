@@ -11,6 +11,27 @@
         </div>
 
         <div class="auth-page-form-container pr-16 mt-16 pt-16" data-simplebar @if((!empty($isRtl) and $isRtl)) data-simplebar-direction="rtl" @endif>
+
+            <div class="mb-24">
+                <div class="font-12 text-gray-500 mb-8">{{ trans('update.select_a_role') }}</div>
+
+                <div class="d-flex align-items-center gap-4 p-4 rounded-12 border-gray-300">
+                    <div class="auth-register-method-item flex-1">
+                        <input type="radio" name="account_type" value="user" id="userRole" {{ (old('account_type', 'user') == 'user') ? 'checked' : '' }}>
+                        <label class="d-flex-center cursor-pointer" for="userRole">{{ trans('update.role_user') }}</label>
+                    </div>
+
+                    <div class="auth-register-method-item flex-1">
+                        <input type="radio" name="account_type" value="teacher" id="teacherRole" {{ (old('account_type') == 'teacher') ? 'checked' : '' }}>
+                        <label class="d-flex-center cursor-pointer" for="teacherRole">{{ trans('update.role_teacher') }}</label>
+                    </div>
+                </div>
+                @error('account_type')
+                <div class="invalid-feedback d-block">
+                    {{ $message }}
+                </div>
+                @enderror
+            </div>
             
             @if($errors->any())
                 <div class="alert alert-danger mb-24">

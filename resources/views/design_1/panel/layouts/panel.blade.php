@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="/assets/default/vendors/simplebar/simplebar.css">
     <link rel="stylesheet" href="/assets/design_1/css/app.min.css">
     <link rel="stylesheet" href="/assets/design_1/css/panel.min.css">
-    <link rel="stylesheet" href="/assets/design_1/css/panel-elzatuna.css">
+    <link rel="stylesheet" href="/assets/design_1/css/panel-elzatuna.css?v={{ @filemtime(public_path('assets/design_1/css/panel-elzatuna.css')) }}">
 
     @if($isRtl)
         <link rel="stylesheet" href="/assets/design_1/css/rtl-app.min.css">

@@ -26,15 +26,84 @@ class RegistrationVerificationToken extends Model
     public static function generateToken(array $data, int $expiryMinutes = 15): string
     {
         $token = Str::random(64);
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         
         self::create([
             'token' => hash('sha256', $token),
+            'verification_code' => $verificationCode,
             'data' => $data,
             'expires_at' => now()->addMinutes($expiryMinutes),
             'used' => false,
         ]);
 
         return $token;
+    }
+
+    /**
+     * Generate only a verification code (for code-based verification)
+     *
+     * @param array $data
+     * @param int $expiryMinutes
+     * @return string The 6-digit verification code
+     */
+    public static function generateVerificationCode(array $data, int $expiryMinutes = 60): string
+    {
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        self::create([
+            'token' => hash('sha256', Str::random(64)), // Still generate token for uniqueness
+            'verification_code' => $verificationCode,
+            'data' => $data,
+            'expires_at' => now()->addMinutes($expiryMinutes),
+            'used' => false,
+        ]);
+
+        return $verificationCode;
+    }
+
+    /**
+     * Verify code and retrieve data
+     *
+     * @param string $email
+     * @param string $code
+     * @param int $step
+     * @return array|null
+     */
+    public static function verifyCode(string $email, string $code, int $step): ?array
+    {
+        $record = self::where('verification_code', $code)
+            ->where('used', false)
+            ->where('expires_at', '>', now())
+            ->whereJsonContains('data->email', $email)
+            ->whereJsonContains('data->step', $step)
+            ->first();
+
+        if (!$record) {
+            return null;
+        }
+
+        return $record->data;
+    }
+
+    /**
+     * Mark code as used
+     *
+     * @param string $code
+     * @param string $email
+     * @return bool
+     */
+    public static function markCodeAsUsed(string $code, string $email): bool
+    {
+        $record = self::where('verification_code', $code)
+            ->whereJsonContains('data->email', $email)
+            ->first();
+
+        if ($record) {
+            $record->update(['used' => true]);
+            return true;
+        }
+
+        return false;
     }
 
     /**

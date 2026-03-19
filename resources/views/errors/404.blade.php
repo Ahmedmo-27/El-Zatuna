@@ -1,53 +1,49 @@
-@extends("design_1.web.layouts.app")
-
-@push("styles_top")
-    <link rel="stylesheet" href="{{ getDesign1StylePath("system_status_pages") }}">
-@endpush
+@extends('design_1.web.layouts.app')
 
 @php
+    $statusCode = 404;
     $errorSettings = get404ErrorPageSettings();
+
+    $defaultTitle = 'Page Not Found';
+    $defaultDescription = 'The page you are looking for does not exist or has been moved.';
+
+    $displayTitle = !empty($errorSettings['title']) ? $errorSettings['title'] : $defaultTitle;
+    $displayDescription = !empty($errorSettings['description']) ? $errorSettings['description'] : $defaultDescription;
+    $displayImage = !empty($errorSettings['image']) ? $errorSettings['image'] : '/assets/design_1/img/no-result/notifications.svg';
+    $displayButtonTitle = !empty($errorSettings['button']['title']) ? $errorSettings['button']['title'] : trans('public.home');
+    $displayButtonLink = !empty($errorSettings['button']['link']) ? $errorSettings['button']['link'] : '/';
+    $displayRightFloatImage = !empty($errorSettings['right_float_image']) ? $errorSettings['right_float_image'] : null;
 @endphp
 
-@section("content")
-    <section class="container mt-96 mb-104 position-relative">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
-                <div class="system-status-page-section position-relative">
-                    <div class="system-status-page-section__mask"></div>
-
-                    <div class="position-relative d-flex-center flex-column bg-white rounded-32 p-24 pt-64 p-lg-40 text-center z-index-2">
-
-                        @if(!empty($errorSettings['right_float_image']))
-                            <div class="system-status-page-right-float-image">
-                                <img src="{{ $errorSettings['right_float_image'] }}" alt="{{ trans('update.right_float_image') }}" class="img-cover">
-                            </div>
-                        @endif
-
-                        @if(!empty($errorSettings['image']))
-                            <div class="system-status-page-image">
-                                <img src="{{ $errorSettings['image'] }}" alt="{{ $errorSettings['title'] ?? '' }}" class="img-cover">
-                            </div>
-                        @endif
-
-                        @if(!empty($errorSettings['title']))
-                            <h1 class="font-16 font-weight-bold mt-16">{{ $errorSettings['title'] }}</h1>
-                        @endif
-
-                        @if(!empty($errorSettings['description']))
-                            <p class="font-14 text-gray-500 mt-4">{!! nl2br($errorSettings['description']) !!}</p>
-                        @endif
-
-                        @if(!empty($errorSettings['button']) and !empty($errorSettings['button']['title']) and !empty($errorSettings['button']['link']))
-                            <a href="{{ $errorSettings['button']['link'] }}" class="btn btn-primary btn-lg mt-24">{{ $errorSettings['button']['title'] }}</a>
-                        @endif
-
+@section('content')
+    <main class="bg-[#FAFFE0] text-[#072923] min-h-screen">
+        <section class="max-w-[1200px] mx-auto px-8 md:px-16 lg:px-24 pt-28 pb-24">
+            <div class="bg-white rounded-[32px] border border-[#ECF4B8] shadow-sm p-8 md:p-12 lg:p-16 text-center relative overflow-hidden">
+                @if(!empty($displayRightFloatImage))
+                    <div class="absolute top-4 right-4 w-24 h-24 md:w-32 md:h-32 opacity-80 pointer-events-none">
+                        <img src="{{ $displayRightFloatImage }}" alt="{{ trans('update.right_float_image') }}" class="w-full h-full object-contain">
                     </div>
+                @endif
+
+                <div class="inline-flex items-center gap-3 bg-[#FAFFE0] border border-[#ECF4B8] px-5 py-2 rounded-full">
+                    <x-iconsax-lin-warning-2 class="w-5 h-5 text-[#C8CD06]"/>
+                    <span class="text-sm font-semibold uppercase tracking-wide">{{ trans('update.error_page') }} {{ $statusCode }}</span>
+                </div>
+
+                <h1 class="text-5xl md:text-6xl font-bold mt-6">{{ $displayTitle }}</h1>
+                <p class="mt-4 text-xl md:text-2xl text-[#072923]/70 whitespace-pre-line">{{ $displayDescription }}</p>
+
+                <div class="mt-10 flex justify-center">
+                    <img src="{{ $displayImage }}" alt="Error {{ $statusCode }}" class="w-72 md:w-96 lg:w-[520px] opacity-90" />
+                </div>
+
+                <div class="mt-10 flex items-center justify-center gap-4 flex-wrap">
+                    <a href="{{ $displayButtonLink }}" class="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#C8CD06] text-[#072923] font-semibold hover:opacity-90 transition">
+                        <x-iconsax-lin-home class="w-5 h-5"/>
+                        {{ $displayButtonTitle }}
+                    </a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 @endsection
-
-@push('scripts_bottom')
-
-@endpush

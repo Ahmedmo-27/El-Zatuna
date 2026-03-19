@@ -278,6 +278,40 @@ class WebinarsController extends Controller
 
     }
 
+    /**
+     * Create a new course (webinar, course, or text_lesson). Teacher/organization only.
+     *
+     * @OA\Post(
+     *     path="/v1/instructor/webinar",
+     *     summary="Create course",
+     *     tags={"Instructor"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"type","title","thumbnail","image_cover","description","category_id","duration","rules"},
+     *             @OA\Property(property="type", type="string", enum={"webinar","course","text_lesson"}),
+     *             @OA\Property(property="title", type="string"),
+     *             @OA\Property(property="thumbnail", type="string", description="Image URL or base64"),
+     *             @OA\Property(property="image_cover", type="string"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="category_id", type="integer"),
+     *             @OA\Property(property="duration", type="number"),
+     *             @OA\Property(property="start_date", type="string", format="date-time", description="Required if type=webinar"),
+     *             @OA\Property(property="capacity", type="integer", description="Required if type=webinar"),
+     *             @OA\Property(property="rules", type="integer", example=1),
+     *             @OA\Property(property="is_draft", type="boolean"),
+     *             @OA\Property(property="private", type="boolean"),
+     *             @OA\Property(property="support", type="boolean"),
+     *             @OA\Property(property="downloadable", type="boolean"),
+     *             @OA\Property(property="tags", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Course created"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Teacher/organization only")
+     * )
+     */
     public function storeAll(Request $request)
     {
         $user = auth()->user();
@@ -457,13 +491,20 @@ class WebinarsController extends Controller
         }
 
         $webinarRulesRequired = false;
-        if (($currentStep == 8 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
+        // Any final submission (Send for Review) requires agreeing to rules.
+        if (!$getNextStep and !$isDraft) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
         validateParam($request->all(), $rules);
 
-        $data['status'] = ($isDraft or $webinarRulesRequired) ? Webinar::$isDraft : Webinar::$pending;
+        $originalStatus = $webinar->status;
+        if ($originalStatus == Webinar::$active) {
+            // Keep already approved courses active when editing via API.
+            $data['status'] = Webinar::$active;
+        } else {
+            $data['status'] = ($isDraft or $webinarRulesRequired) ? Webinar::$isDraft : Webinar::$pending;
+        }
         $data['updated_at'] = time();
 
         if ($currentStep == 1) {
@@ -488,10 +529,6 @@ class WebinarsController extends Controller
             if ($data['category_id'] !== $webinar->category_id) {
                 WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
             }
-        }
-
-        if ($currentStep == 3) {
-            $data['subscribe'] = (!empty($data['subscribe']) && $data['subscribe'] == 1) ? true : false;
         }
 
         $filters = $request->get('filters', null);
@@ -536,11 +573,14 @@ class WebinarsController extends Controller
         if ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
-            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 8) ? $nextStep : 8);
+            // New flow: 3 or 4 steps; clamp next step to last visible step.
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= $stepCount) ? $nextStep : $stepCount);
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/8';
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . $stepCount;
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }
@@ -726,7 +766,7 @@ class WebinarsController extends Controller
         }
 
         $webinarRulesRequired = false;
-        if (($currentStep == 8 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft)) {
+        if (!$getNextStep and !$isDraft) {
             $webinarRulesRequired = empty($data['rules']);
         }
 
@@ -758,10 +798,6 @@ class WebinarsController extends Controller
             if ($data['category_id'] !== $webinar->category_id) {
                 WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
             }
-        }
-
-        if ($currentStep == 3) {
-            $data['subscribe'] = !empty($data['subscribe']) ? true : false;
         }
 
         $filters = $request->get('filters', null);
@@ -806,11 +842,13 @@ class WebinarsController extends Controller
         if ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
-            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= 8) ? $nextStep : 8);
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= $stepCount) ? $nextStep : $stepCount);
         }
 
         if ($webinarRulesRequired) {
-            $url = '/panel/courses/' . $webinar->id . '/step/8';
+            $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 4 : 3;
+            $url = '/panel/courses/' . $webinar->id . '/step/' . $stepCount;
 
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }

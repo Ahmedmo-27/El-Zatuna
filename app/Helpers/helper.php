@@ -746,7 +746,7 @@ function currency($user = null)
 
 function getDefaultCurrency()
 {
-    return getFinancialCurrencySettings('currency') ?? 'USD';
+    return getFinancialCurrencySettings('currency') ?? 'EGP';
 }
 
 function currencySign($currency = null)
@@ -860,7 +860,7 @@ function currencySign($currency = null)
             return '$';
             break;
         case 'EGP':
-            return '£';
+            return 'EGP';
             break;
         case 'GTQ':
             return 'Q';
@@ -967,9 +967,6 @@ function currencySign($currency = null)
         case 'KWD':
             return 'KD';
             break;
-        case 'EGP':
-            return 'ج.م';
-            break;
         case 'NAD':
             return 'NAD';
             break;
@@ -1010,10 +1007,10 @@ function currencySign($currency = null)
             return 'MZM';
             break;
         default:
-            return '$';
+            return 'EGP';
     }
 
-    return '$';
+    return 'EGP';
 }
 
 function getCountriesMobileCode()
@@ -1919,6 +1916,36 @@ function isAdminUrl($url = null)
     return (1 === strpos($url, $prefix));
 }
 
+/**
+ * Check if user can access course content. Full course purchase, first section (free), or section purchase grants access.
+ * Users who paid the full course price (e.g. 2000) get access to ALL sections with no extra payment.
+ *
+ * @param \App\Models\Webinar $course
+ * @param \App\User|null $user
+ * @param \App\Models\WebinarChapter|null $chapter Section/chapter the content belongs to; null = full course access only
+ * @return bool
+ */
+function canUserAccessCourseContent($course, $user = null, $chapter = null)
+{
+    if (empty($user) && auth()->check()) {
+        $user = auth()->user();
+    }
+    if (empty($user)) {
+        $user = function_exists('apiAuth') ? apiAuth() : null;
+    }
+    if (empty($course)) {
+        return false;
+    }
+    // Full course purchase (e.g. 2000) grants access to all sections — no extra charge per section
+    if ($course->checkUserHasBought($user) || !empty($course->getInstallmentOrder())) {
+        return true;
+    }
+    if (empty($chapter)) {
+        return false;
+    }
+    return $chapter->isFirstSection() || $chapter->checkUserHasBought($user);
+}
+
 function getTranslateAttributeValue($model, $key, $loca = null)
 {
     $isAdminUrl = isAdminUrl();
@@ -2044,7 +2071,7 @@ function curformat($amount)
     }
 
     // (A3) RESULT
-    return "\$$whole.$decimal";
+    return "EGP $whole.$decimal";
 }
 
 function handlePriceFormat($price, $decimals = 0, $decimal_separator = '.', $thousands_separator = '')
@@ -2178,6 +2205,82 @@ function convertPriceToDefaultCurrency($price, $userCurrencyItem = null)
     }
 
     return $price;
+}
+
+/**
+ * Calculate the course full price (in default currency, e.g. EGP) based on the number of sections.
+ *
+ * Pricing rules:
+ * - Single section (1) => 150
+ * - 2–5 sections      => 150 * number of sections
+ * - 6–8 sections      => 1100
+ * - 9–11 sections     => 1300
+ * - 12–14 sections    => 1750
+ * - 15–18 sections    => 2000
+ *
+ * @param int|null $sections
+ * @return int|null
+ */
+function calculateCoursePriceBySections(?int $sections): ?int
+{
+    if (empty($sections) || $sections <= 0) {
+        return null;
+    }
+
+    // Below 6 sections => 150 * number of sections
+    if ($sections < 6) {
+        return 150 * $sections;
+    }
+
+    if ($sections >= 6 && $sections <= 8) {
+        return 1100;
+    }
+
+    if ($sections >= 9 && $sections <= 11) {
+        return 1300;
+    }
+
+    if ($sections >= 12 && $sections <= 14) {
+        return 1750;
+    }
+
+    if ($sections >= 15 && $sections <= 18) {
+        return 2000;
+    }
+
+    // For courses with more than 18 sections, keep the top tier (2000) unless changed later.
+    return 2000;
+}
+
+/**
+ * Calculate section (chapter) price based on duration in minutes.
+ *
+ * Pricing rules:
+ * - Up to 1 hour (<= 60 min)                => 150
+ * - 1.5 hours and up (>= 90 min)            => 300
+ * - 2.5 hours and up (>= 150 min)           => 450
+ *
+ * Note: For durations between 61 and 89 minutes, we keep the 1-hour tier (150).
+ */
+function calculateChapterPriceByDurationMinutes(?int $minutes): ?int
+{
+    if (is_null($minutes) || $minutes < 0) {
+        return null;
+    }
+
+    if ($minutes <= 60) {
+        return 150;
+    }
+
+    if ($minutes >= 150) {
+        return 450;
+    }
+
+    if ($minutes >= 90) {
+        return 300;
+    }
+
+    return 150;
 }
 
 function addCurrencyToPrice($price, $userCurrencyItem = null)
@@ -2445,14 +2548,28 @@ function customSortArrayNumAndTextIndex($array)
     return array_merge($numericKeys, $textualKeys);
 }
 
-function getDefaultAvatarPath()
+function getDefaultAvatarPath(?\App\User $user = null, int $size = 40)
 {
+    if ($user instanceof \App\User) {
+        if ($user->isTeacher()) {
+            return '/assets/admin/img/avatar/avatar-4.png';
+        }
+    }
+
     $settings = getOthersPersonalizationSettings();
+
+    if (!empty($settings) and !empty($settings['user_avatar_style']) and $settings['user_avatar_style'] == 'ui_avatar') {
+        if ($user instanceof \App\User) {
+            return "/getDefaultAvatar?item={$user->id}&name={$user->full_name}&size={$size}";
+        }
+
+        return "/getDefaultAvatar?name=User&size={$size}";
+    }
 
     if (!empty($settings) and !empty($settings['default_user_avatar'])) {
         $avatarUrl = $settings['default_user_avatar'];
     } else {
-        $avatarUrl = "/assets/default/img/default/avatar-1.png";
+        $avatarUrl = "/pfpfallback.png";
     }
 
     return $avatarUrl;

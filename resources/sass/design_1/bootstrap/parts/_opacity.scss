@@ -1,7 +1,8 @@
 @use "sass:math";
+@use "sass:map";
 
 $opacity: ();
-$opacity: map-merge(
+$opacity: map.merge(
         (
             '0':0,
             '25':25,

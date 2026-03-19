@@ -25,7 +25,6 @@
                             </div>
                             <div class="ml-8">
                                 <h4 class="font-14 text-dark">{{ $user->full_name }}</h4>
-                                <p class="mt-2 font-12 text-gray-500">{{ $user->role->caption }}</p>
                             </div>
                         </div>
 
@@ -74,31 +73,9 @@
         <div class="mt-16 pt-12 px-12 border-top-gray-100">
 
             <div class="custom-tabs">
-                <div class="position-relative sidebar-tabs d-flex align-items-center justify-content-between gap-4 p-8 bg-gray-100 rounded-30">
-                    <div class="navbar-item d-flex-center cursor-pointer py-8 px-24 rounded-20 active" data-tab-toggle data-tab-href="#contentTab">
-                        <span class="">{{ trans('update.content') }}</span>
-                    </div>
-
-                    <div class="navbar-item d-flex-center cursor-pointer py-8 px-24 rounded-20" data-tab-toggle data-tab-href="#quizzesTab">
-                        <span class="">{{ trans('quiz.quizzes') }}</span>
-                    </div>
-
-                    <div class="navbar-item d-flex-center cursor-pointer py-8 px-24 rounded-20" data-tab-toggle data-tab-href="#certificatesTab">
-                        <span class="">{{ trans('panel.certificates') }}</span>
-                    </div>
-                </div>
-
-                <div class="custom-tabs-body mt-12">
+                <div class="custom-tabs-body">
                     <div class="custom-tabs-content active" id="contentTab">
                         @include('design_1.web.courses.learning_page.includes.sidebar.tabs.contents')
-                    </div>
-
-                    <div class="custom-tabs-content" id="quizzesTab">
-                        @include('design_1.web.courses.learning_page.includes.sidebar.tabs.quizzes')
-                    </div>
-
-                    <div class="custom-tabs-content" id="certificatesTab">
-                        @include('design_1.web.courses.learning_page.includes.sidebar.tabs.certificates')
                     </div>
                 </div>
             </div>

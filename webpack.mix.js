@@ -45,6 +45,26 @@ mix.options({
     processCssUrls: false
 });
 
+// Silence Dart Sass deprecation warnings during build (legacy-js-api from sass-loader, @import from our SCSS)
+mix.override((config) => {
+    const silenceSass = (rules) => {
+        (rules || []).forEach((rule) => {
+            if (rule.oneOf) silenceSass(rule.oneOf);
+            const use = rule.use ?? (rule.loader ? [rule] : []);
+            const list = Array.isArray(use) ? use : [use];
+            list.forEach((u) => {
+                if (!u) return;
+                const name = typeof u === 'string' ? u : u.loader || '';
+                if (!name.includes('sass-loader')) return;
+                if (typeof u === 'string') return;
+                u.options = u.options || {};
+                u.options.sassOptions = { ...(u.options.sassOptions || {}), silenceDeprecations: ['legacy-js-api', 'import'] };
+            });
+        });
+    };
+    silenceSass(config.module?.rules);
+});
+
 
 const assetsFiles = [
     // Js

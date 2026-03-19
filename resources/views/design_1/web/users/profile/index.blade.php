@@ -5,7 +5,7 @@
     <style>
         /* El Zatuna Theme Overrides for Profile Page */
         :root {
-            --primary: #C8CD06;
+            --primary: #FAFFE0;
             --secondary: #072923;
         }
         
@@ -52,6 +52,10 @@
     </style>
 @endpush
 
+@php
+    $isInstructorProfile = $user->isTeacher();
+@endphp
+
 
 @section('content')
     <div class="profile-cover-card">
@@ -81,39 +85,47 @@
                                     <span class="ml-4">{{ trans('update.courses') }}</span>
                                 </div>
 
-                                @if($user->isOrganization())
+                                @if(!$isInstructorProfile and $user->isOrganization())
                                     <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'instructors') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#instructorsTab">
                                         <x-iconsax-lin-teacher class="icons" width="16px" height="16px"/>
                                         <span class="ml-4">{{ trans('home.instructors') }}</span>
                                     </div>
                                 @endif
 
-                                @if(!empty(getStoreSettings('status')) and getStoreSettings('status'))
+                                @if(!$isInstructorProfile and !empty(getStoreSettings('status')) and getStoreSettings('status'))
                                     <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'products') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#productsTab">
                                         <x-iconsax-lin-box class="icons" width="16px" height="16px"/>
                                         <span class="ml-4">{{ trans('update.products') }}</span>
                                     </div>
                                 @endif
 
+                                {{-- Temporarily hidden until Articles is used again.
                                 <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'posts') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#articlesTab">
                                     <x-iconsax-lin-note-2 class="icons" width="16px" height="16px"/>
                                     <span class="ml-4">{{ trans('update.articles') }}</span>
                                 </div>
+                                --}}
 
-                                <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'forum') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#forumTab">
-                                    <x-iconsax-lin-messages class="icons" width="16px" height="16px"/>
-                                    <span class="ml-4">{{ trans('update.forum') }}</span>
-                                </div>
+                                @if(!$isInstructorProfile)
+                                    <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'forum') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#forumTab">
+                                        <x-iconsax-lin-messages class="icons" width="16px" height="16px"/>
+                                        <span class="ml-4">{{ trans('update.forum') }}</span>
+                                    </div>
+                                @endif
 
+                                {{-- Temporarily hidden until Badges is used again.
                                 <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'badges') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#badgesTab">
                                     <x-iconsax-lin-medal class="icons" width="16px" height="16px"/>
                                     <span class="ml-4">{{ trans('site.badges') }}</span>
                                 </div>
+                                --}}
 
-                                <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'appointments') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#reserveMeetingTab">
-                                    <x-iconsax-lin-calendar-2 class="icons" width="16px" height="16px"/>
-                                    <span class="ml-4">{{ trans('public.reserve_a_meeting') }}</span>
-                                </div>
+                                @if(!$isInstructorProfile)
+                                    <div class="navbar-item d-flex-center pb-12 cursor-pointer font-12 font-weight-bold {{ (request()->get('tab') == 'appointments') ? 'active' : ''  }}" data-tab-toggle data-tab-href="#reserveMeetingTab">
+                                        <x-iconsax-lin-calendar-2 class="icons" width="16px" height="16px"/>
+                                        <span class="ml-4">{{ trans('public.reserve_a_meeting') }}</span>
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="custom-tabs-body">
@@ -126,31 +138,41 @@
                                     @include('design_1.web.users.profile.tabs.courses')
                                 </div>
 
-                                @if($user->isOrganization())
+                                @if(!$isInstructorProfile and $user->isOrganization())
                                     <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'instructors') ? 'active' : ''  }}" id="instructorsTab">
                                         @include('design_1.web.users.profile.tabs.instructors')
                                     </div>
                                 @endif
 
-                                <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'products') ? 'active' : ''  }}" id="productsTab">
-                                    @include('design_1.web.users.profile.tabs.products')
-                                </div>
+                                @if(!$isInstructorProfile)
+                                    <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'products') ? 'active' : ''  }}" id="productsTab">
+                                        @include('design_1.web.users.profile.tabs.products')
+                                    </div>
+                                @endif
 
+                                {{-- Temporarily hidden until Articles is used again.
                                 <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'posts') ? 'active' : ''  }}" id="articlesTab">
                                     @include('design_1.web.users.profile.tabs.articles')
                                 </div>
+                                --}}
 
-                                <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'forum') ? 'active' : ''  }}" id="forumTab">
-                                    @include('design_1.web.users.profile.tabs.forum')
-                                </div>
+                                @if(!$isInstructorProfile)
+                                    <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'forum') ? 'active' : ''  }}" id="forumTab">
+                                        @include('design_1.web.users.profile.tabs.forum')
+                                    </div>
+                                @endif
 
+                                {{-- Temporarily hidden until Badges is used again.
                                 <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'badges') ? 'active' : ''  }}" id="badgesTab">
                                     @include('design_1.web.users.profile.tabs.badges')
                                 </div>
+                                --}}
 
-                                <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'appointments') ? 'active' : ''  }}" id="reserveMeetingTab">
-                                    @include('design_1.web.users.profile.tabs.reserveMeeting.index')
-                                </div>
+                                @if(!$isInstructorProfile)
+                                    <div class="custom-tabs-content px-16 {{ (request()->get('tab') == 'appointments') ? 'active' : ''  }}" id="reserveMeetingTab">
+                                        @include('design_1.web.users.profile.tabs.reserveMeeting.index')
+                                    </div>
+                                @endif
 
                             </div>
 

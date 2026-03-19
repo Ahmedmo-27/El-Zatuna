@@ -1,0 +1,85 @@
+.cart-drawer {
+  --elzatuna-ink: #072923;
+  --elzatuna-cream: #faffe0;
+  --elzatuna-border: rgba(229, 237, 176, 0.9);
+  --elzatuna-muted: rgba(7, 41, 35, 0.65);
+}
+
+.cart-drawer {
+  background: var(--elzatuna-cream) !important;
+  color: var(--elzatuna-ink) !important;
+  border-left: 1px solid var(--elzatuna-border);
+  box-shadow: -18px 0 45px rgba(7, 41, 35, 0.12);
+}
+
+.rtl .cart-drawer {
+  border-left: none;
+  border-right: 1px solid var(--elzatuna-border);
+  box-shadow: 18px 0 45px rgba(7, 41, 35, 0.12);
+}
+
+.cart-drawer .border-bottom-gray-bg,
+.cart-drawer .border-top-gray-bg {
+  border-color: var(--elzatuna-border) !important;
+}
+
+.cart-drawer .text-gray-500,
+.cart-drawer .text-gray-400,
+.cart-drawer .icons.text-gray-500,
+.cart-drawer .icons.text-gray-400 {
+  color: var(--elzatuna-muted) !important;
+}
+
+.cart-drawer .text-dark {
+  color: var(--elzatuna-ink) !important;
+}
+
+.cart-drawer .text-primary {
+  color: var(--elzatuna-ink) !important;
+}
+
+.cart-drawer .card-before-line:before {
+  background-color: var(--elzatuna-ink) !important;
+}
+
+.cart-drawer .bg-gray-100 {
+  background: rgba(229, 237, 176, 0.35) !important;
+}
+
+.cart-drawer .bg-gray-200 {
+  background: rgba(229, 237, 176, 0.55) !important;
+}
+
+.cart-drawer .border-gray-200,
+.cart-drawer .border-gray-300 {
+  border-color: var(--elzatuna-border) !important;
+}
+
+.cart-drawer a {
+  color: inherit;
+}
+
+.cart-drawer a:hover {
+  color: #0e4d42;
+}
+
+.cart-drawer .btn-outline-primary {
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-ink) !important;
+}
+
+.cart-drawer .btn-outline-primary:hover,
+.cart-drawer .btn-outline-primary:focus,
+.cart-drawer .btn-outline-primary:active {
+  background: var(--elzatuna-ink) !important;
+  border-color: var(--elzatuna-ink) !important;
+  color: var(--elzatuna-cream) !important;
+}
+
+/* keep danger styles intact */
+.cart-drawer .text-danger,
+.cart-drawer .icons.text-danger,
+.cart-drawer .delete-action .icons {
+  color: var(--danger) !important;
+}
+

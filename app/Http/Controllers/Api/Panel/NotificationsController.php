@@ -9,6 +9,19 @@ use Illuminate\Http\Request;
 
 class NotificationsController extends Controller
 {
+    /**
+     * List notifications (optional query: status=unread|read).
+     *
+     * @OA\Get(
+     *     path="/v1/panel/notifications",
+     *     summary="List notifications",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="status", in="query", required=false, @OA\Schema(type="string", enum={"unread","read"})),
+     *     @OA\Response(response=200, description="Paginated notifications"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function list(Request $request)
     {
         $status = $request->input('status');
@@ -61,6 +74,20 @@ class NotificationsController extends Controller
 
     }
 
+    /**
+     * Mark a notification as seen.
+     *
+     * @OA\Post(
+     *     path="/v1/panel/notifications/{id}/seen",
+     *     summary="Mark notification as seen",
+     *     tags={"Panel"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Marked as seen"),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Notification not found")
+     * )
+     */
     public function seen($id)
     {
         $user = apiAuth();

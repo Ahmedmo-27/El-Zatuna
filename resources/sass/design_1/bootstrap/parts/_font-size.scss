@@ -1,7 +1,8 @@
 @use "sass:math";
+@use "sass:map";
 
 $fontSizes: ();
-$fontSizes: map-merge(
+$fontSizes: map.merge(
         (
             8: 8,
             10: 10,
