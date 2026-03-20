@@ -251,11 +251,6 @@
                                 </div>
                             @endforeach
 
-                            @if(($subscriptionPlans ?? collect())->isEmpty())
-                                <div class="md:col-span-3 rounded-[24px] border border-[#C8CD06]/25 bg-[#FAFFE0]/5 p-6 md:p-8 text-[#FAFFE0]/85">
-                                    <p class="text-base md:text-lg leading-relaxed">Plans will appear here as soon as they are added from the admin panel.</p>
-                                </div>
-                            @endif
                         </div>
                     </div>
                 </div>
