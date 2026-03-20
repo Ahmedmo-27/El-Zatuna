@@ -197,25 +197,21 @@
 
         @auth
             <section class="max-w-[1360px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-16 py-18 md:py-22">
-                <div class="bg-[#072923] rounded-[36px] p-8 md:p-12 lg:p-14 shadow-[0_20px_60px_rgba(7,41,35,0.2)]">
-                    <div class="grid lg:grid-cols-[minmax(0,340px)_1fr] gap-8 lg:gap-10 items-start">
-                        <div class="text-[#FAFFE0]">
+                <div class="bg-[#072923] rounded-[36px] p-10 md:p-14 lg:p-16 shadow-[0_20px_60px_rgba(7,41,35,0.2)]">
+                    <div class="grid {{ (($subscriptionPlans ?? collect())->count() > 0) ? 'lg:grid-cols-[minmax(0,420px)_1fr]' : 'lg:grid-cols-1' }} gap-10 lg:gap-14 items-start">
+                        <div class="text-[#FAFFE0] max-w-[560px]">
                             <span class="inline-flex items-center gap-2 rounded-full border border-[#C8CD06]/30 bg-[#C8CD06]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#C8CD06]">Subscription Plans</span>
-                            <h2 class="mt-5 text-3xl md:text-4xl font-bold text-[#FAFFE0]">Choose Your Learning Level</h2>
-                            <p class="mt-4 text-sm md:text-base leading-relaxed text-[#FAFFE0]/75">Discover flexible subscription plans with premium content, structured paths, and ongoing support for your academic journey.</p>
+                            <h2 class="mt-6 text-[2.1rem] md:text-[2.55rem] leading-[1.12] font-bold text-[#FAFFE0]">Choose Your Learning Level</h2>
+                            <p class="mt-5 text-base md:text-[1.35rem] leading-[1.6] text-[#FAFFE0]/80 max-w-[32ch]">Discover flexible subscription plans with premium content, structured paths, and ongoing support for your academic journey.</p>
 
-                            <ul class="mt-7 space-y-4">
-                                <li class="flex items-center gap-2.5 text-sm md:text-base"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Unlimited course access</li>
-                                <li class="flex items-center gap-2.5 text-sm md:text-base"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Flexible payment options</li>
-                                <li class="flex items-center gap-2.5 text-sm md:text-base"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Regular content updates</li>
+                            <ul class="mt-10 space-y-5">
+                                <li class="flex items-center gap-3 text-base md:text-[1.15rem] leading-[1.5]"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Unlimited course access</li>
+                                <li class="flex items-center gap-3 text-base md:text-[1.15rem] leading-[1.5]"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Flexible payment options</li>
+                                <li class="flex items-center gap-3 text-base md:text-[1.15rem] leading-[1.5]"><x-iconsax-lin-tick-circle class="w-5 h-5 text-[#C8CD06]"/> Regular content updates</li>
                             </ul>
-
-                            <button class="mt-8 bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm inline-flex items-center gap-2">
-                                <x-iconsax-lin-crown class="w-5 h-5"/> VIP Member
-                            </button>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-7">
                             @foreach(($subscriptionPlans ?? collect())->take(3) as $plan)
                                 <div class="bg-[#FAFFE0] rounded-[28px] border border-[#E4EDAA] p-6 md:p-7 flex flex-col shadow-[0_10px_30px_rgba(7,41,35,0.1)]">
                                     <div class="h-12 w-12 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4 text-2xl">
@@ -254,6 +250,12 @@
                                     </form>
                                 </div>
                             @endforeach
+
+                            @if(($subscriptionPlans ?? collect())->isEmpty())
+                                <div class="md:col-span-3 rounded-[24px] border border-[#C8CD06]/25 bg-[#FAFFE0]/5 p-6 md:p-8 text-[#FAFFE0]/85">
+                                    <p class="text-base md:text-lg leading-relaxed">Plans will appear here as soon as they are added from the admin panel.</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
