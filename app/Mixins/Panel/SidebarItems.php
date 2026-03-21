@@ -118,7 +118,8 @@ class SidebarItems
                 $items['webinars']['items'][] = ['text' => trans('panel.organization_classes'), 'url' => '/panel/courses/organization_classes'];
             }
 
-            if ($user->can('panel_webinars_my_purchases')) {
+            // Hidden for teacher dashboard by request.
+            if (!$user->isTeacher() and $user->can('panel_webinars_my_purchases')) {
                 $items['webinars']['items'][] = ['text' => trans('panel.my_purchases'), 'url' => '/panel/courses/purchases'];
             }
 
@@ -130,7 +131,8 @@ class SidebarItems
                 $items['webinars']['items'][] = ['text' => trans('panel.my_comments'), 'url' => '/panel/courses/my-comments'];
             }
 
-            if ($user->can('panel_webinars_favorites')) {
+            // Hidden for teacher dashboard by request.
+            if (!$user->isTeacher() and $user->can('panel_webinars_favorites')) {
                 $items['webinars']['items'][] = ['text' => trans('panel.favorites'), 'url' => '/panel/courses/favorites'];
             }
 
@@ -230,7 +232,8 @@ class SidebarItems
         }
 
 
-        if ($user->can('panel_quizzes')) {
+        // Hidden for teacher dashboard by request.
+        if (!$user->isTeacher() and $user->can('panel_quizzes')) {
             $items['quizzes'] = [
                 'icon' => self::getIcon('quizzes'),
                 'text' => trans('panel.quizzes'),
@@ -263,7 +266,8 @@ class SidebarItems
         }
 
 
-        if ($user->can('panel_certificates')) {
+        // Hidden for teacher dashboard by request.
+        if (!$user->isTeacher() and $user->can('panel_certificates')) {
             $items['certificates'] = [
                 'icon' => self::getIcon('certificates'),
                 'text' => trans('panel.certificates'),
