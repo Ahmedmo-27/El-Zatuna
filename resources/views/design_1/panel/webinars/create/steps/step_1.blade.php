@@ -20,7 +20,7 @@
         <div class="form-group ">
             <label class="form-group-label is-required bg-white">{{ trans('public.select_a_teacher') }}</label>
 
-            <select name="teacher_id" class="select2 @error('teacher_id')  is-invalid @enderror">
+            <select name="teacher_id" class="select2 @error('teacher_id')  is-invalid @enderror" required>
                 <option value="" {{ (!empty($webinar) and !empty($webinar->teacher_id)) ? '' : 'selected' }}>{{ trans('public.choose_instructor') }}</option>
 
                 @foreach($teachers as $teacher)
@@ -73,7 +73,7 @@
     <div class="form-group">
         <label class="form-group-label is-required bg-white">{{ trans('public.title') }}</label>
         <span class="has-translation bg-gray-300 rounded-8 p-8"><x-iconsax-lin-translate class="icons text-gray-500"/></span>
-        <input type="text" name="title" class="form-control @error('title')  is-invalid @enderror" value="{{ (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->title : old('title') }}" placeholder=""/>
+        <input type="text" name="title" class="form-control @error('title')  is-invalid @enderror" value="{{ (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->title : old('title') }}" placeholder="" required/>
         @error('title')
         <div class="invalid-feedback">
             {{ $message }}
@@ -204,7 +204,7 @@
 
     <div class="form-group bg-white-editor">
         <label class="form-group-label is-required">{{ trans('public.summary') }}</label>
-        <textarea name="summary" rows="5" class="form-control @error('summary')  is-invalid @enderror" placeholder="{{ trans('update.course_summary_placeholder') }}">{!! (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->summary : old('summary')  !!}</textarea>
+        <textarea name="summary" rows="5" class="form-control @error('summary')  is-invalid @enderror" placeholder="{{ trans('update.course_summary_placeholder') }}" required>{!! (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->summary : old('summary')  !!}</textarea>
         @error('summary')
         <div class="invalid-feedback">
             {{ $message }}
@@ -217,7 +217,7 @@
 
     <div class="form-group bg-white-editor">
         <label class="form-group-label is-required">{{ trans('public.description') }}</label>
-        <textarea name="description" class="main-summernote form-control @error('description')  is-invalid @enderror" data-height="400" placeholder="{{ trans('forms.webinar_description_placeholder') }}">{!! (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->description : old('description')  !!}</textarea>
+        <textarea name="description" class="main-summernote form-control @error('description')  is-invalid @enderror" data-height="400" placeholder="{{ trans('forms.webinar_description_placeholder') }}" required>{!! (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->description : old('description')  !!}</textarea>
         @error('description')
         <div class="invalid-feedback">
             {{ $message }}

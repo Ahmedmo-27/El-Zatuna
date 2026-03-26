@@ -20,7 +20,7 @@
 
         @foreach($coursetypes as $coursetype => $coursetypeIcon)
             <div class="create-webinar-course-types custom-input-button position-relative">
-                <input type="radio" class="" name="type" id="course_type_{{ $coursetype }}" value="{{ $coursetype }}" {{ (!empty($upcomingCourse) and $upcomingCourse->type == $coursetype) ? 'checked' : '' }}>
+                <input type="radio" class="" name="type" id="course_type_{{ $coursetype }}" value="{{ $coursetype }}" {{ (!empty($upcomingCourse) and $upcomingCourse->type == $coursetype) ? 'checked' : '' }} required>
                 <label for="course_type_{{ $coursetype }}" class="position-relative d-flex-center flex-column p-16 p-lg-32 rounded-16 border-gray-200 text-center bg-white">
                     <div class="d-flex-center size-64 bg-gray-100 rounded-16">
                         @svg("iconsax-bul-{$coursetypeIcon}", ['height' => 32, 'width' => 32, 'class' => 'text-gray-500'])
@@ -69,7 +69,7 @@
     <div class="form-group">
         <label class="form-group-label is-required">{{ trans('public.title') }}</label>
         <span class="has-translation bg-gray-300 rounded-8 p-8"><x-iconsax-lin-translate class="icons text-gray-500"/></span>
-        <input type="text" name="title" class="form-control @error('title')  is-invalid @enderror" value="{{ (!empty($upcomingCourse) and !empty($upcomingCourse->translate($locale))) ? $upcomingCourse->translate($locale)->title : old('title') }}" placeholder=""/>
+        <input type="text" name="title" class="form-control @error('title')  is-invalid @enderror" value="{{ (!empty($upcomingCourse) and !empty($upcomingCourse->translate($locale))) ? $upcomingCourse->translate($locale)->title : old('title') }}" placeholder="" required/>
         @error('title')
         <div class="invalid-feedback">
             {{ $message }}
@@ -186,7 +186,7 @@
 
     <div class="form-group bg-white-editor">
         <label class="form-group-label is-required">{{ trans('public.description') }}</label>
-        <textarea name="description" class="main-summernote form-control @error('description')  is-invalid @enderror" data-height="400" placeholder="{{ trans('forms.webinar_description_placeholder') }}">{!! (!empty($upcomingCourse) and !empty($upcomingCourse->translate($locale))) ? $upcomingCourse->translate($locale)->description : old('description')  !!}</textarea>
+        <textarea name="description" class="main-summernote form-control @error('description')  is-invalid @enderror" data-height="400" placeholder="{{ trans('forms.webinar_description_placeholder') }}" required>{!! (!empty($upcomingCourse) and !empty($upcomingCourse->translate($locale))) ? $upcomingCourse->translate($locale)->description : old('description')  !!}</textarea>
         @error('description')
         <div class="invalid-feedback">
             {{ $message }}

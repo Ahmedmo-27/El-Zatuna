@@ -32,7 +32,7 @@
                 <div class="form-group">
                     <span class="has-translation bg-transparent"><x-iconsax-lin-calendar-2 class="text-gray-border" width="24px" height="24px"/></span>
                     <label class="form-group-label is-required">{{ trans('public.start_date') }}</label>
-                    <input type="text" name="start_date" class="form-control datetimepicker js-default-init-date-picker @error('start_date')  is-invalid @enderror" value="{{ (!empty($webinar) and $webinar->start_date) ? dateTimeFormat($webinar->start_date, 'Y-m-d H:i', false, false, $webinar->timezone) : old('start_date') }}" autocomplete="off">
+                    <input type="text" name="start_date" class="form-control datetimepicker js-default-init-date-picker @error('start_date')  is-invalid @enderror" value="{{ (!empty($webinar) and $webinar->start_date) ? dateTimeFormat($webinar->start_date, 'Y-m-d H:i', false, false, $webinar->timezone) : old('start_date') }}" autocomplete="off" required>
 
                     @error('start_date')
                     <div class="invalid-feedback">
