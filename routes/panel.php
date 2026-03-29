@@ -63,6 +63,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
 
             Route::group(['prefix' => '{webinar_id}/statistics'], function () {
                 Route::get('/', 'WebinarStatisticController@index');
+                Route::get('/reset-visits', 'WebinarStatisticController@resetVisits');
             });
         });
 

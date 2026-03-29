@@ -95,7 +95,15 @@
             <div class="col-6 col-lg-3 mt-16">
                 <div class="bg-white p-16 rounded-16 border-gray-200">
                     <div class="d-flex align-items-start justify-content-between">
-                        <span class="text-gray-500 mt-8">{{ trans('update.visits') }}</span>
+                        <div>
+                            <span class="text-gray-500 mt-8 d-block">{{ trans('update.visits') }}</span>
+                            <a href="/panel/courses/{{ $course->id }}/statistics/reset-visits?redirect_to={{ urlencode(request()->fullUrl()) }}"
+                               class="delete-action font-12 text-danger mt-4 d-inline-block"
+                               data-confirm="{{ trans('public.delete') }}"
+                               data-msg="{{ trans('public.are_you_sure') }}">
+                                {{ trans('public.delete') }}
+                            </a>
+                        </div>
 
                         <div class="size-48 d-flex-center bg-accent-30 rounded-12">
                             <x-iconsax-bul-frame-2 class="icons text-accent" width="24px" height="24px"/>
@@ -103,6 +111,36 @@
                     </div>
 
                     <h5 class="font-24 mt-12 line-height-1">{{ $visitsCount }}</h5>
+                </div>
+            </div>
+
+            {{-- Unique Visitors --}}
+            <div class="col-6 col-lg-3 mt-16">
+                <div class="bg-white p-16 rounded-16 border-gray-200">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <span class="text-gray-500 mt-8">{{ trans('update.unique_visitors') }}</span>
+
+                        <div class="size-48 d-flex-center bg-success-30 rounded-12">
+                            <x-iconsax-bul-frame-2 class="icons text-success" width="24px" height="24px"/>
+                        </div>
+                    </div>
+
+                    <h5 class="font-24 mt-12 line-height-1">{{ $uniqueVisitorsCount }}</h5>
+                </div>
+            </div>
+
+            {{-- Student Viewers --}}
+            <div class="col-6 col-lg-3 mt-16">
+                <div class="bg-white p-16 rounded-16 border-gray-200">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <span class="text-gray-500 mt-8">{{ trans('update.student_viewers') }}</span>
+
+                        <div class="size-48 d-flex-center bg-warning-30 rounded-12">
+                            <x-iconsax-bul-frame-2 class="icons text-warning" width="24px" height="24px"/>
+                        </div>
+                    </div>
+
+                    <h5 class="font-24 mt-12 line-height-1">{{ $studentViewersCount }}</h5>
                 </div>
             </div>
 

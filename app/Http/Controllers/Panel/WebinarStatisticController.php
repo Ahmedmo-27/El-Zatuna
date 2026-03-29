@@ -106,6 +106,47 @@ class WebinarStatisticController extends Controller
         abort(404);
     }
 
+    public function resetVisits(Request $request, $courseId)
+    {
+        $this->authorize("panel_webinars_statistics");
+
+        $user = auth()->user();
+
+        $course = Webinar::where('id', $courseId)
+            ->where(function ($query) use ($user) {
+                $query->where(function ($query) use ($user) {
+                    $query->where('creator_id', $user->id)
+                        ->orWhere('teacher_id', $user->id);
+                });
+
+                $query->orWhereHas('webinarPartnerTeacher', function ($query) use ($user) {
+                    $query->where('teacher_id', $user->id);
+                });
+            })
+            ->first();
+
+        if (empty($course)) {
+            abort(404);
+        }
+
+        $course->visits()->delete();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'code' => 200,
+                'redirect_to' => $request->get('redirect_to'),
+            ], 200);
+        }
+
+        $toastData = [
+            'title' => trans('public.request_success'),
+            'msg' => trans('public.request_success'),
+            'status' => 'success'
+        ];
+
+        return redirect()->back()->with(['toast' => $toastData]);
+    }
+
     private function getTopSummary($course, $studentsIds, $gifts)
     {
 
@@ -113,7 +154,20 @@ class WebinarStatisticController extends Controller
             ->sum('seconds_spent');
         $courseWatchTimeMinutes = ($courseWatchTimeSeconds > 0) ? $courseWatchTimeSeconds / 60 : 0;
 
-        $visitsCount = $course->visits()->count();
+        $visitsQuery = $course->visits();
+        $visitsCount = deepClone($visitsQuery)->count();
+        $uniqueVisitorsCount = deepClone($visitsQuery)
+            ->whereNotNull('visitor_uid')
+            ->distinct('visitor_uid')
+            ->count('visitor_uid');
+
+        $giftReceiptsIds = $gifts->pluck('receipt.id')->filter()->toArray();
+        $courseStudentsUserIds = array_values(array_unique(array_merge($studentsIds, $giftReceiptsIds)));
+
+        $studentViewersCount = deepClone($visitsQuery)
+            ->whereIn('visitor_id', $courseStudentsUserIds)
+            ->distinct('visitor_id')
+            ->count('visitor_id');
 
         return [
             'studentsCount' => count(array_unique($studentsIds)) + count($gifts),
@@ -124,6 +178,8 @@ class WebinarStatisticController extends Controller
             'pendingQuizzesCount' => $this->getPendingQuizzesCount($course->id),
             'courseWatchTimeMinutes' => $courseWatchTimeMinutes,
             'visitsCount' => $visitsCount,
+            'uniqueVisitorsCount' => $uniqueVisitorsCount,
+            'studentViewersCount' => $studentViewersCount,
         ];
     }
 

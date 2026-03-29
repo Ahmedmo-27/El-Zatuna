@@ -3202,6 +3202,8 @@ return [
 'live_class_start' => 'Live Class Start',
 'course_performance' => 'Course Performance',
 'visits' => 'Visits',
+'unique_visitors' => 'Unique Visitors',
+'student_viewers' => 'Student Viewers',
 'watch_time' => 'Watch Time',
 'average_student_progress' => 'Average Student Progress',
 'no_data' => 'No Data',
