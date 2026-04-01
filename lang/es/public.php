@@ -248,6 +248,7 @@ return [
     'cancel' => 'Cancelar',
     'canceled' => 'Cancelado',
     'success' => 'Success',
+    'error' => 'Error',
     'fail' => 'Fallido',
 
     'unavailable' => 'No disponible',
