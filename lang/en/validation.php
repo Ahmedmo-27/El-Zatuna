@@ -130,7 +130,7 @@ return [
 
     'custom' => [
         'email' => [
-            'unique' => 'This email has already been used before.',
+            'unique' => 'The email you entered has already been used.',
         ],
     ],
 
