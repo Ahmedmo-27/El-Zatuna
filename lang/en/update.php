@@ -4332,6 +4332,7 @@ return [
 'mobile_app_configuration_hint' => 'You can manage settings related to the mobile app.',
 'mobile_app_setting_api_key_input_hint' => 'Set API Key For Mobile App Requests Security',
 'negative_grade' => 'Negative Grade',
+'newsletter_email_already_subscribed' => 'This email is already subscribed to the newsletter.',
 'leave_empty_for_no_negative' => 'Leave empty for no negative mark',
 'text_lessons' => 'Text Lessons',
 'view_full_lessons' => 'View full lessons',
