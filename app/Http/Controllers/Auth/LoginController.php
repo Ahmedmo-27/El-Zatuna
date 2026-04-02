@@ -88,7 +88,9 @@ class LoginController extends Controller
             $rules['captcha'] = 'required|captcha';
         }
 
-        $this->validate($request, $rules, [], [
+        $this->validate($request, $rules, [
+            'email.exists' => trans('auth.email_not_registered'),
+        ], [
             'mobile' => trans('auth.mobile'),
             'email' => trans('auth.email'),
             'captcha' => trans('site.captcha'),
