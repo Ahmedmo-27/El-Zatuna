@@ -3878,6 +3878,7 @@ return [
 'text_lesson' => 'Text Lesson',
 'file_type_png' => 'PNG',
 'assignment' => 'Assignment',
+'you_cannot_follow_yourself' => 'You cannot follow yourself.',
 'you_have_several_quizzes_that_you_have_not_checked_them' => 'You have several unchecked quizzes.',
 'start_now' => 'Start Now',
 'add_new_related_products' => 'Add New Related Products',

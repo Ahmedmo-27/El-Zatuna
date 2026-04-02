@@ -281,7 +281,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         });
 
         Route::group(['prefix' => 'users'], function () {
-            Route::get('/{username}/follow', 'UserController@followToggle');
+            Route::get('/{username}/follow', 'UserProfileController@followToggle');
         });
 
         Route::group(['prefix' => 'become-instructor'], function () {

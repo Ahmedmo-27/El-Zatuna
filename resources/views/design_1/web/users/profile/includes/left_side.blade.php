@@ -17,12 +17,12 @@
 
         <div class="profile-followers-card position-relative d-flex align-items-center justify-content-around mt-16 w-100">
             <div class="flex-1 text-center">
-                <span class="d-block font-14 font-weight-bold">{{ shortNumbers($userFollowers->count()) }}</span>
+                <span class="d-block font-14 font-weight-bold js-user-followers-count" data-raw-count="{{ $userFollowers->count() }}">{{ shortNumbers($userFollowers->count()) }}</span>
                 <span class="d-block mt-4 font-12 text-gray-500">{{ trans('panel.followers') }}</span>
             </div>
 
             <div class="flex-1 text-center">
-                <span class="d-block font-14 font-weight-bold">{{ shortNumbers($userFollowing->count()) }}</span>
+                <span class="d-block font-14 font-weight-bold js-user-following-count" data-raw-count="{{ $userFollowing->count() }}">{{ shortNumbers($userFollowing->count()) }}</span>
                 <span class="d-block mt-4 font-12 text-gray-500">{{ trans('panel.following') }}</span>
             </div>
         </div>

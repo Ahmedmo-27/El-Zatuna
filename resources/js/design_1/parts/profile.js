@@ -22,6 +22,18 @@
                     $this.removeClass('btn-danger').addClass('btn-primary');
                     $this.text(followLang);
                 }
+
+                if (typeof result.followers_count_short !== 'undefined') {
+                    $('.js-user-followers-count')
+                        .text(result.followers_count_short)
+                        .attr('data-raw-count', result.followers_count);
+                }
+
+                if (typeof result.following_count_short !== 'undefined') {
+                    $('.js-user-following-count')
+                        .text(result.following_count_short)
+                        .attr('data-raw-count', result.following_count);
+                }
             }
         })
     });

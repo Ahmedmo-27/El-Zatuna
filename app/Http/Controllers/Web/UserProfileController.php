@@ -284,6 +284,20 @@ class UserProfileController extends Controller
         $authUser = auth()->user();
         $user = User::where('username', $username)->first();
 
+        if (empty($user)) {
+            return response()->json([
+                'code' => 404,
+                'message' => trans('auth.user_not_found')
+            ], 404);
+        }
+
+        if ((int)$authUser->id === (int)$user->id) {
+            return response()->json([
+                'code' => 422,
+                'message' => trans('update.you_cannot_follow_yourself')
+            ], 422);
+        }
+
         $followStatus = false;
         $follow = Follow::where('follower', $authUser->id)
             ->where('user_id', $user->id)
@@ -301,9 +315,16 @@ class UserProfileController extends Controller
             $follow->delete();
         }
 
+        $followersCount = $user->followers()->count();
+        $followingCount = $user->following()->count();
+
         return response()->json([
             'code' => 200,
-            'follow' => $followStatus
+            'follow' => $followStatus,
+            'followers_count' => $followersCount,
+            'followers_count_short' => shortNumbers($followersCount),
+            'following_count' => $followingCount,
+            'following_count_short' => shortNumbers($followingCount),
         ], 200);
     }
 
