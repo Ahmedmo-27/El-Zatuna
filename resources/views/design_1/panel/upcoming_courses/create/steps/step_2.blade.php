@@ -10,7 +10,7 @@
     <div class="form-group  mt-24">
         <label class="form-group-label is-required">{{ trans('public.category') }}</label>
 
-        <select name="category_id" id="categories" class="select2 @error('category_id')  is-invalid @enderror">
+        <select name="category_id" id="categories" class="select2 @error('category_id')  is-invalid @enderror" required>
             <option {{ (!empty($upcomingCourse) and !empty($upcomingCourse->category_id)) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>
             @foreach($categories as $category)
                 @if(!empty($category->subCategories) and $category->subCategories->count() > 0)
@@ -39,7 +39,7 @@
     <div class="form-group">
         <span class="has-translation bg-transparent"><x-iconsax-lin-calendar-2 class="text-gray-border" width="24px" height="24px"/></span>
         <label class="form-group-label is-required">{{ trans('update.estimated_publish_date') }}</label>
-        <input type="text" name="publish_date" class="form-control datetimepicker js-default-init-date-picker @error('publish_date')  is-invalid @enderror" value="{{ (!empty($upcomingCourse) and $upcomingCourse->publish_date) ? dateTimeFormat($upcomingCourse->publish_date, 'Y-m-d H:i', false, false, $upcomingCourse->timezone) : old('publish_date') }}" autocomplete="off">
+        <input type="text" name="publish_date" class="form-control datetimepicker js-default-init-date-picker @error('publish_date')  is-invalid @enderror" value="{{ (!empty($upcomingCourse) and $upcomingCourse->publish_date) ? dateTimeFormat($upcomingCourse->publish_date, 'Y-m-d H:i', false, false, $upcomingCourse->timezone) : old('publish_date') }}" autocomplete="off" required>
 
         @error('publish_date')
         <div class="invalid-feedback">

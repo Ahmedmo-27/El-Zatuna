@@ -33,11 +33,16 @@
         <div>
             <h4 class="font-semibold mb-3 flex items-center gap-2"><x-iconsax-lin-sms-star class="w-5 h-5"/> NEWSLETTER</h4>
             <p class="text-[#072923]/70 mb-3">You read this far, might as well sign up.</p>
-            <div class="flex flex-col gap-3">
-                <input type="text" placeholder="First name" class="bg-transparent border-b border-[#A3B18A] outline-none w-full text-[#072923] placeholder-[#072923]/50 transition-all duration-200 focus:border-[#C8CD06]" />
-                <input type="email" placeholder="john.doe@elzatuna.subject" class="bg-transparent border-b border-[#A3B18A] outline-none w-full text-[#072923] placeholder-[#072923]/50 transition-all duration-200 focus:border-[#C8CD06]" />
+            <div class="js-newsletter-form flex flex-col gap-3">
+                <input type="text" name="first_name" placeholder="First name" class="bg-transparent border-b border-[#A3B18A] outline-none w-full text-[#072923] placeholder-[#072923]/50 transition-all duration-200 focus:border-[#C8CD06]" />
+
+                <div class="form-group mb-0">
+                    <input type="email" name="newsletter_email" placeholder="john.doe@elzatuna.subject" class="js-ajax-newsletter_email bg-transparent border-b border-[#A3B18A] outline-none w-full text-[#072923] placeholder-[#072923]/50 transition-all duration-200 focus:border-[#C8CD06]" />
+                    <div class="invalid-feedback d-block"></div>
+                </div>
+
+                <button type="button" class="js-submit-newsletter-btn mt-4 bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm hover:bg-[#BDEA42] transition-colors duration-200">Sign Up</button>
             </div>
-            <button class="mt-4 bg-[#C8CD06] text-[#072923] font-semibold px-6 py-3 rounded-full text-sm hover:bg-[#BDEA42] transition-colors duration-200">Sign Up</button>
         </div>
     </div>
     <div class="max-w-7xl mx-auto px-8 pb-8 text-xs text-[#072923]/60 flex items-center">

@@ -519,6 +519,7 @@ class RegisterController extends Controller
             'username' => 'required|string|min:3|max:255|unique:users',
             'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
             'password_confirmation' => 'required|same:password',
+            'term' => 'accepted',
             'university_id' => $isTeacher ? 'nullable' : 'required|exists:universities,id',
             'faculty_id' => $isTeacher ? 'nullable' : [
                 'required',
@@ -666,7 +667,7 @@ class RegisterController extends Controller
             'country_code' => ($registerMethod == 'mobile') ? 'required' : 'nullable',
             'mobile' => (($registerMethod == 'mobile') ? 'required' : 'nullable') . '|numeric|unique:users',
             'email' => (($registerMethod == 'email') ? 'required' : 'nullable') . '|email|max:255|unique:users',
-            'term' => 'required',
+            'term' => 'accepted',
             'full_name' => 'required|string|min:3',
             'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['full_name'] ?? null)],
             'password_confirmation' => 'required|same:password',

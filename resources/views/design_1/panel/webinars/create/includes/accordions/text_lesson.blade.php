@@ -66,8 +66,8 @@
             @endif
 
             <div class="form-group">
-                <label class="form-group-label">{{ trans('public.title') }}</label>
-                <input type="text" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][title]" class="js-ajax-title form-control" value="{{ !empty($textLesson) ? $textLesson->title : '' }}" placeholder=""/>
+                <label class="form-group-label is-required">{{ trans('public.title') }}</label>
+                <input type="text" name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][title]" class="js-ajax-title form-control" value="{{ !empty($textLesson) ? $textLesson->title : '' }}" placeholder="" required/>
                 <div class="invalid-feedback"></div>
             </div>
 
@@ -120,17 +120,17 @@
             </div>
 
             <div class="form-group">
-                <label class="form-group-label">{{ trans('public.summary') }}</label>
-                <textarea name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][summary]" class="js-ajax-summary form-control" rows="6">{{ !empty($textLesson) ? $textLesson->summary : '' }}</textarea>
+                <label class="form-group-label is-required">{{ trans('public.summary') }}</label>
+                <textarea name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][summary]" class="js-ajax-summary form-control" rows="6" required>{{ !empty($textLesson) ? $textLesson->summary : '' }}</textarea>
                 <div class="invalid-feedback"></div>
             </div>
 
 
             <div class="form-group">
-                <label class="form-group-label">{{ trans('public.content') }}</label>
+                <label class="form-group-label is-required">{{ trans('public.content') }}</label>
                 <div class="content-summernote js-ajax-file_path">
                     <textarea class="js-content-summernote-input form-control {{ !empty($textLesson) ? 'js-content-summernote' : '' }}">{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
-                    <textarea name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][content]" class="js-hidden-content-summernote {{ !empty($textLesson) ? 'js-hidden-content-'.$textLesson->id : '' }} d-none">{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
+                    <textarea name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][content]" class="js-hidden-content-summernote js-ajax-content {{ !empty($textLesson) ? 'js-hidden-content-'.$textLesson->id : '' }} d-none">{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
                 </div>
                 <div class="invalid-feedback"></div>
             </div>

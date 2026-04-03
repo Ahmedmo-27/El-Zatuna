@@ -79,7 +79,7 @@ class LoginController extends Controller
             ];
         } else {
             $rules = [
-                'email' => 'required|email|exists:users,email',
+                'email' => 'required|email',
                 'password' => 'required|min:6',
             ];
         }
@@ -170,11 +170,7 @@ class LoginController extends Controller
             $this->getUsername($request) => $this->getUsernameValue($request),
             'password' => $request->get('password')
         ];
-        $remember = true;
-
-        /*if (!empty($request->get('remember')) and $request->get('remember') == true) {
-            $remember = true;
-        }*/
+        $remember = in_array($request->get('remember'), [true, 1, '1', 'on'], true);
 
         return $this->guard()->attempt($credentials, $remember);
     }

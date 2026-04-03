@@ -242,6 +242,7 @@ class RegisterController extends Controller
             'username' => 'required|string|min:3|max:255|unique:users',
             'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
             'password_confirmation' => 'required|same:password',
+            'term' => 'accepted',
             'university_id' => 'required|exists:universities,id',
             'faculty_id' => [
                 'required',

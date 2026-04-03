@@ -107,44 +107,7 @@
                     </div>
                 </div>
 
-                {{-- profile_video --}}
-                <div class="col-12 col-lg-4 mt-20 mt-lg-0">
-                    <div class="d-flex flex-column bg-white p-16 rounded-16 border-gray-200 h-100">
-                        <h3 class="font-14 font-weight-bold">{{ trans('update.profile_video') }}</h3>
-
-                        <div class="user-setting-profile-video-box d-flex-center flex-column rounded-15 mt-16 bg-gray-100 w-100">
-                            @if(!empty($user->profile_video))
-                                <video class="img-cover rounded-15" data-value-1="1" data-value-2="1.1" autoplay="autoplay" loop="loop" muted="" playsinline="" controls oncontextmenu="return false" preload="auto">
-                                    <source src="{{ $user->getProfileVideoUrl() }}" type="video/mp4"/>
-                                </video>
-                            @else
-                                <div class="d-flex-center size-48 rounded-12 bg-primary-30">
-                                    <x-iconsax-bul-video-circle class="icons text-primary" width="24px" height="24px"/>
-                                </div>
-                            @endif
-                        </div>
-
-                        <p class="my-16 text-gray-500">{{ trans('update.user_setting_profile_video_hint') }}</p>
-
-                        <div class="d-flex align-items-center mt-auto">
-                            <div class="position-relative custom-input-file flex-1">
-                                <input type="file" name="profile_video" id="profileVideo" class="" accept="video/*">
-
-                                <label for="profileVideo" class="d-flex-center w-100 p-20 rounded-12 border-gray-300 border-dashed cursor-pointer bg-hover-gray-100">
-                                    <x-iconsax-lin-direct-send class="icons text-primary" width='16px' height='16px'/>
-                                    <span class="font-12 ml-8 text-primary">{{ trans('update.select_a_video') }}</span>
-                                </label>
-                            </div>
-
-                            @if(!empty($user->profile_video))
-                                <a href="/panel/setting/media/profile_video/delete" class="delete-action d-flex-center size-56 border-danger border-dashed rounded-8 ml-16 bg-hover-gray-100">
-                                    <x-iconsax-lin-trash class="icons text-danger" width='24px' height='24px'/>
-                                </a>
-                            @endif
-
-                        </div>
-                    </div>
-                </div>
+                {{-- Profile video section removed intentionally. --}}
 
                 {{-- signature --}}
                 @php

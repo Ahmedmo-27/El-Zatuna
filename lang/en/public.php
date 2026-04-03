@@ -250,6 +250,7 @@ return [
 'cancel' => 'Cancel',
 'canceled' => 'Canceled',
 'success' => 'Success',
+'error' => 'error',
 'fail' => 'Failed',
 
 'unavailable' => 'Unavailable',

@@ -348,7 +348,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::post('metas/{meta_id}/update', 'UserController@updateMeta');
         Route::get('metas/{meta_id}/delete', 'UserController@deleteMeta');
         Route::get('/deleteAccount', 'UserController@deleteAccount');
-        Route::get('/media/{type}/delete', 'UserController@deleteUserMedia');
+        Route::get('/media/{type}/delete', 'UserController@deleteUserMedia')->where('type', 'avatar|cover_img|profile_secondary_image|profile_video|signature_img');
 
         Route::group(['prefix' => '/attachments'], function () {
             Route::get('/get-form', 'UserProfileAttachmentsController@getForm');
@@ -549,6 +549,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/bookmarks', 'ForumsBookmarksController@index');
     });
 
+    /*
     Route::group(['prefix' => 'blog'], function () {
         Route::get('/', 'BlogPostsController@index');
         Route::get('/new', 'BlogPostsController@create');
@@ -567,6 +568,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/delete', 'BlogRelatedPostsController@destroy');
         });
     });
+    */
 
     Route::group(['prefix' => 'ai-contents'], function () {
         Route::get('/', 'AiContentController@index');

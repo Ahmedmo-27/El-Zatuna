@@ -2,12 +2,13 @@
 
 namespace App\Mail;
 
+use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 class SendNotifications extends Mailable
 {
-    use SerializesModels;
+    use Queueable, SerializesModels;
 
     public $notification;
 

@@ -23,7 +23,7 @@
                 </div>
 
                 @error('password')
-                <div class="invalid-feedback">
+                <div class="invalid-feedback d-block">
                     {{ $message }}
                 </div>
                 @enderror
@@ -34,6 +34,11 @@
                     @include('design_1.web.includes.captcha_input')
                 </div>
             @endif
+
+            <div class="custom-control custom-checkbox mt-20">
+                <input type="checkbox" name="remember" id="rememberSwitch" class="custom-control-input" value="1" {{ old('remember') ? 'checked' : '' }}>
+                <label class="custom-control__label cursor-pointer" for="rememberSwitch">{{ trans('auth.remember_me') }}</label>
+            </div>
 
             <div class="text-right mt-12">
                 <a href="/forget-password" target="_blank" class="font-14 text-dark">{{ trans('auth.forget_your_password') }}</a>
