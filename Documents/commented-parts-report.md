@@ -1,5 +1,15 @@
 ﻿# Commented Parts - Clear Summary
 
+## Latest Updates (2026-04-03)
+- app/Mixins/Panel/SidebarItems.php:499
+	- Articles sidebar block for teachers commented out (includes New Article, My Articles, Comments).
+- routes/panel.php:551
+	- Panel blog routes commented out (posts, comments, related posts).
+- resources/views/design_1/web/users/profile/tabs/about.blade.php:19
+	- Profile overview bar: Articles metric card commented out (Meetings restored).
+- resources/views/design_1/panel/settings/includes/progress.blade.php:8
+	- Additional Information tab commented out from profile settings step navigation.
+
 This file is a simplified map of commented sections with lines.
 
 ## Teacher Dashboard Hidden Items

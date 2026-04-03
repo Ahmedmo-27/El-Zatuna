@@ -1,27 +1,37 @@
-<div class="d-flex align-items-center mt-16 border-gray-200 rounded-16">
+<div class="profile-overview-metrics d-flex align-items-center mt-16 border-gray-200 rounded-16">
 
-    <div class="flex-1 px-12 py-16 p-lg-20">
-        <x-iconsax-bul-teacher class="icons text-accent" width="32px" height="32px"/>
-        <div class="font-14 text-gray-500 mt-8">{{ trans('quiz.student') }}</div>
-        <div class="font-16 font-weight-bold mt-4">{{ $user->getTeacherStudentsCount() ?? '-' }}</div>
+    <div class="profile-overview-metric flex-1 px-12 py-16 p-lg-20">
+        <div class="profile-overview-metric__icon">
+            <x-iconsax-bol-teacher class="icons" width="42px" height="42px"/>
+        </div>
+        <div class="profile-overview-metric__label font-14 mt-8">{{ trans('quiz.student') }}</div>
+        <div class="profile-overview-metric__value font-16 font-weight-bold mt-4">{{ $user->getTeacherStudentsCount() ?? '-' }}</div>
     </div>
 
-    <div class="flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
-        <x-iconsax-bul-video-play class="icons text-primary" width="32px" height="32px"/>
-        <div class="font-14 text-gray-500 mt-8">{{ trans('update.courses') }}</div>
-        <div class="font-16 font-weight-bold mt-4">{{ $coursesCount ?? '-' }}</div>
+    <div class="profile-overview-metric flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
+        <div class="profile-overview-metric__icon">
+            <x-iconsax-lin-book class="icons" width="42px" height="42px"/>
+        </div>
+        <div class="profile-overview-metric__label font-14 mt-8">{{ trans('update.courses') }}</div>
+        <div class="profile-overview-metric__value font-16 font-weight-bold mt-4">{{ $coursesCount ?? '-' }}</div>
     </div>
 
-    <div class="flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
-        <x-iconsax-bul-note-2 class="icons text-success" width="32px" height="32px"/>
-        <div class="font-14 text-gray-500 mt-8">{{ trans('update.articles') }}</div>
-        <div class="font-16 font-weight-bold mt-4">{{ $user->reviewsCount() ?? '-' }}</div>
+    {{-- Temporarily hidden to match the requested teacher profile overview.
+    <div class="profile-overview-metric flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
+        <div class="profile-overview-metric__icon">
+            <x-iconsax-bul-note-2 class="icons text-success" width="36px" height="36px"/>
+        </div>
+        <div class="profile-overview-metric__label font-14 mt-8">{{ trans('update.articles') }}</div>
+        <div class="profile-overview-metric__value font-16 font-weight-bold mt-4">{{ $user->reviewsCount() ?? '-' }}</div>
     </div>
+    --}}
 
-    <div class="flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
-        <x-iconsax-bul-calendar-2 class="icons text-warning" width="32px" height="32px"/>
-        <div class="font-14 text-gray-500 mt-8">{{ trans('panel.meetings') }}</div>
-        <div class="font-16 font-weight-bold mt-4">{{ $appointments ?? '-' }}</div>
+    <div class="profile-overview-metric flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
+        <div class="profile-overview-metric__icon">
+            <x-iconsax-lin-calendar-2 class="icons" width="42px" height="42px"/>
+        </div>
+        <div class="profile-overview-metric__label font-14 mt-8">{{ trans('panel.meetings') }}</div>
+        <div class="profile-overview-metric__value font-16 font-weight-bold mt-4">{{ $appointments ?? '-' }}</div>
     </div>
 
 </div>
@@ -40,34 +50,16 @@
         </div>
     @endif
 
-    @if(!empty($user->profile_video))
-        <div class="col-12 col-md-6 mt-24">
-            @push('styles_top')
-                <link rel="stylesheet" href="/assets/vendors/plyr.io/plyr.min.css">
-            @endpush
-
-            @push('scripts_bottom')
-                <script src="/assets/vendors/plyr.io/plyr.min.js"></script>
-            @endpush
-
-            <div class="profile-video-card">
-                <video class="js-init-plyr-io plyr-io-video" controls preload="auto" width="100%">
-                    <source src="{{ $user->getProfileVideoUrl() }}" type="video/mp4"/>
-                </video>
-            </div>
-        </div>
-    @endif
-
     @if(!empty($educations) and !$educations->isEmpty())
         <div class="col-12 col-md-6 mt-24">
             <h4 class="font-16 font-weight-bold">{{ trans('site.education') }}</h4>
 
             @foreach($educations as $education)
                 <div class="profile-education-card d-flex align-items-center {{ $loop->first ? 'mt-12' : 'mt-16' }}">
-                    <div class="d-flex-center size-40 rounded-12 bg-gray-100">
-                        <x-iconsax-bul-teacher class="icons text-gray-500" width="24px" height="24px"/>
+                    <div class="d-flex-center profile-education-card__icon rounded-16">
+                        <x-iconsax-bol-teacher class="icons" width="36px" height="36px"/>
                     </div>
-                    <div class="ml-8 text-gray-500">{{ $education->value }}</div>
+                    <div class="ml-12 profile-education-card__value">{{ $education->value }}</div>
                 </div>
             @endforeach
         </div>
@@ -79,12 +71,122 @@
 
             @foreach($experiences as $experience)
                 <div class="profile-education-card d-flex align-items-center {{ $loop->first ? 'mt-12' : 'mt-16' }}">
-                    <div class="d-flex-center size-40 rounded-12 bg-gray-100">
-                        <x-iconsax-bul-briefcase class="icons text-gray-500" width="24px" height="24px"/>
+                    <div class="d-flex-center profile-education-card__icon rounded-16">
+                        <x-iconsax-bul-briefcase class="icons" width="36px" height="36px"/>
                     </div>
-                    <div class="ml-8 text-gray-500">{{ $experience->value }}</div>
+                    <div class="ml-12 profile-education-card__value">{{ $experience->value }}</div>
                 </div>
             @endforeach
+        </div>
+    @endif
+
+    @php
+        $profileLinksData = [];
+
+        if (!empty($user->profile_links)) {
+            $decodedProfileLinks = json_decode($user->profile_links, true);
+            $profileLinksData = is_array($decodedProfileLinks) ? $decodedProfileLinks : [];
+        }
+
+        $knownProfileLinks = [
+            ['key' => 'portfolio', 'title' => trans('update.portfolio'), 'type' => 'portfolio'],
+            ['key' => 'website', 'title' => trans('update.website'), 'type' => 'website'],
+            ['key' => 'linkedin', 'title' => trans('update.linkedin'), 'type' => 'linkedin'],
+            ['key' => 'github', 'title' => trans('update.github'), 'type' => 'github'],
+            ['key' => 'twitter', 'title' => trans('update.twitter'), 'type' => 'twitter'],
+            ['key' => 'facebook', 'title' => trans('update.facebook'), 'type' => 'facebook'],
+            ['key' => 'youtube', 'title' => trans('update.youtube'), 'type' => 'youtube'],
+            ['key' => 'instagram', 'title' => trans('update.instagram'), 'type' => 'instagram'],
+            ['key' => 'behance', 'title' => trans('update.behance'), 'type' => 'behance'],
+            ['key' => 'dribbble', 'title' => trans('update.dribbble'), 'type' => 'dribbble'],
+            ['key' => 'medium', 'title' => trans('update.medium'), 'type' => 'medium'],
+        ];
+
+        $customDomainTypeMap = [
+            'linkedin.com' => 'linkedin',
+            'github.com' => 'github',
+            'twitter.com' => 'twitter',
+            'x.com' => 'twitter',
+            'facebook.com' => 'facebook',
+            'youtube.com' => 'youtube',
+            'youtu.be' => 'youtube',
+            'instagram.com' => 'instagram',
+            'behance.net' => 'behance',
+            'dribbble.com' => 'dribbble',
+            'medium.com' => 'medium',
+        ];
+
+        $publicProfileLinks = [];
+
+        if ($user->isTeacher()) {
+            foreach ($knownProfileLinks as $knownProfileLink) {
+                if (!empty($profileLinksData[$knownProfileLink['key']])) {
+                    $publicProfileLinks[] = [
+                        'title' => $knownProfileLink['title'],
+                        'url' => $profileLinksData[$knownProfileLink['key']],
+                        'type' => $knownProfileLink['type'],
+                    ];
+                }
+            }
+        }
+
+        if (!empty($profileLinksData['custom']) && is_array($profileLinksData['custom'])) {
+            foreach ($profileLinksData['custom'] as $customLink) {
+                if (!is_array($customLink) || empty($customLink['url'])) {
+                    continue;
+                }
+
+                $type = 'custom';
+                $customHost = ltrim(mb_strtolower((string)(parse_url($customLink['url'], PHP_URL_HOST) ?? '')), '.');
+                $customHost = preg_replace('/^www\./', '', $customHost) ?? $customHost;
+
+                if (!empty($customHost)) {
+                    foreach ($customDomainTypeMap as $domain => $domainType) {
+                        $normalizedDomain = ltrim(mb_strtolower($domain), '.');
+                        $normalizedDomain = preg_replace('/^www\./', '', $normalizedDomain) ?? $normalizedDomain;
+
+                        if ($customHost === $normalizedDomain || str_ends_with($customHost, '.' . $normalizedDomain)) {
+                            $type = $domainType;
+                            break;
+                        }
+                    }
+                }
+
+                $publicProfileLinks[] = [
+                    'title' => !empty($customLink['title']) ? $customLink['title'] : trans('update.custom_link'),
+                    'url' => $customLink['url'],
+                    'type' => $type,
+                ];
+            }
+        }
+    @endphp
+
+    @if(!empty($publicProfileLinks))
+        <div class="col-12 col-md-6 mt-24">
+            <h4 class="font-16 font-weight-bold">{{ trans('update.portfolio_and_links') }}</h4>
+
+            <div class="profile-external-links-list mt-10">
+                @foreach($publicProfileLinks as $profileLink)
+                    @php
+                        $displayUrl = preg_replace('/^https?:\/\//i', '', $profileLink['url']);
+                    @endphp
+
+                    <a href="{{ $profileLink['url'] }}" target="_blank" rel="nofollow noopener noreferrer" class="profile-external-link-inline d-flex align-items-center">
+                        <span class="profile-external-link-inline__icon d-flex-center">
+                            @include('design_1.web.users.profile.tabs.components.link_icon', [
+                                'type' => $profileLink['type'],
+                                'size' => 22,
+                                'className' => 'icons',
+                            ])
+                        </span>
+
+                        <span class="ml-10 profile-external-link-inline__content">
+                            <span class="profile-external-link-inline__text">{{ $profileLink['title'] }}</span>
+                            <span class="profile-external-link-inline__url text-truncate">{{ $displayUrl }}</span>
+                        </span>
+                    </a>
+                @endforeach
+            </div>
         </div>
     @endif
 

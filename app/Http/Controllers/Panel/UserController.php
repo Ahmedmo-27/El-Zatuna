@@ -34,9 +34,15 @@ class UserController extends Controller
 {
     use UserFormFieldsTrait;
 
+    private const PROFILE_LINKS_ENCODE_FAILED = '__PROFILE_LINKS_ENCODE_FAILED__';
+
     public function setting(Request $request, $step = "basic_information")
     {
         $this->authorize("panel_others_profile_setting");
+
+        if ($step === 'extra_information') {
+            $step = 'basic_information';
+        }
 
         $user = auth()->user();
 
@@ -144,6 +150,10 @@ class UserController extends Controller
 
         $step = $data['step'] ?? "basic_information";
 
+        if ($step === "extra_information") {
+            return redirect('/panel/setting/step/basic_information');
+        }
+
         $rules = [];
 
         if ($step == "basic_information") {
@@ -153,6 +163,25 @@ class UserController extends Controller
                 'full_name' => 'required|string',
                 'email' => (($registerMethod == 'email') ? 'required' : 'nullable') . '|email|max:255|unique:users,email,' . $user->id,
                 'mobile' => (($registerMethod == 'mobile') ? 'required' : 'nullable') . '|numeric|unique:users,mobile,' . $user->id,
+            ];
+        } elseif ($step == "about") {
+            $rules = [
+                'bio' => 'nullable|string|max:255',
+                'about' => 'nullable|string',
+                'profile_links.portfolio' => 'nullable|string|max:500',
+                'profile_links.website' => 'nullable|string|max:500',
+                'profile_links.linkedin' => 'nullable|string|max:500',
+                'profile_links.github' => 'nullable|string|max:500',
+                'profile_links.twitter' => 'nullable|string|max:500',
+                'profile_links.facebook' => 'nullable|string|max:500',
+                'profile_links.youtube' => 'nullable|string|max:500',
+                'profile_links.instagram' => 'nullable|string|max:500',
+                'profile_links.behance' => 'nullable|string|max:500',
+                'profile_links.dribbble' => 'nullable|string|max:500',
+                'profile_links.medium' => 'nullable|string|max:500',
+                'profile_links.custom' => 'nullable|array',
+                'profile_links.custom.*.title' => 'nullable|string|max:80',
+                'profile_links.custom.*.url' => 'nullable|string|max:500',
             ];
         }
 
@@ -230,7 +259,6 @@ class UserController extends Controller
 
                 $updateData = [
                     'avatar' => $this->handleUploadImagesAndFiles($request, $user, "avatar"),
-                    'profile_video' => $this->handleUploadImagesAndFiles($request, $user, "profile_video"),
                     'cover_img' => $this->handleUploadImagesAndFiles($request, $user, "cover_img"),
                     'profile_secondary_image' => $this->handleUploadImagesAndFiles($request, $user, "profile_secondary_image"),
                 ];
@@ -249,6 +277,12 @@ class UserController extends Controller
                     'about' => $data['about'] ?? null,
                     'bio' => $data['bio'] ?? null,
                 ];
+
+                $profileLinksMeta = $this->buildProfileLinksMeta($data['profile_links'] ?? []);
+
+                if ($profileLinksMeta !== self::PROFILE_LINKS_ENCODE_FAILED) {
+                    $updateUserMeta['profile_links'] = $profileLinksMeta;
+                }
 
                 if (!$user->isUser()) {
                     UserOccupation::where('user_id', $user->id)->delete();
@@ -288,6 +322,10 @@ class UserController extends Controller
 
             if (!empty($updateUserMeta)) {
                 foreach ($updateUserMeta as $metaName => $metaValue) {
+                    if ($metaName === 'profile_links' && $metaValue === self::PROFILE_LINKS_ENCODE_FAILED) {
+                        continue;
+                    }
+
                     UserMeta::query()->where('user_id', $user->id)->where('name', $metaName)->delete();
 
                     if (!empty($metaValue)) {
@@ -347,7 +385,7 @@ class UserController extends Controller
         $path = $name === 'signature_img'
             ? $user->userMetas->where('name', 'signature')->first()?->value
             : ($user->{$name} ?? null);
-        $profileAssetTypes = ['avatar', 'profile_video', 'cover_img', 'profile_secondary_image', 'signature_img'];
+        $profileAssetTypes = ['avatar', 'cover_img', 'profile_secondary_image', 'signature_img'];
 
         if (!empty($request->file($name))) {
             if (!empty($path)) {
@@ -431,6 +469,99 @@ class UserController extends Controller
 
             $check->delete();
         }
+    }
+
+    private function buildProfileLinksMeta($rawLinks): ?string
+    {
+        if (empty($rawLinks) || !is_array($rawLinks)) {
+            return null;
+        }
+
+        $knownKeys = [
+            'portfolio',
+            'website',
+            'linkedin',
+            'github',
+            'twitter',
+            'facebook',
+            'youtube',
+            'instagram',
+            'behance',
+            'dribbble',
+            'medium',
+        ];
+
+        $links = ['custom' => []];
+
+        foreach ($knownKeys as $knownKey) {
+            $links[$knownKey] = $this->normalizeExternalUrl($rawLinks[$knownKey] ?? null);
+        }
+
+        if (!empty($rawLinks['custom']) && is_array($rawLinks['custom'])) {
+            foreach ($rawLinks['custom'] as $customLink) {
+                if (!is_array($customLink)) {
+                    continue;
+                }
+
+                $url = $this->normalizeExternalUrl($customLink['url'] ?? null);
+                if (empty($url)) {
+                    continue;
+                }
+
+                $title = trim((string)($customLink['title'] ?? ''));
+                if ($title === '') {
+                    $title = parse_url($url, PHP_URL_HOST) ?: trans('update.custom_link');
+                }
+
+                $links['custom'][] = [
+                    'title' => mb_substr($title, 0, 80),
+                    'url' => $url,
+                ];
+            }
+        }
+
+        $hasPrimaryLinks = false;
+        foreach ($knownKeys as $knownKey) {
+            if (!empty($links[$knownKey])) {
+                $hasPrimaryLinks = true;
+                break;
+            }
+        }
+
+        $hasCustomLinks = !empty($links['custom']);
+
+        if (!$hasPrimaryLinks && !$hasCustomLinks) {
+            return null;
+        }
+
+        try {
+            return json_encode($links, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            logger()->warning('Failed to encode profile links meta.', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return self::PROFILE_LINKS_ENCODE_FAILED;
+        }
+    }
+
+    private function normalizeExternalUrl($url): ?string
+    {
+        $url = trim((string)$url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (!preg_match('/^https?:\/\//i', $url)) {
+            $url = "https://{$url}";
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return $url;
     }
 
     public function storeMetas(Request $request)
@@ -586,10 +717,16 @@ class UserController extends Controller
             $path = $type === 'signature_img'
                 ? $user->userMetas->where('name', 'signature')->first()?->value
                 : $user->{$type};
-            if (!empty($path) && str_starts_with((string) $path, 'Profile-Assets/')) {
-                $r2 = new R2StorageService();
-                $r2->deleteProfileAsset($path);
+
+            if (!empty($path)) {
+                if (str_starts_with((string) $path, 'Profile-Assets/')) {
+                    $r2 = new R2StorageService();
+                    $r2->deleteProfileAsset($path);
+                } else {
+                    $this->removeFile($path);
+                }
             }
+
             if ($type == 'signature_img') {
                 $user->userMetas()->where('name', 'signature')->delete();
             } else {
