@@ -11,9 +11,7 @@
 
         const path = '/users/' + user_id + '/follow';
 
-        $.get(path, function (result) {
-            $this.removeClass('loadingbar').prop('disabled', false);
-
+        $.post(path, {}, function (result) {
             if (result && result.code === 200) {
                 if (result.follow) {
                     $this.removeClass('btn-primary').addClass('btn-danger');
@@ -35,7 +33,16 @@
                         .attr('data-raw-count', result.following_count);
                 }
             }
-        })
+        }).fail(function (xhr) {
+            const title = 'Request failed';
+            const message = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Please try again.';
+
+            if (typeof showToast === 'function') {
+                showToast('error', title, message);
+            }
+        }).always(function () {
+            $this.removeClass('loadingbar').prop('disabled', false);
+        });
     });
 
     /**************

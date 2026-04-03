@@ -129,8 +129,8 @@
             <div class="form-group">
                 <label class="form-group-label is-required">{{ trans('public.content') }}</label>
                 <div class="content-summernote js-ajax-file_path">
-                    <textarea class="js-content-summernote-input form-control {{ !empty($textLesson) ? 'js-content-summernote' : '' }}" required>{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
-                    <textarea name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][content]" class="js-hidden-content-summernote {{ !empty($textLesson) ? 'js-hidden-content-'.$textLesson->id : '' }} d-none" required>{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
+                    <textarea class="js-content-summernote-input form-control {{ !empty($textLesson) ? 'js-content-summernote' : '' }}">{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
+                    <textarea name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][content]" class="js-hidden-content-summernote js-ajax-content {{ !empty($textLesson) ? 'js-hidden-content-'.$textLesson->id : '' }} d-none">{{ !empty($textLesson) ? $textLesson->content : '' }}</textarea>
                 </div>
                 <div class="invalid-feedback"></div>
             </div>

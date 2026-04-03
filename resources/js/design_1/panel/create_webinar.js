@@ -766,10 +766,72 @@
         }
     });
 
+    function extractSummernotePlainText(html) {
+        if (!html) {
+            return '';
+        }
+
+        return $('<div>').html(html).text().replace(/\u00a0/g, ' ').trim();
+    }
+
+    function syncAndValidateTextLessonContent($form) {
+        if (!$form.hasClass('text_lesson-form')) {
+            return true;
+        }
+
+        const $editor = $form.find('textarea.js-content-summernote, textarea[class*="js-content-summernote-"]').first();
+        const $hiddenContent = $form.find('.js-hidden-content-summernote, textarea[class*="js-hidden-content-summernote-"], textarea[name*="[content]"]').first();
+
+        if (!$hiddenContent.length) {
+            return true;
+        }
+
+        let html = '';
+
+        if ($editor.length && typeof $editor.summernote === 'function' && $editor.next('.note-editor').length) {
+            html = $editor.summernote('code') || '';
+        } else if ($editor.length) {
+            html = $editor.val() || '';
+        } else {
+            html = $hiddenContent.val() || '';
+        }
+
+        $hiddenContent.val(html);
+
+        const hasMedia = /<(img|iframe|video|audio|object|embed)\b/i.test(html);
+        const isEmpty = !hasMedia && extractSummernotePlainText(html).length === 0;
+        const $contentFormGroup = $hiddenContent.closest('.form-group');
+        const $feedback = $contentFormGroup.find('.invalid-feedback').first();
+
+        if (isEmpty) {
+            $editor.addClass('is-invalid');
+            $hiddenContent.addClass('is-invalid');
+
+            if ($feedback.length) {
+                $feedback.text('The content field is required.');
+            }
+
+            return false;
+        }
+
+        $editor.removeClass('is-invalid');
+        $hiddenContent.removeClass('is-invalid');
+
+        if ($feedback.length) {
+            $feedback.text('');
+        }
+
+        return true;
+    }
+
     $('body').on('click', '.js-save-course-content', function (e) {
         e.preventDefault();
         const $this = $(this);
         const $form = $this.closest('.js-content-form');
+
+        if (!syncAndValidateTextLessonContent($form)) {
+            return;
+        }
 
         // For file forms with R2/upload: require a file to be selected before submit
         if ($form.hasClass('file-form')) {

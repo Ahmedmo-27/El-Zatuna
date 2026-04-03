@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendNotifications;
 use App\Models\Newsletter;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
@@ -91,16 +92,31 @@ class UserController extends Controller
 
     private function notifySupportAboutNewsletter(string $newsletterEmail): void
     {
-        $supportEmail = 'support@elzatuna.com';
+        $supportEmail = config('mail.support.address');
+        $queue = config('mail.support.queue');
+
+        if (empty($supportEmail)) {
+            return;
+        }
+
+        $notification = [
+            'title' => "New newsletter subscriber: {$newsletterEmail}",
+            'message' => "New footer newsletter subscription: {$newsletterEmail}",
+        ];
 
         try {
-            Mail::raw("New footer newsletter subscription: {$newsletterEmail}", function ($message) use ($supportEmail, $newsletterEmail) {
-                $message->to($supportEmail)
-                    ->subject("New newsletter subscriber: {$newsletterEmail}");
-            });
+            $mailable = new SendNotifications($notification);
+
+            if (!empty($queue)) {
+                $mailable->onQueue($queue);
+            }
+
+            Mail::to($supportEmail)->queue($mailable);
         } catch (\Throwable $exception) {
             \Log::warning('Newsletter support notification failed', [
                 'email' => $newsletterEmail,
+                'support_email' => $supportEmail,
+                'queue' => $queue,
                 'error' => $exception->getMessage(),
             ]);
         }
