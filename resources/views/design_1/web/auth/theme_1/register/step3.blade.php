@@ -193,7 +193,7 @@
 
                 <div class="form-group">
                     <label class="form-group-label" for="faculty_id">{{ trans('update.faculty') }}:</label>
-                    <select name="faculty_id" id="faculty_id" class="js-faculty-select form-control @error('faculty_id') is-invalid @enderror" required>
+                    <select name="faculty_id" id="faculty_id" class="js-faculty-select form-control @error('faculty_id') is-invalid @enderror" data-selected-faculty="{{ old('faculty_id') }}" required>
                         <option value="" disabled {{ empty(old('faculty_id')) ? 'selected' : '' }}>{{ trans('public.select') }}</option>
                         @if(!empty($faculties))
                             @foreach($faculties as $faculty)
