@@ -58,7 +58,15 @@ mix.override((config) => {
                 if (!name.includes('sass-loader')) return;
                 if (typeof u === 'string') return;
                 u.options = u.options || {};
-                u.options.sassOptions = { ...(u.options.sassOptions || {}), silenceDeprecations: ['legacy-js-api', 'import'] };
+                const prevSass = u.options.sassOptions || {};
+                const silent = new Set([
+                    ...(prevSass.silenceDeprecations || []),
+                    'legacy-js-api',
+                    'import',
+                    // Vendored Bootstrap SCSS uses deprecated sass:if() — safe to silence until upstream migrates
+                    'if-function',
+                ]);
+                u.options.sassOptions = { ...prevSass, silenceDeprecations: [...silent] };
             });
         });
     };
