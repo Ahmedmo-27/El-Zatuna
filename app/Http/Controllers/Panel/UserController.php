@@ -34,6 +34,8 @@ class UserController extends Controller
 {
     use UserFormFieldsTrait;
 
+    private const PROFILE_LINKS_ENCODE_FAILED = '__PROFILE_LINKS_ENCODE_FAILED__';
+
     public function setting(Request $request, $step = "basic_information")
     {
         $this->authorize("panel_others_profile_setting");
@@ -276,9 +278,11 @@ class UserController extends Controller
                     'bio' => $data['bio'] ?? null,
                 ];
 
-                $updateUserMeta = [
-                    'profile_links' => $this->buildProfileLinksMeta($data['profile_links'] ?? []),
-                ];
+                $profileLinksMeta = $this->buildProfileLinksMeta($data['profile_links'] ?? []);
+
+                if ($profileLinksMeta !== self::PROFILE_LINKS_ENCODE_FAILED) {
+                    $updateUserMeta['profile_links'] = $profileLinksMeta;
+                }
 
                 if (!$user->isUser()) {
                     UserOccupation::where('user_id', $user->id)->delete();
@@ -318,6 +322,10 @@ class UserController extends Controller
 
             if (!empty($updateUserMeta)) {
                 foreach ($updateUserMeta as $metaName => $metaValue) {
+                    if ($metaName === 'profile_links' && $metaValue === self::PROFILE_LINKS_ENCODE_FAILED) {
+                        continue;
+                    }
+
                     UserMeta::query()->where('user_id', $user->id)->where('name', $metaName)->delete();
 
                     if (!empty($metaValue)) {
@@ -526,7 +534,15 @@ class UserController extends Controller
             return null;
         }
 
-        return json_encode($links);
+        try {
+            return json_encode($links, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            logger()->warning('Failed to encode profile links meta.', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return self::PROFILE_LINKS_ENCODE_FAILED;
+        }
     }
 
     private function normalizeExternalUrl($url): ?string
@@ -695,16 +711,22 @@ class UserController extends Controller
     public function deleteUserMedia($type)
     {
         $user = auth()->user();
-        $items = ['avatar', 'cover_img', 'profile_secondary_image', 'signature_img'];
+        $items = ['avatar', 'cover_img', 'profile_secondary_image', 'profile_video', 'signature_img'];
 
         if (in_array($type, $items)) {
             $path = $type === 'signature_img'
                 ? $user->userMetas->where('name', 'signature')->first()?->value
                 : $user->{$type};
-            if (!empty($path) && str_starts_with((string) $path, 'Profile-Assets/')) {
-                $r2 = new R2StorageService();
-                $r2->deleteProfileAsset($path);
+
+            if (!empty($path)) {
+                if (str_starts_with((string) $path, 'Profile-Assets/')) {
+                    $r2 = new R2StorageService();
+                    $r2->deleteProfileAsset($path);
+                } else {
+                    $this->removeFile($path);
+                }
             }
+
             if ($type == 'signature_img') {
                 $user->userMetas()->where('name', 'signature')->delete();
             } else {

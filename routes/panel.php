@@ -347,7 +347,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::post('metas/{meta_id}/update', 'UserController@updateMeta');
         Route::get('metas/{meta_id}/delete', 'UserController@deleteMeta');
         Route::get('/deleteAccount', 'UserController@deleteAccount');
-        Route::get('/media/{type}/delete', 'UserController@deleteUserMedia');
+        Route::get('/media/{type}/delete', 'UserController@deleteUserMedia')->where('type', 'avatar|cover_img|profile_secondary_image|profile_video|signature_img');
 
         Route::group(['prefix' => '/attachments'], function () {
             Route::get('/get-form', 'UserProfileAttachmentsController@getForm');

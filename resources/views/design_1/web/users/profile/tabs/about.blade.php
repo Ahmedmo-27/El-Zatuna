@@ -137,11 +137,15 @@
                 }
 
                 $type = 'custom';
-                $customHost = mb_strtolower((string)(parse_url($customLink['url'], PHP_URL_HOST) ?? ''));
+                $customHost = ltrim(mb_strtolower((string)(parse_url($customLink['url'], PHP_URL_HOST) ?? '')), '.');
+                $customHost = preg_replace('/^www\./', '', $customHost) ?? $customHost;
 
                 if (!empty($customHost)) {
                     foreach ($customDomainTypeMap as $domain => $domainType) {
-                        if (str_contains($customHost, $domain)) {
+                        $normalizedDomain = ltrim(mb_strtolower($domain), '.');
+                        $normalizedDomain = preg_replace('/^www\./', '', $normalizedDomain) ?? $normalizedDomain;
+
+                        if ($customHost === $normalizedDomain || str_ends_with($customHost, '.' . $normalizedDomain)) {
                             $type = $domainType;
                             break;
                         }
@@ -167,7 +171,7 @@
                         $displayUrl = preg_replace('/^https?:\/\//i', '', $profileLink['url']);
                     @endphp
 
-                    <a href="{{ $profileLink['url'] }}" target="_blank" rel="nofollow" class="profile-external-link-inline d-flex align-items-center">
+                    <a href="{{ $profileLink['url'] }}" target="_blank" rel="nofollow noopener noreferrer" class="profile-external-link-inline d-flex align-items-center">
                         <span class="profile-external-link-inline__icon d-flex-center">
                             @include('design_1.web.users.profile.tabs.components.link_icon', [
                                 'type' => $profileLink['type'],
