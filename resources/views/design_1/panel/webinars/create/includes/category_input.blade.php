@@ -4,7 +4,7 @@
     $categoryId = old('category_id', $webinar ? $webinar->category_id : null);
 @endphp
 
-<select name="category_id" id="categories" class="select2 @error('category_id') is-invalid @enderror">
+<select name="category_id" id="categories" class="select2 @error('category_id') is-invalid @enderror" required>
     <option {{ !empty($categoryId) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>
 
     @foreach($categories as $category)

@@ -8,7 +8,7 @@
     <div class="form-group  mt-24">
         <label class="form-group-label is-required">{{ trans('public.category') }}</label>
 
-        <select name="category_id" id="categories" class="select2 @error('category_id')  is-invalid @enderror">
+        <select name="category_id" id="categories" class="select2 @error('category_id')  is-invalid @enderror" required>
             <option {{ (!empty($bundle) and !empty($bundle->category_id)) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>
             @foreach($categories as $category)
                 @if(!empty($category->subCategories) and $category->subCategories->count() > 0)

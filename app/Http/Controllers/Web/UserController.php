@@ -9,6 +9,7 @@ use App\Models\RewardAccounting;
 use App\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -19,7 +20,8 @@ class UserController extends Controller
         $validator = Validator::make($data, [
             'newsletter_email' => 'required|email|max:255|unique:newsletters,email'
         ], [
-            'newsletter_email.required' => [trans('update.entering_the_email_for_the_newsletter_is_required')],
+            'newsletter_email.required' => trans('update.entering_the_email_for_the_newsletter_is_required'),
+            'newsletter_email.unique' => trans('update.newsletter_email_already_subscribed'),
         ]);
 
         if ($validator->fails()) {
@@ -78,11 +80,30 @@ class UserController extends Controller
             RewardAccounting::makeRewardAccounting($user_id, $newsletterReward, Reward::NEWSLETTERS, $user_id, true);
         }
 
+        $this->notifySupportAboutNewsletter($email);
+
         return response()->json([
             'code' => 200,
             'title' => trans('public.request_success'),
             'msg' => trans('site.create_newsletter_success'),
         ]);
+    }
+
+    private function notifySupportAboutNewsletter(string $newsletterEmail): void
+    {
+        $supportEmail = 'support@elzatuna.com';
+
+        try {
+            Mail::raw("New footer newsletter subscription: {$newsletterEmail}", function ($message) use ($supportEmail, $newsletterEmail) {
+                $message->to($supportEmail)
+                    ->subject("New newsletter subscriber: {$newsletterEmail}");
+            });
+        } catch (\Throwable $exception) {
+            \Log::warning('Newsletter support notification failed', [
+                'email' => $newsletterEmail,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     public function search(Request $request)
