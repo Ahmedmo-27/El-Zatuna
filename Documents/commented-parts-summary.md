@@ -7,7 +7,7 @@
 - app/Mixins/Panel/SidebarItems.php:270 -> Certificates section hidden for teachers
 - app/Mixins/Panel/SidebarItems.php:499 -> Articles sidebar section hidden for teachers
 - routes/panel.php:551 -> Panel Articles (blog) routes disabled
-- resources/views/design_1/web/users/profile/tabs/about.blade.php:19 -> Profile overview bar Articles and Meetings cards hidden
+- resources/views/design_1/web/users/profile/tabs/about.blade.php:19 -> Profile overview bar Articles card hidden (Meetings restored)
 - resources/views/design_1/panel/settings/includes/progress.blade.php:8 -> Additional Information tab hidden from settings
 
 ## 2) Important commented-out sections (website)

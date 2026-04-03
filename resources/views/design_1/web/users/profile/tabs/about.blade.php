@@ -24,15 +24,15 @@
         <div class="profile-overview-metric__label font-14 mt-8">{{ trans('update.articles') }}</div>
         <div class="profile-overview-metric__value font-16 font-weight-bold mt-4">{{ $user->reviewsCount() ?? '-' }}</div>
     </div>
+    --}}
 
     <div class="profile-overview-metric flex-1 px-12 py-16 p-lg-20 border-left-gray-200">
         <div class="profile-overview-metric__icon">
-            <x-iconsax-bul-calendar-2 class="icons text-warning" width="36px" height="36px"/>
+            <x-iconsax-lin-calendar-2 class="icons" width="42px" height="42px"/>
         </div>
         <div class="profile-overview-metric__label font-14 mt-8">{{ trans('panel.meetings') }}</div>
         <div class="profile-overview-metric__value font-16 font-weight-bold mt-4">{{ $appointments ?? '-' }}</div>
     </div>
-    --}}
 
 </div>
 
