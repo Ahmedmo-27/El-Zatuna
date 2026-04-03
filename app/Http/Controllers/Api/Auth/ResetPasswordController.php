@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\Controller;
+use App\Models\DeleteAccountRequest;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use Illuminate\Foundation\Auth\ResetsPasswords;
@@ -65,6 +66,9 @@ class ResetPasswordController extends Controller
             $user = User::where('email', $data['email'])
                 ->update(['password' => Hash::make($data['password'])]);
             DB::table('password_resets')->where(['email' => $data['email']])->delete();
+
+            $userId = User::where('email', $data['email'])->value('id');
+            DeleteAccountRequest::cancelPendingForUserId($userId ? (int) $userId : null);
 
            return apiResponse2(1, 'password_reset', 'password reset.');
         }
