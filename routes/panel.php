@@ -548,6 +548,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/bookmarks', 'ForumsBookmarksController@index');
     });
 
+    /*
     Route::group(['prefix' => 'blog'], function () {
         Route::get('/', 'BlogPostsController@index');
         Route::get('/new', 'BlogPostsController@create');
@@ -566,6 +567,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/delete', 'BlogRelatedPostsController@destroy');
         });
     });
+    */
 
     Route::group(['prefix' => 'ai-contents'], function () {
         Route::get('/', 'AiContentController@index');

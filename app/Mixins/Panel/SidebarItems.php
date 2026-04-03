@@ -495,7 +495,8 @@ class SidebarItems
         }
 
 
-        // Articles
+        /*
+        // Articles (commented out by request)
         if ($user->isTeacher() and $user->can('panel_blog')) {
 
             $items['blog'] = [
@@ -520,6 +521,7 @@ class SidebarItems
             }
 
         }
+        */
 
 
         // noticeboard

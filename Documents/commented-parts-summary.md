@@ -5,6 +5,8 @@
 - app/Mixins/Panel/SidebarItems.php:135 -> Favorites hidden for teachers
 - app/Mixins/Panel/SidebarItems.php:236 -> Quizzes section hidden for teachers
 - app/Mixins/Panel/SidebarItems.php:270 -> Certificates section hidden for teachers
+- app/Mixins/Panel/SidebarItems.php:499 -> Articles sidebar section hidden for teachers
+- routes/panel.php:551 -> Panel Articles (blog) routes disabled
 
 ## 2) Important commented-out sections (website)
 - resources/views/design_1/web/become_instructor/wizard/form.blade.php:54 -> Bank Account Section - Commented Out
