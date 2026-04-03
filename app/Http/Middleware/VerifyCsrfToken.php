@@ -12,17 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        '/payments/verify/Iyzipay',
-        '/payments/verify/Paytm',
-        '/payments/verify/JazzCash',
-        '/payments/verify/Izipay',
-        '/payments/verify/Sslcommerz',
-        '/payments/verify/Ipay88',
-        '/payments/verify/TapPayment',
-        '/payments/verify/Paytr',
-        '/payments/verify/Paytabs',
-        '/payments/verify/Cintepay',
-        '/payments/verify/Clickpay',
         '/payments/verify/Geidea',
     ];
 }

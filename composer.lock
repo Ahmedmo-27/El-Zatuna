@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0b97b289f47d2fd8fcc117e64527539d",
+    "content-hash": "990a99d236bd7351603ee574a1229ade",
     "packages": [
         {
             "name": "akcybex/laravel-jazzcash",
@@ -1385,57 +1385,6 @@
                 "source": "https://github.com/chehivskiy/I18N_Arabic/tree/1.0.2"
             },
             "time": "2019-10-08T15:03:10+00:00"
-        },
-        {
-            "name": "cinetpay/cinetpay-php",
-            "version": "1.9.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/cinetpay/cinetpay-php-legacy.git",
-                "reference": "8a4a53bce076036fc5d6781bee839719780f2028"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/cinetpay/cinetpay-php-legacy/zipball/8a4a53bce076036fc5d6781bee839719780f2028",
-                "reference": "8a4a53bce076036fc5d6781bee839719780f2028",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "php": ">=5.6.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "CinetPay": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Fawaz Adisa",
-                    "email": "adisaf@programmer.net",
-                    "role": "Developer"
-                }
-            ],
-            "description": "easily integrate cinetpay's gateway on your php web site.",
-            "homepage": "https://github.com/cinetpay/cinetpay-php-legacy",
-            "keywords": [
-                "cinetpay",
-                "integration",
-                "mobile",
-                "money"
-            ],
-            "support": {
-                "email": "support@cinetpay.com",
-                "issues": "https://github.com/cinetpay/cinetpay-php-legacy/issues",
-                "source": "https://github.com/cinetpay/cinetpay-php-legacy/tree/v1.9.2"
-            },
-            "time": "2020-11-30T00:00:00+00:00"
         },
         {
             "name": "clickpaysa/laravel_package",
@@ -3700,64 +3649,6 @@
                 "source": "https://github.com/grpc/grpc-php/tree/v1.74.0"
             },
             "time": "2025-07-24T20:02:16+00:00"
-        },
-        {
-            "name": "guysolamour/laravel-cinetpay",
-            "version": "v2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/guysolamour/laravel-cinetpay.git",
-                "reference": "e54b0f0ec8635b83ff7b2b8ce11d6e810e4c308d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/guysolamour/laravel-cinetpay/zipball/e54b0f0ec8635b83ff7b2b8ce11d6e810e4c308d",
-                "reference": "e54b0f0ec8635b83ff7b2b8ce11d6e810e4c308d",
-                "shasum": ""
-            },
-            "require": {
-                "cinetpay/cinetpay-php": "^1.9",
-                "illuminate/support": "^8.0|^9.0|^10.0",
-                "php": "^7.3|^8.0"
-            },
-            "require-dev": {
-                "orchestra/testbench": "^4.0|^5.0|^6.0",
-                "phpunit/phpunit": "^8.4|^9.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Guysolamour\\Cinetpay\\ServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Guysolamour\\Cinetpay\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Guy-roland ASSALE",
-                    "email": "rolandassale@gmail.com"
-                }
-            ],
-            "description": "A laravel wrapper for cinetpay",
-            "keywords": [
-                "cinetpay",
-                "laravel",
-                "payment"
-            ],
-            "support": {
-                "issues": "https://github.com/guysolamour/laravel-cinetpay/issues",
-                "source": "https://github.com/guysolamour/laravel-cinetpay/tree/v2.0"
-            },
-            "time": "2023-02-26T08:36:21+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

@@ -175,13 +175,6 @@ class PromotionsController extends Controller
                 ]);
 
                 if ($amount > 0) {
-                    $razorpay = false;
-                    foreach ($paymentChannels as $paymentChannel) {
-                        if ($paymentChannel->class_name == 'Razorpay') {
-                            $razorpay = true;
-                        }
-                    }
-
                     $calculatePrices = [
                         'total' => $order->total_amount,
                         'sub_total' => $order->amount,
@@ -198,7 +191,6 @@ class PromotionsController extends Controller
                         'order' => $order,
                         'count' => 1,
                         'userCharge' => $user->getAccountingCharge(),
-                        'razorpay' => $razorpay
                     ];
 
                     return view('design_1.web.cart.payment.index', $data);

@@ -311,15 +311,6 @@ class CartController extends Controller
             }
 
             if (!empty($order) and $order->total_amount > 0) {
-                $razorpay = false;
-                $isMultiCurrency = !empty(getFinancialCurrencySettings('multi_currency'));
-
-                foreach ($paymentChannels as $paymentChannel) {
-                    if ($paymentChannel->class_name == 'Razorpay' and (!$isMultiCurrency or in_array(currency(), $paymentChannel->currencies))) {
-                        $razorpay = true;
-                    }
-                }
-
                 $totalCashbackAmount = $this->getTotalCashbackAmount($carts, $user, $calculate["sub_total"]);
 
                 $data = [
@@ -331,7 +322,6 @@ class CartController extends Controller
                     'order' => $order,
                     'count' => $carts->count(),
                     'userCharge' => $user->getAccountingCharge(),
-                    'razorpay' => $razorpay,
                     'totalCashbackAmount' => $totalCashbackAmount,
                     'previousUrl' => url()->previous(),
                 ];

@@ -30,13 +30,7 @@
 
             showToast("success", pleaseWaitLang, transferringToLang)
 
-            const channelName = $selectedChannel.attr('data-class');
-
-            if (channelName === 'Razorpay') {
-                $('.razorpay-payment-button').trigger('click');
-            } else {
-                $form.trigger('submit');
-            }
+            $form.trigger('submit');
         } else {
             showToast('error', '', selectPaymentGatewayLang)
         }
