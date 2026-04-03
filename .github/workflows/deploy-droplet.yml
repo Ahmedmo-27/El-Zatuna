@@ -1,0 +1,112 @@
+# Deploy El-Zatuna to DigitalOcean Droplet on push to main (or manual run).
+# Requires secrets: DROPLET_HOST, DROPLET_USER, SSH_PRIVATE_KEY
+# Server: no sudo required if the queue worker unit uses Restart=always (see guide).
+# If workers do not pick up code after deploy, ensure CACHE_DRIVER is redis/database/file (not array), or uncomment a manual restart in the deploy script below.
+#
+# Flow: parallel gates (PHPUnit + production Mix build) → SSH deploy on server.
+
+name: Deploy to Droplet
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cancel in-progress runs when a newer commit hits the same branch
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php-tests:
+    name: PHP (Composer + PHPUnit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, xml, curl, zip, gd, bcmath, intl
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Prepare Laravel
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+
+      - name: Run tests
+        run: php vendor/bin/phpunit
+
+  frontend-build:
+    name: Frontend (Mix production build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies and build
+        run: |
+          npm ci
+          npm run prod
+
+  deploy:
+    name: Deploy to Droplet
+    runs-on: ubuntu-latest
+    needs: [php-tests, frontend-build]
+    environment: production
+    steps:
+      - name: Record Droplet host key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "$DROPLET_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            cd /var/www/elzatuna
+            git pull origin main
+            composer install --no-dev --optimize-autoloader --no-interaction
+            php artisan migrate --force
+            php artisan l5-swagger:generate
+            php artisan optimize
+            if command -v npm >/dev/null 2>&1; then
+              npm ci
+              npm run prod
+            fi
+            # Workers exit gracefully after current job; systemd Restart=always starts fresh processes (see DEPLOY_DROPLET_GUIDE worker unit).
+            php artisan queue:restart
