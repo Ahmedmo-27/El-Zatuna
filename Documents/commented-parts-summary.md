@@ -7,6 +7,7 @@
 - app/Mixins/Panel/SidebarItems.php:270 -> Certificates section hidden for teachers
 - app/Mixins/Panel/SidebarItems.php:499 -> Articles sidebar section hidden for teachers
 - routes/panel.php:551 -> Panel Articles (blog) routes disabled
+- resources/views/design_1/web/users/profile/tabs/about.blade.php:19 -> Profile overview bar Articles and Meetings cards hidden
 
 ## 2) Important commented-out sections (website)
 - resources/views/design_1/web/become_instructor/wizard/form.blade.php:54 -> Bank Account Section - Commented Out

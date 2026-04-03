@@ -154,6 +154,25 @@ class UserController extends Controller
                 'email' => (($registerMethod == 'email') ? 'required' : 'nullable') . '|email|max:255|unique:users,email,' . $user->id,
                 'mobile' => (($registerMethod == 'mobile') ? 'required' : 'nullable') . '|numeric|unique:users,mobile,' . $user->id,
             ];
+        } elseif ($step == "about") {
+            $rules = [
+                'bio' => 'nullable|string|max:255',
+                'about' => 'nullable|string',
+                'profile_links.portfolio' => 'nullable|string|max:500',
+                'profile_links.website' => 'nullable|string|max:500',
+                'profile_links.linkedin' => 'nullable|string|max:500',
+                'profile_links.github' => 'nullable|string|max:500',
+                'profile_links.twitter' => 'nullable|string|max:500',
+                'profile_links.facebook' => 'nullable|string|max:500',
+                'profile_links.youtube' => 'nullable|string|max:500',
+                'profile_links.instagram' => 'nullable|string|max:500',
+                'profile_links.behance' => 'nullable|string|max:500',
+                'profile_links.dribbble' => 'nullable|string|max:500',
+                'profile_links.medium' => 'nullable|string|max:500',
+                'profile_links.custom' => 'nullable|array',
+                'profile_links.custom.*.title' => 'nullable|string|max:80',
+                'profile_links.custom.*.url' => 'nullable|string|max:500',
+            ];
         }
 
         $this->validate($request, $rules);
@@ -248,6 +267,10 @@ class UserController extends Controller
                 $updateData = [
                     'about' => $data['about'] ?? null,
                     'bio' => $data['bio'] ?? null,
+                ];
+
+                $updateUserMeta = [
+                    'profile_links' => $this->buildProfileLinksMeta($data['profile_links'] ?? []),
                 ];
 
                 if (!$user->isUser()) {
@@ -431,6 +454,91 @@ class UserController extends Controller
 
             $check->delete();
         }
+    }
+
+    private function buildProfileLinksMeta($rawLinks): ?string
+    {
+        if (empty($rawLinks) || !is_array($rawLinks)) {
+            return null;
+        }
+
+        $knownKeys = [
+            'portfolio',
+            'website',
+            'linkedin',
+            'github',
+            'twitter',
+            'facebook',
+            'youtube',
+            'instagram',
+            'behance',
+            'dribbble',
+            'medium',
+        ];
+
+        $links = ['custom' => []];
+
+        foreach ($knownKeys as $knownKey) {
+            $links[$knownKey] = $this->normalizeExternalUrl($rawLinks[$knownKey] ?? null);
+        }
+
+        if (!empty($rawLinks['custom']) && is_array($rawLinks['custom'])) {
+            foreach ($rawLinks['custom'] as $customLink) {
+                if (!is_array($customLink)) {
+                    continue;
+                }
+
+                $url = $this->normalizeExternalUrl($customLink['url'] ?? null);
+                if (empty($url)) {
+                    continue;
+                }
+
+                $title = trim((string)($customLink['title'] ?? ''));
+                if ($title === '') {
+                    $title = parse_url($url, PHP_URL_HOST) ?: trans('update.custom_link');
+                }
+
+                $links['custom'][] = [
+                    'title' => mb_substr($title, 0, 80),
+                    'url' => $url,
+                ];
+            }
+        }
+
+        $hasPrimaryLinks = false;
+        foreach ($knownKeys as $knownKey) {
+            if (!empty($links[$knownKey])) {
+                $hasPrimaryLinks = true;
+                break;
+            }
+        }
+
+        $hasCustomLinks = !empty($links['custom']);
+
+        if (!$hasPrimaryLinks && !$hasCustomLinks) {
+            return null;
+        }
+
+        return json_encode($links);
+    }
+
+    private function normalizeExternalUrl($url): ?string
+    {
+        $url = trim((string)$url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (!preg_match('/^https?:\/\//i', $url)) {
+            $url = "https://{$url}";
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return $url;
     }
 
     public function storeMetas(Request $request)

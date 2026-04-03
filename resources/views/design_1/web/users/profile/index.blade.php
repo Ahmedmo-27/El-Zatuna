@@ -49,6 +49,100 @@
             background-color: #BDEA42 !important;
             border-color: #BDEA42 !important;
         }
+
+        .profile-overview-metrics {
+            border: 1px solid #ecf4b8;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fde5 100%);
+        }
+
+        .profile-overview-metric {
+            min-height: 132px;
+        }
+
+        .profile-overview-metric__icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            border: 1px solid #d9e7a3;
+            background: #f0f7ca;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-overview-metric__icon .icons {
+            color: #072923 !important;
+            width: 34px !important;
+            height: 34px !important;
+        }
+
+        .profile-overview-metric__label {
+            color: #4b655f !important;
+            font-weight: 700;
+        }
+
+        .profile-overview-metric__value {
+            color: #072923 !important;
+            font-size: 24px;
+            line-height: 1.1;
+        }
+
+        .profile-about-me-description,
+        .profile-about-me-description p,
+        .profile-about-me-description li {
+            color: #3b5b54 !important;
+        }
+
+        .profile-education-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fdeb 100%);
+            border: 1px solid #e2edb6;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .profile-education-card:after {
+            display: none;
+        }
+
+        .profile-education-card__icon {
+            background: #f0f7ca;
+            border: 1px solid #dae8a0;
+            flex-shrink: 0;
+            width: 74px;
+            height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-education-card__icon .icons {
+            color: #072923 !important;
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        .profile-education-card__value {
+            color: #294943;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .profile-external-link-card {
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .profile-external-link-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(7, 41, 35, .08);
+        }
+
+        .profile-external-link-card__title {
+            color: #072923;
+        }
+
+        .profile-external-link-card__url {
+            color: #49635e !important;
+        }
     </style>
 @endpush
 

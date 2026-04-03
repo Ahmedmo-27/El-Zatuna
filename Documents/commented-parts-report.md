@@ -5,6 +5,8 @@
 	- Articles sidebar block for teachers commented out (includes New Article, My Articles, Comments).
 - routes/panel.php:551
 	- Panel blog routes commented out (posts, comments, related posts).
+- resources/views/design_1/web/users/profile/tabs/about.blade.php:19
+	- Profile overview bar: Articles and Meetings metric cards commented out.
 
 This file is a simplified map of commented sections with lines.
 
