@@ -127,27 +127,25 @@
             @endcan
 
             @can('admin_delete_account_requests_confirm')
-                <div class="dropdown-item d-flex align-items-center mb-3 py-3 px-0 gap-4">
-                    @include('admin.includes.delete_button',[
-                        'url' => getAdminPanelUrl().'/users/delete-account-requests/'.$request->id.'/confirm',
-                        'btnClass' => 'text-success font-14',
-                        'btnText' => trans('update.confirm'),
-                        'btnIcon' => 'tick-circle',
-                        'iconType' => 'lin',
-                        'iconClass' => 'text-success mr-2'
-                    ])
-                </div>
+                {{-- POST and DELETE must be used; delete_button uses <a href> (GET) which never matched the routes. --}}
+                <form method="post" action="{{ getAdminPanelUrl() }}/users/delete-account-requests/{{ $request->id }}/confirm" class="mb-0"
+                      onsubmit="return confirm({{ json_encode(trans('update.delete_account_modal_hint')) }});">
+                    @csrf
+                    <button type="submit" class="dropdown-item d-flex align-items-center mb-3 py-3 px-0 gap-4 btn btn-link text-left text-decoration-none rounded-0 border-0 w-100 text-success font-14">
+                        <x-iconsax-lin-tick-circle class="icons text-success mr-2" width="18px" height="18px"/>
+                        <span class="text-success font-14">{{ trans('update.confirm') }}</span>
+                    </button>
+                </form>
 
-                <div class="dropdown-item d-flex align-items-center mb-0 py-3 px-0 gap-4">
-                    @include('admin.includes.delete_button',[
-                        'url' => getAdminPanelUrl().'/users/delete-account-requests/'.$request->id.'/delete',
-                        'btnClass' => 'dropdown-item text-danger mb-0 py-3 px-0 font-14',
-                        'btnText' => trans('public.delete'),
-                        'btnIcon' => 'trash',
-                        'iconType' => 'lin',
-                        'iconClass' => 'text-danger mr-2'
-                    ])
-                </div>
+                <form method="post" action="{{ getAdminPanelUrl() }}/users/delete-account-requests/{{ $request->id }}/delete" class="mb-0"
+                      onsubmit="return confirm({{ json_encode(trans('admin/main.delete_confirm_msg')) }});">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="dropdown-item d-flex align-items-center mb-0 py-3 px-0 gap-4 btn btn-link text-left text-decoration-none rounded-0 border-0 w-100 text-danger font-14">
+                        <x-iconsax-lin-trash class="icons text-danger mr-2" width="18px" height="18px"/>
+                        <span class="text-danger font-14">{{ trans('public.delete') }}</span>
+                    </button>
+                </form>
             @endcan
         </div>
     </div>

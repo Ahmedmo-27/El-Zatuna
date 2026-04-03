@@ -1202,6 +1202,7 @@ return [
 'delete-account-requests' => 'Account Deletion Requests',
 'delete_account_request_stored_msg' => 'Your request was submitted. Your account will be deleted after admin approval.',
 'user_account_successful_deleted' => 'Account successfully deleted.',
+'delete_account_user_failed_try_again' => 'The user could not be deleted. They may still have related records blocking removal. Check the application log for details.',
 
 'we_will_send_a_link_to_reset_your_password' => 'We will send a link to reset your password.',
 
