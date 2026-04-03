@@ -89,8 +89,10 @@ jobs:
         env:
           DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
 
+      # Secrets: DROPLET_HOST, DROPLET_USER, SSH_PRIVATE_KEY (full OpenSSH private key; matching
+      # public key must be in DROPLET_USER's ~/.ssh/authorized_keys on the server).
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
