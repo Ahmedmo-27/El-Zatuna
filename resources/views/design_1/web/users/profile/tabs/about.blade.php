@@ -50,24 +50,6 @@
         </div>
     @endif
 
-    @if(!empty($user->profile_video))
-        <div class="col-12 col-md-6 mt-24">
-            @push('styles_top')
-                <link rel="stylesheet" href="/assets/vendors/plyr.io/plyr.min.css">
-            @endpush
-
-            @push('scripts_bottom')
-                <script src="/assets/vendors/plyr.io/plyr.min.js"></script>
-            @endpush
-
-            <div class="profile-video-card">
-                <video class="js-init-plyr-io plyr-io-video" controls preload="auto" width="100%">
-                    <source src="{{ $user->getProfileVideoUrl() }}" type="video/mp4"/>
-                </video>
-            </div>
-        </div>
-    @endif
-
     @if(!empty($educations) and !$educations->isEmpty())
         <div class="col-12 col-md-6 mt-24">
             <h4 class="font-16 font-weight-bold">{{ trans('site.education') }}</h4>
@@ -95,18 +77,6 @@
                     <div class="ml-12 profile-education-card__value">{{ $experience->value }}</div>
                 </div>
             @endforeach
-        </div>
-    @endif
-
-    @if(!empty($occupations) and !$occupations->isEmpty())
-        <div class="col-12 mt-24">
-            <h4 class="font-16 font-weight-bold">{{ trans('update.skills_&_interests') }}</h4>
-
-            <div class="d-flex align-items-center mt-8 gap-12 flex-wrap">
-                @foreach($occupations as $occupation)
-                    <div class="bg-gray-100 p-10 rounded-8 font-12 text-gray-500">{{ $occupation->category->title }}</div>
-                @endforeach
-            </div>
         </div>
     @endif
 
@@ -188,27 +158,41 @@
     @endphp
 
     @if(!empty($publicProfileLinks))
-        <div class="col-12 mt-24">
+        <div class="col-12 col-md-6 mt-24">
             <h4 class="font-16 font-weight-bold">{{ trans('update.portfolio_and_links') }}</h4>
 
-            <div class="row mt-4">
+            <div class="profile-external-links-list mt-10">
                 @foreach($publicProfileLinks as $profileLink)
-                    <div class="col-12 col-md-6 col-lg-4 mt-12">
-                        <a href="{{ $profileLink['url'] }}" target="_blank" rel="nofollow" class="profile-external-link-card d-flex align-items-center rounded-16 p-12 border-gray-200 bg-white bg-hover-gray-100">
-                            <div class="profile-external-link-card__icon d-flex-center size-48 rounded-12 bg-gray-100 border-gray-200">
-                                @include('design_1.web.users.profile.tabs.components.link_icon', [
-                                    'type' => $profileLink['type'],
-                                    'size' => 24,
-                                    'className' => 'icons text-primary',
-                                ])
-                            </div>
+                    @php
+                        $displayUrl = preg_replace('/^https?:\/\//i', '', $profileLink['url']);
+                    @endphp
 
-                            <div class="ml-10 overflow-hidden">
-                                <div class="profile-external-link-card__title font-14 font-weight-bold text-dark">{{ $profileLink['title'] }}</div>
-                                <div class="profile-external-link-card__url font-12 text-gray-500 text-truncate">{{ parse_url($profileLink['url'], PHP_URL_HOST) ?: $profileLink['url'] }}</div>
-                            </div>
-                        </a>
-                    </div>
+                    <a href="{{ $profileLink['url'] }}" target="_blank" rel="nofollow" class="profile-external-link-inline d-flex align-items-center">
+                        <span class="profile-external-link-inline__icon d-flex-center">
+                            @include('design_1.web.users.profile.tabs.components.link_icon', [
+                                'type' => $profileLink['type'],
+                                'size' => 22,
+                                'className' => 'icons',
+                            ])
+                        </span>
+
+                        <span class="ml-10 profile-external-link-inline__content">
+                            <span class="profile-external-link-inline__text">{{ $profileLink['title'] }}</span>
+                            <span class="profile-external-link-inline__url text-truncate">{{ $displayUrl }}</span>
+                        </span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    @if(!empty($occupations) and !$occupations->isEmpty())
+        <div class="col-12 mt-24">
+            <h4 class="font-16 font-weight-bold">{{ trans('update.skills_&_interests') }}</h4>
+
+            <div class="d-flex align-items-center mt-8 gap-12 flex-wrap">
+                @foreach($occupations as $occupation)
+                    <div class="bg-gray-100 p-10 rounded-8 font-12 text-gray-500">{{ $occupation->category->title }}</div>
                 @endforeach
             </div>
         </div>

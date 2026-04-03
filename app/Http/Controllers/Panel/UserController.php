@@ -38,6 +38,10 @@ class UserController extends Controller
     {
         $this->authorize("panel_others_profile_setting");
 
+        if ($step === 'extra_information') {
+            $step = 'basic_information';
+        }
+
         $user = auth()->user();
 
         $data = [
@@ -144,6 +148,10 @@ class UserController extends Controller
 
         $step = $data['step'] ?? "basic_information";
 
+        if ($step === "extra_information") {
+            return redirect('/panel/setting/step/basic_information');
+        }
+
         $rules = [];
 
         if ($step == "basic_information") {
@@ -249,7 +257,6 @@ class UserController extends Controller
 
                 $updateData = [
                     'avatar' => $this->handleUploadImagesAndFiles($request, $user, "avatar"),
-                    'profile_video' => $this->handleUploadImagesAndFiles($request, $user, "profile_video"),
                     'cover_img' => $this->handleUploadImagesAndFiles($request, $user, "cover_img"),
                     'profile_secondary_image' => $this->handleUploadImagesAndFiles($request, $user, "profile_secondary_image"),
                 ];
@@ -370,7 +377,7 @@ class UserController extends Controller
         $path = $name === 'signature_img'
             ? $user->userMetas->where('name', 'signature')->first()?->value
             : ($user->{$name} ?? null);
-        $profileAssetTypes = ['avatar', 'profile_video', 'cover_img', 'profile_secondary_image', 'signature_img'];
+        $profileAssetTypes = ['avatar', 'cover_img', 'profile_secondary_image', 'signature_img'];
 
         if (!empty($request->file($name))) {
             if (!empty($path)) {
@@ -688,7 +695,7 @@ class UserController extends Controller
     public function deleteUserMedia($type)
     {
         $user = auth()->user();
-        $items = ['avatar', 'cover_img', 'profile_secondary_image', 'profile_video', 'signature_img'];
+        $items = ['avatar', 'cover_img', 'profile_secondary_image', 'signature_img'];
 
         if (in_array($type, $items)) {
             $path = $type === 'signature_img'

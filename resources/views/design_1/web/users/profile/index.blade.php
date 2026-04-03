@@ -127,21 +127,82 @@
             font-weight: 600;
         }
 
-        .profile-external-link-card {
-            transition: transform .2s ease, box-shadow .2s ease;
+        .profile-external-links-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .profile-external-link-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(7, 41, 35, .08);
+        .profile-external-link-inline {
+            max-width: 100%;
+            text-decoration: none !important;
+            min-width: 0;
+            padding: 6px 4px;
+            border-radius: 12px;
+            transition: background-color .2s ease;
         }
 
-        .profile-external-link-card__title {
+        .profile-external-link-inline:hover {
+            background-color: #f8fbe9;
+        }
+
+        .profile-external-link-inline__icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid #dae8a0;
+            background: #f0f7ca;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+
+        .profile-external-link-inline__icon .icons {
+            color: #072923 !important;
+            width: 22px !important;
+            height: 22px !important;
+            display: block;
+            line-height: 1;
+        }
+
+        .profile-external-link-inline__content {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .profile-external-link-inline__text {
             color: #072923;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
-        .profile-external-link-card__url {
+        .profile-external-link-inline__url {
             color: #49635e !important;
+            font-size: 13px;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        @media (max-width: 767px) {
+            .profile-external-link-inline__content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+
+            .profile-external-link-inline__text {
+                font-size: 14px;
+            }
+
+            .profile-external-link-inline__url {
+                font-size: 12px;
+            }
         }
     </style>
 @endpush
