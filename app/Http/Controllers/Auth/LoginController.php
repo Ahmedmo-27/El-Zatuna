@@ -79,7 +79,7 @@ class LoginController extends Controller
             ];
         } else {
             $rules = [
-                'email' => 'required|email|exists:users,email',
+                'email' => 'required|email',
                 'password' => 'required|min:6',
             ];
         }
@@ -88,9 +88,7 @@ class LoginController extends Controller
             $rules['captcha'] = 'required|captcha';
         }
 
-        $this->validate($request, $rules, [
-            'email.exists' => trans('auth.email_not_registered'),
-        ], [
+        $this->validate($request, $rules, [], [
             'mobile' => trans('auth.mobile'),
             'email' => trans('auth.email'),
             'captcha' => trans('site.captcha'),

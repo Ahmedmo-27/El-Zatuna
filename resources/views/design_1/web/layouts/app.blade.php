@@ -120,6 +120,7 @@
     var requestDetailsLang = '{{ trans('update.request_details') }}';
     var sendRequestLang = '{{ trans('update.send_request') }}';
     var closeLang = '{{ trans('public.close') }}';
+    var contentRequiredLang = '{{ trans('validation.required', ['attribute' => trans('public.content')]) }}';
     var generatedContentLang = '{{ trans('update.generated_content') }}';
     var copyLang = '{{ trans('public.copy') }}';
     var doneLang = '{{ trans('public.done') }}';
