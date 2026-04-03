@@ -93,7 +93,7 @@ class UserController extends Controller
     private function notifySupportAboutNewsletter(string $newsletterEmail): void
     {
         $supportEmail = config('mail.support.address');
-        $queue = config('mail.support.queue');
+        $queue = trim((string) config('mail.support.queue', ''));
 
         if (empty($supportEmail)) {
             return;
@@ -107,7 +107,7 @@ class UserController extends Controller
         try {
             $mailable = new SendNotifications($notification);
 
-            if (!empty($queue)) {
+            if ($queue !== '') {
                 $mailable->onQueue($queue);
             }
 

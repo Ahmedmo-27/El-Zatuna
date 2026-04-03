@@ -104,7 +104,7 @@ return [
 
     'support' => [
         'address' => env('MAIL_SUPPORT_ADDRESS', 'support@elzatuna.com'),
-        'queue' => env('MAIL_SUPPORT_QUEUE', 'mail'),
+        'queue' => env('MAIL_SUPPORT_QUEUE'),
     ],
 
     /*

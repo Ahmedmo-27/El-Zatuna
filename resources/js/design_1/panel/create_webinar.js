@@ -808,7 +808,8 @@
             $hiddenContent.addClass('is-invalid');
 
             if ($feedback.length) {
-                $feedback.text('The content field is required.');
+                const message = (typeof contentRequiredLang !== 'undefined' && contentRequiredLang) ? contentRequiredLang : 'The content field is required.';
+                $feedback.text(message);
             }
 
             return false;
