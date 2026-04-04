@@ -101,9 +101,10 @@ jobs:
           script: |
             set -euo pipefail
             cd /var/www/elzatuna
-            # Generated assets can differ per server build and block git pull.
-            git restore --worktree --staged -- public/assets/design_1/js/parts/learning_page.min.js public/assets/design_1/js/parts/learning_page_noticeboards.min.js public/assets/design_1/js/parts/video_player_helpers.min.js || true
-            git pull --ff-only origin main
+            # Discard any local drift in tracked files (built min.css/min.js, etc.) so pull never aborts.
+            # Untracked files (.env, storage/, uploads) are not affected.
+            git fetch origin
+            git reset --hard origin/main
             composer install --no-dev --optimize-autoloader --no-interaction
             php artisan migrate --force
             php artisan l5-swagger:generate
