@@ -4,6 +4,8 @@
 /public/debug_paytabs.log
 !/public/store/.htaccess
 /storage/*.key
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
 /vendor
 /.idea
 /.vscode
