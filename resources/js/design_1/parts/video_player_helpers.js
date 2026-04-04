@@ -37,7 +37,7 @@
         if (storage === 'youtube') {
             html = `<div class="plyr__video-embed w-100 h-100" id="${tagId}" data-poster="${thumbnail ?? ''}">
               <iframe
-                                src="${path}?origin=${siteDomain}&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=0&amp;controls=1"
+                                src="${path}?origin=${siteDomain}&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=0&amp;controls=0"
                 allowfullscreen
                 allowtransparency
                 allow="autoplay"
@@ -55,7 +55,7 @@
                 fs: 0,
                 disablekb: 1,
                 playsinline: 1,
-                controls: 1
+                controls: 0
             };
         } else if (storage === "vimeo") {
             let vimeoPath = convertVimeoLinkToPlay(path);
