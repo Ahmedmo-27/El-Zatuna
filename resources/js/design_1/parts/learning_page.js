@@ -148,7 +148,7 @@
 
     function getLearningPlyrOptions() {
         return {
-            hideControls: false,
+            hideControls: true,
             controls: [
                 'play-large',
                 'rewind',

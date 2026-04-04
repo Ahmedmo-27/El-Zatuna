@@ -60,22 +60,8 @@
 
         .learning-page__file-player-card .plyr__controls {
             z-index: 12;
-            display: flex !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: none !important;
-            pointer-events: auto !important;
             background: linear-gradient(180deg, rgba(7, 41, 35, 0) 0%, rgba(7, 41, 35, 0.88) 52%) !important;
             padding: 12px 14px !important;
-        }
-
-        .learning-page__file-player-card .plyr__progress__container,
-        .learning-page__file-player-card .plyr__time,
-        .learning-page__file-player-card .plyr__control {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            color: #faffdf;
         }
 
         .learning-page__file-player-card .plyr__control--overlaid {

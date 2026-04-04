@@ -53,7 +53,7 @@
         let options = {
             autoplay: false,
             preload: 'auto',
-            hideControls: false,
+            hideControls: true,
             controls,
             settings: ['speed', 'quality', 'captions'],
             previewThumbnails: {
