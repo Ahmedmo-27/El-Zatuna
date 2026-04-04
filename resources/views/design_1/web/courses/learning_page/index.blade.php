@@ -127,6 +127,22 @@
     <script src="/assets/vendors/plyr.io/plyr.min.js"></script>
 
     <script src="{{ $videoPlayerHelpersScriptPath }}{{ $videoPlayerHelpersScriptSep }}v={{ $videoPlayerHelpersScriptVersion }}"></script>
+    <script>
+        (function () {
+            if (typeof window.makeVideoPlayerHtml !== 'function') {
+                return;
+            }
+
+            const originalMakeVideoPlayerHtml = window.makeVideoPlayerHtml;
+
+            // Learning page should always fill the responsive player container.
+            window.makeVideoPlayerHtml = function (path, storage, height, tagId, thumbnail, mimeType) {
+                const forcedHeight = '100%';
+
+                return originalMakeVideoPlayerHtml(path, storage, forcedHeight, tagId, thumbnail, mimeType);
+            };
+        })();
+    </script>
     <script src="{{ getDesign1ScriptPath("learning_page_noticeboards") }}"></script>
     <script src="{{ getDesign1ScriptPath("learning_page") }}"></script>
 @endpush
