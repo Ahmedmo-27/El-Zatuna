@@ -142,12 +142,17 @@ body {
 .learning-page__file-player-card {
   position: relative;
   width: 100%;
-  height: 87vh;
+  height: auto;
+  aspect-ratio: 16/9;
+  min-height: 240px;
+  max-height: min(76vh, 700px);
   border-radius: 12px;
+  overflow: hidden;
 }
 @media (max-width: 991px) {
   .learning-page__file-player-card {
-    height: 334px;
+    min-height: 220px;
+    max-height: 60vh;
   }
 }
 .learning-page__file-player-card .file-player-button {
@@ -166,9 +171,17 @@ body {
 .learning-page__file-player-card:hover .file-player-button {
   transform: translate(-50%, -50%) scale(1.04);
 }
-.learning-page__file-player-card .plyr.plyr--video {
+.learning-page__file-player-card .js-file-player-el,
+.learning-page__file-player-card .plyr.plyr--video,
+.learning-page__file-player-card iframe,
+.learning-page__file-player-card video,
+.learning-page__file-player-card .h_iframe-aparat_embed_frame {
+  width: 100%;
   height: 100% !important;
   border-radius: 12px;
+}
+.learning-page__file-player-card .plyr__video-wrapper {
+  background-color: var(--black);
 }
 .learning-page__file-player-card .vimeoFrame {
   height: 100% !important;
@@ -178,11 +191,6 @@ body {
 .learning-page__file-player-card .vimeoFrame .vimeoplayer {
   position: static !important;
   height: 100% !important;
-}
-.learning-page__file-player-card iframe, .learning-page__file-player-card .h_iframe-aparat_embed_frame {
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
 }
 .learning-page__file-player-card .h_iframe-aparat_embed_frame > span {
   display: none !important;
