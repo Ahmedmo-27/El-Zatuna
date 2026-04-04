@@ -14,6 +14,18 @@
             margin-left: auto;
             margin-right: auto;
             height: min(68vh, 620px);
+            overflow: visible !important;
+        }
+
+        .learning-page__file-player-card .plyr,
+        .learning-page__file-player-card .plyr--video,
+        .learning-page__file-player-card .plyr__video-wrapper {
+            height: 100%;
+            overflow: visible;
+        }
+
+        .learning-page__file-player-card .plyr__controls {
+            z-index: 3;
         }
 
         .learning-page__file-player-card video,
@@ -24,7 +36,7 @@
 
         @media (max-width: 991px) {
             .learning-page__file-player-card {
-                height: min(52vh, 360px);
+                height: min(58vh, 420px);
             }
         }
     </style>

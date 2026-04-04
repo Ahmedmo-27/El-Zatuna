@@ -17,7 +17,7 @@
                     fs: 0,
                     disablekb: 1,
                     playsinline: 1,
-                    controls: 0
+                    controls: 1
                 }
             }
 
