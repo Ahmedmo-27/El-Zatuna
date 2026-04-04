@@ -9,15 +9,49 @@
         handleTrackSpentTime();
     });
 
+    function getCsrfToken() {
+        return window.csrfToken || $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').val() || '';
+    }
+
+    function postWithCsrf(path, data = {}, successCallback = function () {}) {
+        const payload = {
+            ...(data || {}),
+        };
+
+        if (!payload._token) {
+            payload._token = getCsrfToken();
+        }
+
+        return $.post(path, payload, successCallback);
+    }
+
+    function handleCsrfMismatch(err) {
+        if (err && err.status === 419) {
+            window.location.reload();
+            return true;
+        }
+
+        return false;
+    }
+
     function handleTrackSpentTime() {
         const path = `${courseLearningUrl}/track-time`;
+        let shouldStopTracking = false;
 
         setInterval(function () {
-            $.post(path, {}, function (result) {
+            if (shouldStopTracking) {
+                return;
+            }
+
+            postWithCsrf(path, {}, function (result) {
                 if (result && result.force_reload) {
                     window.location.reload();
                 }
-            })
+            }).fail(function (err) {
+                if (handleCsrfMismatch(err)) {
+                    shouldStopTracking = true;
+                }
+            });
         }, 10000)
     }
 
@@ -84,7 +118,7 @@
         const html = `<div class="bg-white rounded-24 p-16">
             <div class="d-flex-center flex-column text-center border-gray-200 rounded-12 py-160">
                 <div class="">
-                    <img src="/assets/default/img/loading.svg" alt="" class="img-fluid" width="80px" height="80px">
+                    <img src="/assets/design_1/img/loading.svg" alt="" class="img-fluid" width="80px" height="80px">
                 </div>
 
                 <h3 class="mt-12 font-16">${pleaseWaitLang}</h3>
@@ -112,12 +146,41 @@
         window.history.pushState({}, '', `${newPath}?${params.toString()}`);
     }
 
+    function getLearningPlyrOptions() {
+        return {
+            hideControls: true,
+            controls: [
+                'play-large',
+                'rewind',
+                'play',
+                'fast-forward',
+                'progress',
+                'current-time',
+                'duration',
+                'mute',
+                'volume',
+                'settings',
+                'fullscreen'
+            ],
+            settings: ['speed', 'quality', 'captions'],
+            youtube: {
+                rel: 0,
+                modestbranding: 1,
+                iv_load_policy: 3,
+                fs: 0,
+                disablekb: 1,
+                playsinline: 1,
+                controls: 0
+            }
+        };
+    }
+
     function handleVideoPlayer() {
         const $players = $('.js-file-player-el');
 
         if ($players.length) {
             for (const plyr of $players) {
-                const player = new Plyr(plyr);
+                const player = new Plyr(plyr, getLearningPlyrOptions());
                 
                 // Add video completion tracking
                 const $playerElement = $(plyr);
@@ -155,7 +218,7 @@
             ...extraData,
         };
 
-        $.post(path, data, function (result) {
+        postWithCsrf(path, data, function (result) {
             if (result.code === 200) {
                 $mainContent.html(result.html);
 
@@ -168,6 +231,10 @@
                 }
             }
         }).fail(err => {
+            if (handleCsrfMismatch(err)) {
+                return;
+            }
+
             showToast('error', oopsLang, somethingWentWrongLang);
         })
 
@@ -232,7 +299,7 @@
             item_id: itemId
         };
 
-        $.post(path, data, function (result) {
+        postWithCsrf(path, data, function (result) {
             if (result.code === 200 && !result.already_completed) {
                 // Mark as completed in session
                 autoCompletedItems.add(key);
@@ -263,6 +330,10 @@
                 }
             }
         }).fail(err => {
+            if (handleCsrfMismatch(err)) {
+                return;
+            }
+
             // Silently fail - this is auto-completion, don't disturb user
             console.log('Auto-complete failed:', err);
         });
@@ -318,7 +389,7 @@
         const $percentBar = $('.js-course-learning-progress-bar-percent');
         const $percentNum = $('.js-course-learning-progress-percent');
 
-        $.post(path, data, function (result) {
+        postWithCsrf(path, data, function (result) {
             showToast("success", result.title, result.msg);
 
             if (result.learning_progress_percent && $percentBar.length) {
@@ -331,6 +402,10 @@
             }
 
         }).fail(err => {
+            if (handleCsrfMismatch(err)) {
+                return;
+            }
+
             $this.prop('checked', !status);
             showToast('error', oopsLang, somethingWentWrongLang);
         });
@@ -496,11 +571,15 @@
             $this.removeClass('text-warning').addClass('text-gray-500');
         }
 
-        $.post(path, {}, function (result) {
+        postWithCsrf(path, {}, function (result) {
             if (result.code === 200) {
                 showToast('success', result.title, result.msg);
             }
-        }).fail(function () {
+        }).fail(function (err) {
+            if (handleCsrfMismatch(err)) {
+                return;
+            }
+
             showToast('error', oopsLang, somethingWentWrongLang);
         })
     });
@@ -554,7 +633,7 @@
 
         $this.addClass('loadingbar').prop('disabled', true);
 
-        $.post(path, {}, function (result) {
+        postWithCsrf(path, {}, function (result) {
             if (result.code === 200) {
                 showToast('success', result.title, result.msg);
 
@@ -562,7 +641,11 @@
                     window.location.reload();
                 }, 1000)
             }
-        }).fail(() => {
+        }).fail((err) => {
+            if (handleCsrfMismatch(err)) {
+                return;
+            }
+
             showToast('error', oopsLang, somethingWentWrongLang);
         })
     })
@@ -575,7 +658,7 @@
         loadingSwl();
         const data = {};
 
-        $.post(path, data, function (result) {
+        postWithCsrf(path, data, function (result) {
             if (result.code === 200) {
                 const html = `<div class="d-flex-center flex-column text-center my-24">
                     <h4 class="font-14">${result.title}</h4>
@@ -592,7 +675,11 @@
                     window.location.reload();
                 }, 1000)
             }
-        }).fail(() => {
+        }).fail((err) => {
+            if (handleCsrfMismatch(err)) {
+                return;
+            }
+
             showToast('error', oopsLang, somethingWentWrongLang);
         })
     })
