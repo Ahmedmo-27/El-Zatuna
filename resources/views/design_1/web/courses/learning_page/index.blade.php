@@ -43,12 +43,44 @@
             height: 100% !important;
         }
 
+        .learning-page__file-player-card .plyr,
+        .learning-page__file-player-card .plyr--video {
+            display: flex;
+            flex-direction: column;
+            --plyr-color-main: #d4da2c;
+            --plyr-video-control-color: #faffdf;
+            --plyr-video-control-background: rgba(7, 41, 35, 0.75);
+        }
+
         .learning-page__file-player-card .plyr__video-wrapper {
+            flex: 1 1 auto;
+            min-height: 0;
             background-color: #000;
         }
 
         .learning-page__file-player-card .plyr__controls {
             z-index: 12;
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+            pointer-events: auto !important;
+            background: linear-gradient(180deg, rgba(7, 41, 35, 0) 0%, rgba(7, 41, 35, 0.88) 52%) !important;
+            padding: 12px 14px !important;
+        }
+
+        .learning-page__file-player-card .plyr__progress__container,
+        .learning-page__file-player-card .plyr__time,
+        .learning-page__file-player-card .plyr__control {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            color: #faffdf;
+        }
+
+        .learning-page__file-player-card .plyr__control--overlaid {
+            border: 2px solid rgba(250, 255, 223, 0.8);
+            background: rgba(7, 41, 35, 0.62);
         }
 
         .learning-page__file-player-card video,

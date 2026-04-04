@@ -112,12 +112,41 @@
         window.history.pushState({}, '', `${newPath}?${params.toString()}`);
     }
 
+    function getLearningPlyrOptions() {
+        return {
+            hideControls: false,
+            controls: [
+                'play-large',
+                'rewind',
+                'play',
+                'fast-forward',
+                'progress',
+                'current-time',
+                'duration',
+                'mute',
+                'volume',
+                'settings',
+                'fullscreen'
+            ],
+            settings: ['speed', 'quality', 'captions'],
+            youtube: {
+                rel: 0,
+                modestbranding: 1,
+                iv_load_policy: 3,
+                fs: 0,
+                disablekb: 1,
+                playsinline: 1,
+                controls: 0
+            }
+        };
+    }
+
     function handleVideoPlayer() {
         const $players = $('.js-file-player-el');
 
         if ($players.length) {
             for (const plyr of $players) {
-                const player = new Plyr(plyr);
+                const player = new Plyr(plyr, getLearningPlyrOptions());
                 
                 // Add video completion tracking
                 const $playerElement = $(plyr);

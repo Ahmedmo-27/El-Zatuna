@@ -7,7 +7,7 @@
         <div class="learning-page__file-player-card mb-16 bg-gray-400">
             <div class="js-file-player-el plyr__video-embed w-100 h-100" id="fileVideo{{ $file->id }}">
                 <iframe
-                    src="{{ $file->file }}?origin={{ url('/') }}&amp;iv_load_policy=0&amp;modestbranding=0&amp;playsinline=0&amp;showinfo=0&amp;rel=0&amp;enablejsapi=0"
+                    src="{{ $file->file }}?origin={{ url('/') }}&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=0&amp;controls=0"
                     allowfullscreen
                     allowtransparency
                     allow="autoplay"
