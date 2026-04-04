@@ -75,7 +75,9 @@
             html = '<iframe src="' + path + '" class="img-cover bg-gray-200" frameborder="0" allowfullscreen="true" ></iframe>';
         } else {
             const sourceType = mimeType || 'video/mp4';
-            html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="100%" data-poster="${thumbnail ?? ''}">
+            const resolvedHeight = (height === null || height === undefined || height === '') ? '100%' : height;
+
+            html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${resolvedHeight}" data-poster="${thumbnail ?? ''}">
                 <source src="${path}" type="${sourceType}"/>
             </video>`;
         }
