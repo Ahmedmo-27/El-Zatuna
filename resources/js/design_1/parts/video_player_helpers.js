@@ -37,7 +37,7 @@
         if (storage === 'youtube') {
             html = `<div class="plyr__video-embed w-100 h-100" id="${tagId}" data-poster="${thumbnail ?? ''}">
               <iframe
-                                src="${path}?origin=${siteDomain}&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=0&amp;controls=0"
+                src="${path}?origin=${siteDomain}&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=0&amp;controls=0"
                 allowfullscreen
                 allowtransparency
                 allow="autoplay"
@@ -75,7 +75,9 @@
             html = '<iframe src="' + path + '" class="img-cover bg-gray-200" frameborder="0" allowfullscreen="true" ></iframe>';
         } else {
             const sourceType = mimeType || 'video/mp4';
-            html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${height}" data-poster="${thumbnail ?? ''}">
+            const resolvedHeight = (height === null || height === undefined || height === '') ? '100%' : height;
+
+            html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${resolvedHeight}" data-poster="${thumbnail ?? ''}">
                 <source src="${path}" type="${sourceType}"/>
             </video>`;
         }
@@ -90,8 +92,6 @@
 
         closeVideoPlayer();
 
-        const height = $(window).width() > 991 ? 426 : 264;
-
         $.post('/course/getFilePath', {file_id: fileId}, function (result) {
 
             if (result && result.code === 200) {
@@ -99,7 +99,7 @@
 
                 const videoTagId = 'videoPlayer' + fileId;
 
-                const {html, options} = makeVideoPlayerHtml(result.path, storage, height, videoTagId, undefined, result.mime_type);
+                const {html, options} = makeVideoPlayerHtml(result.path, storage, '100%', videoTagId, undefined, result.mime_type);
 
                 if ($contentEl) {
                     $contentEl.html(html);

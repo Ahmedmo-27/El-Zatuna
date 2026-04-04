@@ -99,7 +99,7 @@
         @else
             {{-- Local upload videos can use direct path --}}
             <div class="learning-page__file-player-card mb-16 bg-gray-400">
-                <video id="fileVideo{{ $file->id }}" class="js-file-player-el plyr-io-video" controls preload="auto" width="100%" height="426" data-poster="{{ $course->getImageCover() }}">
+                <video id="fileVideo{{ $file->id }}" class="js-file-player-el plyr-io-video" controls preload="auto" width="100%" height="100%" data-poster="{{ $course->getImageCover() }}">
                     <source src="{{ $file->file }}" type="video/mp4"/>
                 </video>
             </div>
