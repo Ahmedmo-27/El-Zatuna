@@ -101,14 +101,12 @@ jobs:
           script: |
             set -euo pipefail
             cd /var/www/elzatuna
-            git pull origin main
+            # Generated assets can differ per server build and block git pull.
+            git restore --worktree --staged -- public/assets/design_1/js/parts/learning_page.min.js public/assets/design_1/js/parts/learning_page_noticeboards.min.js public/assets/design_1/js/parts/video_player_helpers.min.js || true
+            git pull --ff-only origin main
             composer install --no-dev --optimize-autoloader --no-interaction
             php artisan migrate --force
             php artisan l5-swagger:generate
             php artisan optimize
-            if command -v npm >/dev/null 2>&1; then
-              npm ci
-              npm run prod
-            fi
             # Workers exit gracefully after current job; systemd Restart=always starts fresh processes (see DEPLOY_DROPLET_GUIDE worker unit).
             php artisan queue:restart
