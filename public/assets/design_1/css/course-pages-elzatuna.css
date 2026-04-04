@@ -155,16 +155,22 @@
   position: relative;
 }
 
-/* Reserve full card area for poster / Plyr before video metadata loads */
-.learning-page__file-player-card.js-learning-file-video-player-box,
+/*
+ * Poster layer: only the inner wrapper (R2, etc.) fills the card.
+ * Do not set height:100% on .learning-page__file-player-card.js-learning-file-video-player-box
+ * (secure_host) or the card loses its min(vh) height from the learning page inline styles.
+ */
 .learning-page__file-player-card .js-learning-file-video-player-box {
   width: 100%;
   height: 100%;
   position: relative;
   overflow: hidden;
+  border-radius: inherit;
 }
 
-.learning-page__file-player-card .js-learning-file-video-player-box > img.img-cover {
+/* Poster image: nested wrapper (R2) OR card is the box (secure_host) */
+.learning-page__file-player-card .js-learning-file-video-player-box > img.img-cover,
+.learning-page__file-player-card.js-learning-file-video-player-box > img.img-cover {
   position: absolute;
   left: 0;
   top: 0;
@@ -172,6 +178,7 @@
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  border-radius: inherit;
 }
 
 .learning-page__file-player-card .file-player-button {

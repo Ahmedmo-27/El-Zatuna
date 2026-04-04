@@ -29,7 +29,7 @@
         </div>
     @elseif($file->storage == 'secure_host')
         <div class="learning-page__file-player-card js-learning-file-video-player-box mb-16 bg-gray-400" data-id="{{ $file->id }}">
-            <img src="{{ $course->getImageCover() }}" class="img-cover rounded-12" alt="{{ $course->title }}"/>
+            <img src="{{ $course->getImageCover() }}" class="img-cover" alt="{{ $course->title }}"/>
 
             <div class="file-player-button js-learning-file-video-player-btn d-flex-center rounded-circle size-92 cursor-pointer" data-id="{{ $file->id }}">
                 <x-iconsax-bol-play class="icons text-white" width="32px" height="32px"/>
@@ -90,7 +90,7 @@
             {{-- R2 videos use JavaScript to get proxied URL --}}
             <div class="learning-page__file-player-card mb-16 bg-gray-400">
                 <div class="js-learning-file-video-player-box" data-id="{{ $file->id }}">
-                    <img src="{{ $course->getImageCover() }}" class="img-cover rounded-12" alt="{{ $course->title }}"/>
+                    <img src="{{ $course->getImageCover() }}" class="img-cover" alt="{{ $course->title }}"/>
                     <div class="file-player-button js-learning-file-video-player-btn d-flex-center rounded-circle size-92 cursor-pointer" data-id="{{ $file->id }}">
                         <x-iconsax-bol-play class="icons text-white" width="32px" height="32px"/>
                     </div>

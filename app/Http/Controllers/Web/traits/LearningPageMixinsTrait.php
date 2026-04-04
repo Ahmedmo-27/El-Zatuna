@@ -51,22 +51,31 @@ trait LearningPageMixinsTrait
 
         $course = $query->first();
 
-        if (!empty($course) and ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder()))) {
-            $isPrivate = $course->private;
-            $hasBought = $course->checkUserHasBought($user);
-
-            if (!empty($user) and ($user->id == $course->creator_id or $user->organ_id == $course->creator_id or $user->isAdmin() or $hasBought)) {
-                $isPrivate = false;
-            }
-
-            if ($isPrivate) {
-                return 'not_access';
-            }
-
-            return $course;
+        if (empty($course)) {
+            return 'not_access';
         }
 
-        return 'not_access';
+        // Must match LearningPageController@index + WebinarController::course access so APIs (track-time, etc.)
+        // work for anyone who can open the learning page (including free first section / preview users).
+        $hasBought = $course->checkUserHasBought($user, true, true);
+        $hasInstallment = !empty($course->getInstallmentOrder());
+        $canAccessFirstSectionFree = !$hasBought && !$hasInstallment && !empty($user) && $course->chapters && $course->chapters->count() > 0;
+
+        if (!$hasBought && !$hasInstallment && !$canAccessFirstSectionFree) {
+            return 'not_access';
+        }
+
+        $isPrivate = $course->private;
+
+        if (!empty($user) and ($user->id == $course->creator_id or $user->organ_id == $course->creator_id or $user->isAdmin() or $hasBought)) {
+            $isPrivate = false;
+        }
+
+        if ($isPrivate) {
+            return 'not_access';
+        }
+
+        return $course;
     }
 
     private function handleStartTrackingTime($courseId, $userId)
