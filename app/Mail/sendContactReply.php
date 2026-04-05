@@ -36,7 +36,7 @@ class sendContactReply extends Mailable
             $generalSettings = getGeneralSettings();
 
             return $this->subject($contact->subject)
-                ->from(!empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
+                ->from(getMailSenderAddress(), getMailSenderName())
                 ->view('design_1.web.emails.contact', [
                     'contact' => $contact,
                     'generalSettings' => $generalSettings

@@ -35,7 +35,7 @@ class SendNotifications extends Mailable
             $generalSettings = getGeneralSettings();
 
             return $this->subject($notification['title'])
-                ->from(!empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'))
+                ->from(getMailSenderAddress(), getMailSenderName())
                 ->cc(!empty($notification['cc']) ? $notification['cc'] : [])
                 ->view('design_1.web.emails.notification', [
                     'notification' => $notification,

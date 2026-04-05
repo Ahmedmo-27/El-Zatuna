@@ -122,8 +122,8 @@ class ForgotPasswordController extends Controller
             'email' => $email
         ];
 
-        $senderEmail = !empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS');
-        $senderName = !empty($generalSettings['site_name']) ? $generalSettings['site_name'] : env('MAIL_FROM_NAME');
+        $senderEmail = getMailSenderAddress();
+        $senderName = getMailSenderName();
 
         try {
             Mail::send('design_1.web.emails.password_verify', $emailData, function ($message) use ($email, $senderEmail, $senderName) {

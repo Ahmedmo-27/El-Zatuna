@@ -2551,3 +2551,39 @@ function getDefaultAvatarPath(?\App\User $user = null, int $size = 40)
 
     return $avatarUrl;
 }
+
+/**
+ * From-address for outbound mail. Always returns a non-empty string so Symfony Mime never receives null
+ * (e.g. when admin "site email" is empty and MAIL_FROM_ADDRESS is missing on the server).
+ */
+function getMailSenderAddress(): string
+{
+    $fromSettings = trim((string) (getGeneralSettings('site_email') ?? ''));
+    if ($fromSettings !== '' && filter_var($fromSettings, FILTER_VALIDATE_EMAIL)) {
+        return $fromSettings;
+    }
+
+    $fromConfig = config('mail.from.address');
+    if (is_string($fromConfig) && $fromConfig !== '' && filter_var($fromConfig, FILTER_VALIDATE_EMAIL)) {
+        return $fromConfig;
+    }
+
+    $host = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+    return $host ? ('noreply@' . $host) : 'hello@example.com';
+}
+
+function getMailSenderName(): string
+{
+    $name = trim((string) (getGeneralSettings('site_name') ?? ''));
+    if ($name !== '') {
+        return $name;
+    }
+
+    $fromConfig = config('mail.from.name');
+    if (is_string($fromConfig) && $fromConfig !== '') {
+        return $fromConfig;
+    }
+
+    return (string) (config('app.name') ?: 'App');
+}
