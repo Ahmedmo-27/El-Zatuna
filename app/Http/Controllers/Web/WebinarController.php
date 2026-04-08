@@ -469,6 +469,10 @@ class WebinarController extends Controller
                         return redirect($file->file);
                     }
 
+                    if ($file->storage === 'r2') {
+                        return $this->downloadR2File($file);
+                    }
+
                     $filePath = public_path($file->file);
 
                     if (file_exists($filePath)) {
@@ -493,6 +497,70 @@ class WebinarController extends Controller
                     return back()->with(['toast' => $toastData]);
                 }
             }
+        }
+
+        return back();
+    }
+
+    /**
+     * Stream downloadable files from private R2 storage.
+     */
+    private function downloadR2File(File $file)
+    {
+        try {
+            $r2Path = $this->extractR2Path($file->file);
+
+            if (empty($r2Path)) {
+                \Log::warning('R2 download: invalid file path', [
+                    'file_id' => $file->id,
+                    'file_field' => $file->file,
+                ]);
+
+                return back();
+            }
+
+            $r2Disk = Storage::disk('r2');
+
+            if (!$r2Disk->exists($r2Path)) {
+                \Log::warning('R2 download: file not found', [
+                    'file_id' => $file->id,
+                    'r2_path' => $r2Path,
+                ]);
+
+                return back();
+            }
+
+            $stream = $r2Disk->readStream($r2Path);
+
+            if ($stream === false) {
+                \Log::warning('R2 download: failed to open stream', [
+                    'file_id' => $file->id,
+                    'r2_path' => $r2Path,
+                ]);
+
+                return back();
+            }
+
+            $extension = pathinfo($r2Path, PATHINFO_EXTENSION) ?: $file->file_type;
+            $fileName = str_replace(' ', '-', $file->title);
+            $fileName = str_replace('.', '-', $fileName);
+            $fileName .= '.' . $extension;
+            $mimeType = $r2Disk->mimeType($r2Path) ?: 'application/octet-stream';
+
+            return response()->streamDownload(function () use ($stream) {
+                fpassthru($stream);
+
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }, $fileName, [
+                'Content-Type' => $mimeType,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('R2 download error', [
+                'file_id' => $file->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return back();
