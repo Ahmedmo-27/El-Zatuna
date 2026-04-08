@@ -106,6 +106,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
             composer install --no-dev --optimize-autoloader --no-interaction
+            php artisan optimize:clear
             php artisan migrate --force
             php artisan l5-swagger:generate
             php artisan optimize
