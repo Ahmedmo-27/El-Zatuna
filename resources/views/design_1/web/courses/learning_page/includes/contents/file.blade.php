@@ -3,6 +3,14 @@
         <div class="learning-page__file-player-card mb-16">
             <iframe src="/ViewerJS/index.html#{{ $filePath }}" class="file-online-viewer rounded-sm {{ $file->downloadable ? 'has-download-card' : '' }} " frameborder="0" allowfullscreen></iframe>
         </div>
+
+        @if($file->downloadable and !$file->isVideo())
+            <div class="d-flex justify-content-center mb-16">
+                <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download" class="btn btn-primary btn-lg" target="_blank">
+                    {{ trans('home.download') }}
+                </a>
+            </div>
+        @endif
     @elseif($file->storage == 'youtube')
         <div class="learning-page__file-player-card mb-16 bg-gray-400">
             <div class="js-file-player-el plyr__video-embed w-100 h-100" id="fileVideo{{ $file->id }}">
