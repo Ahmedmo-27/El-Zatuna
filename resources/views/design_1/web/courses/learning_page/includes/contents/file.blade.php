@@ -1,10 +1,14 @@
+@php
+    $canShowDownloadButton = !$file->isVideo() && ($file->downloadable || ($file->storage === 'r2' && $file->file_type === 'pdf'));
+@endphp
+
 <div class="bg-white rounded-24 p-16">
     @if($file->online_viewer)
         <div class="learning-page__file-player-card mb-16">
-            <iframe src="/ViewerJS/index.html#{{ $filePath }}" class="file-online-viewer rounded-sm {{ $file->downloadable ? 'has-download-card' : '' }} " frameborder="0" allowfullscreen></iframe>
+            <iframe src="/ViewerJS/index.html#{{ $filePath }}" class="file-online-viewer rounded-sm {{ $canShowDownloadButton ? 'has-download-card' : '' }} " frameborder="0" allowfullscreen></iframe>
         </div>
 
-        @if($file->downloadable and !$file->isVideo())
+        @if($canShowDownloadButton)
             <div class="d-flex justify-content-center mb-16">
                 <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download" class="btn btn-primary btn-lg" target="_blank">
                     {{ trans('home.download') }}
@@ -58,7 +62,7 @@
 
             <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/showHtml" class="btn btn-primary btn-lg mt-24" target="_blank">{{ trans('update.show_html_file') }}</a>
         </div>
-    @elseif($file->downloadable and !$file->isVideo())
+    @elseif($canShowDownloadButton)
         <div class="d-flex-center flex-column text-center border-gray-200 rounded-12 py-160 px-48 mb-16">
             <div class="">
                 <img src="/assets/design_1/img/courses/learning_page/file_downloadable.svg" alt="" class="img-fluid" width="285px" height="212px">

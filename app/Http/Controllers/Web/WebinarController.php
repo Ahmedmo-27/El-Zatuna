@@ -457,7 +457,7 @@ class WebinarController extends Controller
                 ->where('id', $file_id)
                 ->first();
 
-            if (!empty($file) and $file->downloadable) {
+            if (!empty($file) and ($file->downloadable || ($file->storage === 'r2' && $file->file_type === 'pdf'))) {
                 $canAccess = true;
 
                 if ($file->accessibility == 'paid') {
