@@ -65,8 +65,14 @@
         </div>
     </div>
 
+    @php
+        $showFileDownloadAction = $itemType == "file" && !$item->isVideo() && (
+            $item->downloadable || ($item->storage === 'r2' && $item->file_type === 'pdf')
+        );
+    @endphp
+
     <div class="d-flex align-items-center gap-16">
-        @if($itemType == "file" and $item->downloadable)
+        @if($showFileDownloadAction)
             <a href="{{ $course->getUrl() }}/file/{{ $item->id }}/download" class="d-flex-center size-48 rounded-circle bg-white" data-tippy-content="{{ trans('home.download') }}">
                 <x-iconsax-lin-import-2 class="icons text-gray-500" width="24px" height="24px"/>
             </a>
