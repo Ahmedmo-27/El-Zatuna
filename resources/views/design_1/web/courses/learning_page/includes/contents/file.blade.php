@@ -62,41 +62,6 @@
 
             <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/showHtml" class="btn btn-primary btn-lg mt-24" target="_blank">{{ trans('update.show_html_file') }}</a>
         </div>
-    @elseif($canShowDownloadButton)
-        <div class="d-flex-center flex-column text-center border-gray-200 rounded-12 py-160 px-48 mb-16">
-            <div class="">
-                <img src="/assets/design_1/img/courses/learning_page/file_downloadable.svg" alt="" class="img-fluid" width="285px" height="212px">
-            </div>
-            <h4 class="font-16 mt-12">{{ trans('update.download_the_file') }}</h4>
-            <div class="mt-8 font-12 text-gray-500">{{ trans('update.you_can_download_the_file_from_the_following_link') }}</div>
-
-            <div class="d-flex align-items-center gap-40 mt-16 ">
-                <div class="d-flex align-items-center text-left">
-                    <div class="d-flex-center size-40 rounded-circle bg-gray-100">
-                        <x-iconsax-lin-document-1 class="icons text-gray-500" width="20px" height="20px"/>
-                    </div>
-                    <div class="ml-8">
-                        <span class="d-block font-12 text-gray-400">{{ trans('public.file_type') }}</span>
-                        <span class="d-block font-14 text-gray-500 font-weight-bold mt-2">{{ trans("update.file_type_{$file->file_type}") }}</span>
-                    </div>
-                </div>
-
-                @if($file->volume > 0)
-                    <div class="d-flex align-items-center text-left">
-                        <div class="d-flex-center size-40 rounded-circle bg-gray-100">
-                            <x-iconsax-lin-ram class="icons text-gray-500" width="20px" height="20px"/>
-                        </div>
-                        <div class="ml-8">
-                            <span class="d-block font-12 text-gray-400">{{ trans('public.volume') }}</span>
-                            <span class="d-block font-14 text-gray-500 font-weight-bold mt-2">{{ $file->getVolume() }}</span>
-                        </div>
-                    </div>
-                @endif
-
-            </div>
-
-            <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download" class="btn btn-primary btn-lg mt-24" target="_blank">{{ trans('home.download') }}</a>
-        </div>
     @elseif($file->isVideo())
         @if($file->storage == 'r2')
             {{-- R2 videos use JavaScript to get proxied URL --}}
