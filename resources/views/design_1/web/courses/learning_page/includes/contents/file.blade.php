@@ -1,5 +1,5 @@
 @php
-    $canShowDownloadButton = !$file->isVideo() && ($file->downloadable || ($file->storage === 'r2' && $file->file_type === 'pdf'));
+    $canShowDownloadButton = !$file->isVideo() && ($file->downloadable || strtolower((string)$file->file_type) === 'pdf');
 @endphp
 
 <div class="bg-white rounded-24 p-16">

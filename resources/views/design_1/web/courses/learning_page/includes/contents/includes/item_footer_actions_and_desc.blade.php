@@ -67,7 +67,7 @@
 
     @php
         $showFileDownloadAction = $itemType == "file" && !$item->isVideo() && (
-            $item->downloadable || ($item->storage === 'r2' && $item->file_type === 'pdf')
+            $item->downloadable || strtolower((string)$item->file_type) === 'pdf'
         );
     @endphp
 
