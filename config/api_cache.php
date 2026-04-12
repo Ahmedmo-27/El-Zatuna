@@ -24,6 +24,9 @@ return [
         'featured_courses' => (int) env('API_CACHE_FEATURED_COURSES_TTL', 120),
         'config_list' => (int) env('API_CACHE_CONFIG_LIST_TTL', 300),
         'config_register' => (int) env('API_CACHE_CONFIG_REGISTER_TTL', 300),
+        'categories_index' => (int) env('API_CACHE_CATEGORIES_INDEX_TTL', 180),
+        'categories_trend' => (int) env('API_CACHE_CATEGORIES_TREND_TTL', 180),
+        'categories_webinars' => (int) env('API_CACHE_CATEGORIES_WEBINARS_TTL', 120),
     ],
 
 ];
