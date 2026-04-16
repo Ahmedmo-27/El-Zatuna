@@ -95,6 +95,8 @@ class ClassesController extends Controller
         $filterOptions = $request->get('filter_option', []);
         $moreOptions = $request->get('moreOptions', []);
         $instructor = $request->get('instructor', null);
+        $minPrice = $request->filled('min_price') ? (float)$request->get('min_price') : null;
+        $maxPrice = $request->filled('max_price') ? (float)$request->get('max_price') : null;
 
         $query->whereHas('teacher', function ($query) {
             $query->where('status', 'active')
@@ -157,6 +159,22 @@ class ClassesController extends Controller
                 $qu->whereNull('price')
                     ->orWhere('price', '0');
             });
+        }
+
+        if (!is_null($minPrice) || !is_null($maxPrice)) {
+            $qualifiedPriceColumn = "{$this->tableName}.price";
+
+            if (!is_null($minPrice) && !is_null($maxPrice) && $minPrice > $maxPrice) {
+                [$minPrice, $maxPrice] = [$maxPrice, $minPrice];
+            }
+
+            if (!is_null($minPrice)) {
+                $query->whereRaw("COALESCE({$qualifiedPriceColumn}, 0) >= ?", [$minPrice]);
+            }
+
+            if (!is_null($maxPrice)) {
+                $query->whereRaw("COALESCE({$qualifiedPriceColumn}, 0) <= ?", [$maxPrice]);
+            }
         }
 
         if (!empty($withDiscount) and $withDiscount == 'on') {
