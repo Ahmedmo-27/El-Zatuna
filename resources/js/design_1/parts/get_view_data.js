@@ -89,9 +89,62 @@
         $(`.js-not-${value}-th`).addClass('d-none');
     }
 
+    function parseFilterDate(value) {
+        if (!value || typeof moment === 'undefined') {
+            return null;
+        }
+
+        const formats = [
+            'YYYY/MM/DD',
+            'YYYY-MM-DD',
+            'YYYY/MM/DD HH:mm',
+            'YYYY-MM-DD HH:mm'
+        ];
+
+        let date = moment(value, formats, true);
+
+        if (!date.isValid()) {
+            date = moment(value);
+        }
+
+        return date.isValid() ? date : null;
+    }
+
+    function validateDateRange($form) {
+        if (!$form.length || !$form.hasClass('js-validate-date-range')) {
+            return true;
+        }
+
+        const fromValue = ($form.find('[name="from"]').first().val() ?? '').trim();
+        const toValue = ($form.find('[name="to"]').first().val() ?? '').trim();
+
+        if (!fromValue || !toValue) {
+            return true;
+        }
+
+        const fromDate = parseFilterDate(fromValue);
+        const toDate = parseFilterDate(toValue);
+
+        if (!fromDate || !toDate) {
+            return true;
+        }
+
+        if (fromDate.isAfter(toDate)) {
+            const errorMessage = window.endDateMustBeAfterStartDateLang || 'End date must be after start date.';
+            showToast('error', oopsLang, errorMessage);
+            return false;
+        }
+
+        return true;
+    }
+
     function handleRequestByFormInputOrBtn($this, $container) {
 
         const $form = $this.closest('form');
+
+        if (!validateDateRange($form)) {
+            return;
+        }
 
         const data = $form.serializeObject();
 
