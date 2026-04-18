@@ -1,6 +1,5 @@
 <?php
 
-use App\Mixins\Financial\MultiCurrency;
 use Illuminate\Support\Facades\Route;
 
 Route::group([], function () {
@@ -97,19 +96,9 @@ Route::group([], function () {
 
     //get Countries Mobile Code
     Route::group(['prefix' => 'regions'], function () {
-        Route::get('/countries/code', function (){
-            return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),
-                getCountriesMobileCode()
-            );
-        });
+        Route::get('/countries/code', ['uses' => 'RegionsController@countriesMobileCode']);
     });
-    Route::get('/currency/list', function (){
-        $multiCurrency = new MultiCurrency();
-        $currencies = $multiCurrency->getCurrencies();
-        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),
-            $currencies
-        );
-    });
+    Route::get('/currency/list', ['uses' => 'CurrencyController@list']);
     Route::post('/notification/new', function (){
         $title = request("title");
         $body = request("message");

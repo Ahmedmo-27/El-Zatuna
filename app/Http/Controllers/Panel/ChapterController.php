@@ -12,6 +12,7 @@ use App\Models\Webinar;
 use App\Models\WebinarAssignment;
 use App\Models\WebinarChapter;
 use App\Models\WebinarChapterItem;
+use App\Services\R2StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -369,9 +370,28 @@ class ChapterController extends Controller
         }
 
         if (!empty($item)) {
-            $item->update([
-                'chapter_id' => !empty($data['chapter_id']) ? $data['chapter_id'] : null
-            ]);
+            $payload = [
+                'chapter_id' => !empty($data['chapter_id']) ? $data['chapter_id'] : null,
+            ];
+
+            if ($item instanceof File
+                && $data['item_type'] === WebinarChapterItem::$chapterFile
+                && $item->storage === 'r2'
+                && !empty($data['chapter_id'])
+                && (int) $data['chapter_id'] !== (int) $item->chapter_id
+                && !empty($item->file)
+            ) {
+                $moveResult = (new R2StorageService())->moveCourseFileToSection(
+                    $item->file,
+                    (int) $webinar->id,
+                    (int) $data['chapter_id']
+                );
+                if (!empty($moveResult['status']) && !empty($moveResult['path'])) {
+                    $payload['file'] = $moveResult['path'];
+                }
+            }
+
+            $item->update($payload);
 
             WebinarChapterItem::where('item_id', $item->id)
                 ->where('type', $data['item_type'])

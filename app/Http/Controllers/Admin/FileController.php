@@ -459,6 +459,22 @@ class FileController extends Controller
             $changeChapter = ($data['chapter_id'] != $file->chapter_id);
             $oldChapterId = $file->chapter_id;
 
+            if ($changeChapter
+                && ($data['storage'] ?? '') === 'r2'
+                && empty($request->file('s3_file'))
+                && !empty($data['file_path'])
+                && !empty($data['chapter_id'])
+            ) {
+                $moveResult = (new R2StorageService())->moveCourseFileToSection(
+                    $data['file_path'],
+                    (int) $webinar->id,
+                    (int) $data['chapter_id']
+                );
+                if (!empty($moveResult['status']) && !empty($moveResult['path'])) {
+                    $data['file_path'] = $moveResult['path'];
+                }
+            }
+
             $file->update([
                 'chapter_id' => $data['chapter_id'],
                 'file' => $data['file_path'],

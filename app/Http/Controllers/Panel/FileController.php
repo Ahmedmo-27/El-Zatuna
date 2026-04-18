@@ -742,6 +742,23 @@ class FileController extends Controller
 
                 $changeChapter = ($data['chapter_id'] != $file->chapter_id);
                 $oldChapterId = $file->chapter_id;
+
+                if ($changeChapter
+                    && ($data['storage'] ?? '') === 'r2'
+                    && empty($fileUpload)
+                    && !empty($data['file_url'])
+                    && !empty($data['chapter_id'])
+                ) {
+                    $r2Service = new R2StorageService();
+                    $moveResult = $r2Service->moveCourseFileToSection(
+                        $data['file_url'],
+                        (int) $webinar->id,
+                        (int) $data['chapter_id']
+                    );
+                    if (!empty($moveResult['status']) && !empty($moveResult['path'])) {
+                        $data['file_url'] = $moveResult['path'];
+                    }
+                }
                 
                 // If storage type changed and old file exists, delete it
                 $oldStorage = $file->storage;

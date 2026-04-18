@@ -280,6 +280,7 @@ return [
 'scorm_settings' => 'SCORM Settings',
 'choose_file' => 'Choose File',
 'section_has_video_hint' => 'This section already has a video. You can replace it below or edit other fields and save.',
+'content_change_section_hint' => 'Pick another section to move this item, then save. It will show under that section in the outline (you can also use the section icon on the item row).',
 'replace_video' => 'Replace',
 'replace_video_optional' => 'Replace video (optional)',
 'choose_zip_file' => 'Choose ZIP File',

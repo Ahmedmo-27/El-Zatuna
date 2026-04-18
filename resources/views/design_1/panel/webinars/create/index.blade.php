@@ -71,6 +71,8 @@
 @push('scripts_bottom')
     <script>
         var saveSuccessLang = '{{ trans('webinars.success_store') }}';
+        var webinarFileTypeRequiredLang = @json(trans('webinars.file_type_required_before_save'));
+        var webinarFileTypeLabelLang = @json(trans('webinars.file_type'));
         var zoomJwtTokenInvalid = '{{ trans('webinars.zoom_jwt_token_invalid') }}';
         var hasZoomApiToken = '{{ (!empty($authUser->zoomApi) and !empty($authUser->zoomApi->api_key) and !empty($authUser->zoomApi->api_secret)) ? 'true' : 'false' }}';
         var editChapterLang = '{{ trans('public.edit_chapter') }}';
