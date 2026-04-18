@@ -606,6 +606,10 @@
                                 if ($fileInput.length) {
                                     // Basic click handler
                                     $zone.on('click', function(e) {
+                                        if ($zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked')) {
+                                            e.preventDefault();
+                                            return;
+                                        }
                                         if (e.target === $zone[0] || $(e.target).closest('.js-drag-drop-content').length) {
                                             e.preventDefault();
                                             $fileInput.trigger('click');
@@ -616,6 +620,9 @@
                                     $zone.on('dragover', function(e) {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        if ($zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked')) {
+                                            return;
+                                        }
                                         $zone.addClass('drag-over');
                                         $zone.find('.js-drag-drop-overlay').removeClass('d-none');
                                     });
@@ -634,6 +641,10 @@
                                         e.stopPropagation();
                                         $zone.removeClass('drag-over');
                                         $zone.find('.js-drag-drop-overlay').addClass('d-none');
+
+                                        if ($zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked')) {
+                                            return;
+                                        }
                                         
                                         const files = e.originalEvent.dataTransfer?.files;
                                         if (files && files.length > 0) {
@@ -835,6 +846,52 @@
             return false;
         }
         return true;
+    }
+
+    function syncFileUploadInteractionLock($form) {
+        const $card = $form.find('.js-file-upload-input').first();
+        if (!$card.length || $card.hasClass('d-none')) {
+            return;
+        }
+        const needsFileTypeFirst = courseFileFormShowsFileTypeField($form);
+        const hasFileType = (($form.find('.js-ajax-file_type').val() || '').trim().length > 0);
+        const locked = needsFileTypeFirst && !hasFileType;
+        const $fileInput = $card.find('.js-ajax-upload-file-input');
+        const $zone = $card.find('.js-file-drag-drop-zone');
+        const lockHint = (typeof webinarFileTypeRequiredLang !== 'undefined' && webinarFileTypeRequiredLang)
+            ? webinarFileTypeRequiredLang
+            : 'Please select a file type first.';
+
+        if (locked) {
+            $card.addClass('js-file-upload-locked');
+            if ($fileInput.length) {
+                if ($fileInput[0].files && $fileInput[0].files.length > 0) {
+                    $fileInput.val('');
+                    $card.find('.js-selected-file-display').addClass('d-none');
+                    $card.find('.js-selected-file-name').text('');
+                    $card.find('.js-selected-file-size').text('');
+                    const $customLabel = $fileInput.closest('.custom-file').find('.custom-file-label');
+                    if ($customLabel.length) {
+                        const def = $customLabel.data('default-label');
+                        $customLabel.text(def && String(def).length ? def : 'Browse');
+                    }
+                }
+                $fileInput.prop('disabled', true);
+            }
+            if ($zone.length) {
+                $zone.attr({ tabindex: '-1', 'aria-disabled': 'true', title: lockHint });
+            }
+        } else {
+            $card.removeClass('js-file-upload-locked');
+            if ($fileInput.length) {
+                $fileInput.prop('disabled', false);
+            }
+            if ($zone.length) {
+                $zone.attr('tabindex', '0');
+                $zone.removeAttr('aria-disabled');
+                $zone.removeAttr('title');
+            }
+        }
     }
 
     function validateCourseFileTypeSelected($form) {
@@ -1249,6 +1306,7 @@
             $fileUrlInputCard.find('input').attr('placeholder', filePathPlaceHolderBySource[source]);
         }
 
+        syncFileUploadInteractionLock($form);
     }
 
     function handleSecureHostUploadType($form, value, isOnChangeByUser = false) {
@@ -1279,6 +1337,8 @@
             $fileUrlInputCard.addClass('d-none')
             $fileUploadInputCard.removeClass('d-none')
         }
+
+        syncFileUploadInteractionLock($form);
     }
 
     $('body').on('change', '.js-file-storage', function (e) {

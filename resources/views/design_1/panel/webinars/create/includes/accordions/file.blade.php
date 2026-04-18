@@ -252,7 +252,7 @@
                                aria-label="{{ trans('update.choose_file') }}"
                                aria-describedby="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}">
                         <span class="custom-file-text">{{ $hasExistingFile ? getFileNameByPath($file->file) : '' }}</span>
-                        <label class="custom-file-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('update.browse') }}</label>
+                        <label class="custom-file-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}" data-default-label="{{ e(trans('update.browse')) }}">{{ trans('update.browse') }}</label>
                     </div>
 
                     <div id="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}" class="font-12 text-gray-500 mt-8">
@@ -428,6 +428,18 @@
         .file-drag-drop-zone:focus-visible {
             outline: 3px solid #007bff;
             outline-offset: 2px;
+        }
+
+        .js-file-upload-locked .js-file-drag-drop-zone {
+            pointer-events: none;
+            cursor: not-allowed;
+            opacity: 0.55;
+            background-color: #e9ecef !important;
+            border-color: #ced4da !important;
+        }
+
+        .js-file-upload-locked .js-file-drag-drop-zone:hover {
+            border-color: #ced4da !important;
         }
         
         /* Screen reader only text */
