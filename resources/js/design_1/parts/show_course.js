@@ -132,17 +132,52 @@
         const $this = $(this);
         const $icons = $this.find('.icons');
         const href = $this.attr('href');
+        const wasFavorite = $this.hasClass('text-danger');
 
-        if ($this.hasClass('text-danger')) {
-            $this.removeClass('text-danger').addClass('text-gray-500');
-            $icons.removeClass('text-danger').addClass('text-gray-500');
-        } else {
-            $this.removeClass('text-gray-500').addClass('text-danger');
-            $icons.removeClass('text-gray-500').addClass('text-danger');
+        if (!href || href === '/login') {
+            window.location.href = '/login';
+            return;
         }
 
-        $.get(href, function (result) {
+        const setFavoriteState = function (isFavorite) {
+            if (isFavorite) {
+                $this.removeClass('text-gray-500').addClass('text-danger');
+                $icons.removeClass('text-gray-500').addClass('text-danger');
+            } else {
+                $this.removeClass('text-danger').addClass('text-gray-500');
+                $icons.removeClass('text-danger').addClass('text-gray-500');
+            }
+        };
 
+        // Optimistic UI update and rollback on request failure.
+        setFavoriteState(!wasFavorite);
+
+        $.get(href, function (result) {
+            const isFavorite = (result && typeof result.is_favorite !== 'undefined')
+                ? !!result.is_favorite
+                : !wasFavorite;
+
+            setFavoriteState(isFavorite);
+
+            const title = (result && result.title)
+                ? result.title
+                : (typeof requestSuccessLang !== 'undefined' ? requestSuccessLang : 'Success');
+
+            const msg = (result && result.msg)
+                ? result.msg
+                : (isFavorite ? 'Course added to your favorites.' : 'Course removed from your favorites.');
+
+            if (typeof showToast === 'function') {
+                showToast('success', title, msg);
+            }
+        }).fail(function () {
+            setFavoriteState(wasFavorite);
+
+            if (typeof showToast === 'function') {
+                const title = (typeof oopsLang !== 'undefined') ? oopsLang : 'Error';
+                const msg = (typeof somethingWentWrongLang !== 'undefined') ? somethingWentWrongLang : 'Something went wrong.';
+                showToast('error', title, msg);
+            }
         });
     });
 

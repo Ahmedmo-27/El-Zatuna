@@ -12,31 +12,69 @@ use Illuminate\Support\Facades\Validator;
 trait BundleShowTrait
 {
 
-    public function favoriteToggle($slug)
+    public function favoriteToggle(Request $request, $slug)
     {
         $userId = auth()->id();
+        $favorited = false;
+        $isAjaxRequest = ($request->ajax() || $request->wantsJson());
+
         $bundle = Bundle::where('slug', $slug)
             ->where('status', 'active')
             ->first();
 
         if (!empty($bundle)) {
 
-            $isFavorite = Favorite::where('bundle_id', $bundle->id)
+            $favoriteRow = Favorite::where('bundle_id', $bundle->id)
                 ->where('user_id', $userId)
                 ->first();
 
-            if (empty($isFavorite)) {
+            if (empty($favoriteRow)) {
                 Favorite::create([
                     'user_id' => $userId,
                     'bundle_id' => $bundle->id,
                     'created_at' => time()
                 ]);
+
+                $favorited = true;
             } else {
-                $isFavorite->delete();
+                $favoriteRow->delete();
+
+                $favorited = false;
             }
+
+            $toastData = [
+                'title' => trans('public.request_success'),
+                'msg' => $favorited ? 'Bundle added to your favorites.' : 'Bundle removed from your favorites.',
+                'status' => 'success',
+            ];
+
+            if ($isAjaxRequest) {
+                return response()->json([
+                    'code' => 200,
+                    'is_favorite' => $favorited,
+                    'title' => $toastData['title'],
+                    'msg' => $toastData['msg'],
+                ], 200);
+            }
+
+            return back()->with(['toast' => $toastData]);
         }
 
-        return response()->json([], 200);
+        $errorToastData = [
+            'title' => 'Not found',
+            'msg' => 'Bundle not found.',
+            'status' => 'error',
+        ];
+
+        if ($isAjaxRequest) {
+            return response()->json([
+                'code' => 404,
+                'title' => $errorToastData['title'],
+                'msg' => $errorToastData['msg'],
+            ], 404);
+        }
+
+        return back()->with(['toast' => $errorToastData]);
     }
 
     public function getShareModal($slug)
