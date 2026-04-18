@@ -169,8 +169,8 @@
         const path = $(this).attr("data-path");
 
         handleBasicModal(path, reportCourseLang, function (result, $body, $footer) {
-            const footerHtml = `<div class="d-flex align-items-center justify-content-end">
-                <button type="button" class="js-submit-course-report btn btn-primary">${reportLang}</button>
+            const footerHtml = `<div class="course-report-modal-footer d-flex align-items-center justify-content-end">
+                <button type="button" class="js-submit-course-report course-report-submit-btn btn btn-primary">${reportLang}</button>
             </div>`;
             $footer.html(footerHtml);
         }, '', '40rem')

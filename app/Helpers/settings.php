@@ -181,7 +181,38 @@ function getOfflineBanksTitle()
  */
 function getReportReasons()
 {
-    return App\Models\Setting::getReportReasons();
+    $rawReasons = App\Models\Setting::getReportReasons();
+    $reasons = [];
+
+    if (is_array($rawReasons)) {
+        foreach ($rawReasons as $rawReason) {
+            $reason = $rawReason;
+
+            if (is_array($reason)) {
+                $reason = $reason['value'] ?? $reason['title'] ?? $reason['reason'] ?? ($reason[0] ?? null);
+            }
+
+            if (is_string($reason)) {
+                $reason = trim(strip_tags($reason));
+            }
+
+            if (!empty($reason) and !in_array($reason, $reasons, true)) {
+                $reasons[] = $reason;
+            }
+        }
+    }
+
+    if (empty($reasons)) {
+        $reasons = [
+            'Misleading or false content',
+            'Inappropriate or offensive content',
+            'Harassment or hate speech',
+            'Spam or scam',
+            'Other',
+        ];
+    }
+
+    return $reasons;
 }
 
 /**
