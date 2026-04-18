@@ -556,6 +556,29 @@ class WebinarController extends Controller
             abort(404);
         }
 
+        $webinar->syncChapterItemsWithContentModels();
+        $webinar->unsetRelation('chapters');
+        $webinar->load([
+            'chapters' => function ($query) {
+                $query->orderBy('order', 'asc');
+                $query->with([
+                    'chapterItems' => function ($query) {
+                        $query->orderBy('order', 'asc');
+
+                        $query->with([
+                            'quiz' => function ($query) {
+                                $query->with([
+                                    'quizQuestions' => function ($query) {
+                                        $query->orderBy('order', 'asc');
+                                    }
+                                ]);
+                            }
+                        ]);
+                    }
+                ]);
+            },
+        ]);
+
         $locale = $request->get('locale', getDefaultLocale());
         storeContentLocale($locale, $webinar->getTable(), $webinar->id);
 

@@ -1472,4 +1472,73 @@ class Webinar extends Model implements TranslatableContract
         return $this->resolveContentAssetUrl($icon);
     }
 
+    /**
+     * Keep webinar_chapter_items.chapter_id aligned with each content row's chapter_id
+     * so the course builder shows items under the correct section.
+     */
+    public function syncChapterItemsWithContentModels(): void
+    {
+        $chapterIds = $this->chapters()->pluck('id');
+        if ($chapterIds->isEmpty()) {
+            return;
+        }
+
+        $items = WebinarChapterItem::query()
+            ->whereIn('chapter_id', $chapterIds)
+            ->get();
+
+        foreach ($items as $chapterItem) {
+            $canonicalChapterId = $this->canonicalChapterIdForChapterItem($chapterItem);
+            if ($canonicalChapterId === null) {
+                continue;
+            }
+            if ((int) $canonicalChapterId === (int) $chapterItem->chapter_id) {
+                continue;
+            }
+
+            $order = WebinarChapterItem::where('chapter_id', $canonicalChapterId)->count() + 1;
+
+            $chapterItem->update([
+                'chapter_id' => $canonicalChapterId,
+                'order' => $order,
+            ]);
+
+            WebinarChapterItem::where('item_id', $chapterItem->item_id)
+                ->where('type', $chapterItem->type)
+                ->where('id', '!=', $chapterItem->id)
+                ->delete();
+        }
+    }
+
+    private function canonicalChapterIdForChapterItem(WebinarChapterItem $chapterItem): ?int
+    {
+        $webinarId = $this->id;
+
+        switch ($chapterItem->type) {
+            case WebinarChapterItem::$chapterFile:
+                $row = File::query()->where('id', $chapterItem->item_id)->where('webinar_id', $webinarId)->first();
+                break;
+            case WebinarChapterItem::$chapterSession:
+                $row = Session::query()->where('id', $chapterItem->item_id)->where('webinar_id', $webinarId)->first();
+                break;
+            case WebinarChapterItem::$chapterTextLesson:
+                $row = TextLesson::query()->where('id', $chapterItem->item_id)->where('webinar_id', $webinarId)->first();
+                break;
+            case WebinarChapterItem::$chapterQuiz:
+                $row = Quiz::query()->where('id', $chapterItem->item_id)->where('webinar_id', $webinarId)->first();
+                break;
+            case WebinarChapterItem::$chapterAssignment:
+                $row = WebinarAssignment::query()->where('id', $chapterItem->item_id)->where('webinar_id', $webinarId)->first();
+                break;
+            default:
+                $row = null;
+        }
+
+        if (empty($row) || empty($row->chapter_id)) {
+            return null;
+        }
+
+        return (int) $row->chapter_id;
+    }
+
 }

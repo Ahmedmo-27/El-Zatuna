@@ -60,6 +60,7 @@
                         @endforeach
                     </select>
                     <div class="invalid-feedback"></div>
+                    @include('design_1.panel.webinars.create.includes.change_section_hint')
                 </div>
             @else
                 <input type="hidden" name="ajax[new][chapter_id]" value="" class="chapter-input">

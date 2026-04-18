@@ -34,12 +34,22 @@ class WebinarChapterItem extends Model
 
     static public function changeChapter($userId, $oldChapterId, $newChapterId, $itemId, $type)
     {
-        $chapterItem = WebinarChapterItem::query()
-            ->where('user_id', $userId)
-            ->where('chapter_id', $oldChapterId)
-            ->where('item_id', $itemId)
-            ->where('type', $type)
-            ->first();
+        $chapterItem = null;
+
+        if (!empty($oldChapterId)) {
+            $chapterItem = WebinarChapterItem::query()
+                ->where('chapter_id', $oldChapterId)
+                ->where('item_id', $itemId)
+                ->where('type', $type)
+                ->first();
+        }
+
+        if (empty($chapterItem)) {
+            $chapterItem = WebinarChapterItem::query()
+                ->where('item_id', $itemId)
+                ->where('type', $type)
+                ->first();
+        }
 
         if (!empty($chapterItem)) {
             $order = WebinarChapterItem::where('chapter_id', $newChapterId)->count() + 1;
@@ -47,10 +57,18 @@ class WebinarChapterItem extends Model
             $chapterItem->update([
                 'chapter_id' => $newChapterId,
                 'order' => $order,
+                'user_id' => $userId,
             ]);
-        } else {
-            WebinarChapterItem::makeItem($userId, $newChapterId, $itemId, $type);
+
+            WebinarChapterItem::where('item_id', $itemId)
+                ->where('type', $type)
+                ->where('id', '!=', $chapterItem->id)
+                ->delete();
+
+            return;
         }
+
+        WebinarChapterItem::makeItem($userId, $newChapterId, $itemId, $type);
     }
 
     public function session()
