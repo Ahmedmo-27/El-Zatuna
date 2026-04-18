@@ -56,8 +56,28 @@
     $('body').on('click', '.js-bottom-fixed-enroll-on-course-btn', function (e) {
         e.preventDefault();
 
+        const $enrollCard = $('.js-enroll-actions-card').first();
+
+        if (!$enrollCard.length) {
+            return;
+        }
+
+        const $addToCartBtn = $enrollCard.find('.js-course-add-to-cart-btn:not(.disabled):not([disabled])').first();
+
+        if ($addToCartBtn.length && !$addToCartBtn.hasClass('loadingbar')) {
+            $addToCartBtn.trigger('click');
+            return;
+        }
+
+        const $freeEnrollLink = $enrollCard.find('a.btn-primary[href*="/free"]:not(.disabled)').first();
+
+        if ($freeEnrollLink.length) {
+            window.location.href = $freeEnrollLink.attr('href');
+            return;
+        }
+
         $('html, body').animate({
-            scrollTop: $('.js-enroll-actions-card').offset().top - 150
+            scrollTop: $enrollCard.offset().top - 150
         }, 1000);
     })
     /**
