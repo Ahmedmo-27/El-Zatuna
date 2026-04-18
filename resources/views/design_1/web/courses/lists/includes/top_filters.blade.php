@@ -2,7 +2,7 @@
     <div class="courses-lists-filters__mask"></div>
 
     <div class="position-relative d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-20 bg-[#072923] text-[#FAFFE0] px-24 py-12 rounded-24 z-index-2">
-        <div class="d-flex align-items-center flex-wrap gap-48">
+        <div class="courses-lists-top-filters__toggles d-flex align-items-center flex-wrap gap-48">
             @foreach(['upcoming', 'free', 'discount'] as $topFilter1)
                 <div class="form-group mb-0 d-flex align-items-center">
                     <div class="custom-switch mr-8">
@@ -17,7 +17,7 @@
             @endforeach
         </div>
 
-        <div class="d-flex align-items-center gap-16">
+        <div class="courses-lists-top-filters__actions d-flex align-items-center gap-16">
 
             <div class="courses-lists-sort-input form-group  mb-0">
                 <select name="sort" class="form-control select2" data-minimum-results-for-search="Infinity">
