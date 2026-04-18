@@ -95,6 +95,7 @@ return [
 'file_volume' => 'File Size (MB)',
 'online_file_volume' => 'Enter File Size (MB)',
 'file_type' => 'File Type',
+'file_type_required_before_save' => 'Please select a file type before uploading or saving this section.',
 'select_file_type' => 'Select File Type',
 'upload' => 'Upload',
 'youtube_vimeo' => 'External (YouTube, Vimeo, etc.)',

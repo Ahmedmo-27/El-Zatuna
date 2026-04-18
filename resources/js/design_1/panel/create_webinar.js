@@ -825,12 +825,56 @@
         return true;
     }
 
+    function courseFileFormShowsFileTypeField($form) {
+        const $row = $form.find('.js-file-type-volume');
+        const $field = $form.find('.js-file-type-field');
+        if (!$row.length || $row.hasClass('d-none')) {
+            return false;
+        }
+        if ($field.length && $field.hasClass('d-none')) {
+            return false;
+        }
+        return true;
+    }
+
+    function validateCourseFileTypeSelected($form) {
+        if (!courseFileFormShowsFileTypeField($form)) {
+            return true;
+        }
+        const fileType = ($form.find('.js-ajax-file_type').val() || '').trim();
+        if (fileType) {
+            const $select = $form.find('.js-ajax-file_type');
+            $select.removeClass('is-invalid');
+            $select.closest('.form-group').find('.invalid-feedback').first().text('');
+            return true;
+        }
+        const msg = (typeof webinarFileTypeRequiredLang !== 'undefined' && webinarFileTypeRequiredLang)
+            ? webinarFileTypeRequiredLang
+            : 'Please select a file type before uploading or saving.';
+        const $select = $form.find('.js-ajax-file_type');
+        $select.addClass('is-invalid');
+        const $feedback = $select.closest('.form-group').find('.invalid-feedback').first();
+        if ($feedback.length) {
+            $feedback.text(msg);
+        }
+        if (typeof showToast === 'function') {
+            showToast('error', (typeof webinarFileTypeLabelLang !== 'undefined' && webinarFileTypeLabelLang) ? webinarFileTypeLabelLang : 'File type', msg);
+        } else {
+            alert(msg);
+        }
+        return false;
+    }
+
     $('body').on('click', '.js-save-course-content', function (e) {
         e.preventDefault();
         const $this = $(this);
         const $form = $this.closest('.js-content-form');
 
         if (!syncAndValidateTextLessonContent($form)) {
+            return;
+        }
+
+        if ($form.hasClass('file-form') && !validateCourseFileTypeSelected($form)) {
             return;
         }
 
@@ -889,6 +933,10 @@
 
             if (!file) {
                 showUploadErrorForForm($form, 'File required', 'Please choose a file to upload before saving.');
+                return;
+            }
+
+            if (!validateCourseFileTypeSelected($form)) {
                 return;
             }
 
