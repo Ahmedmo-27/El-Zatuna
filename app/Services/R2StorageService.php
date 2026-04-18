@@ -397,6 +397,66 @@ class R2StorageService
             return false;
         }
     }
+
+    /**
+     * Relocate a course file object to another section folder (same basename).
+     * Only applies to keys under Courses/{courseId}/; other keys are returned unchanged.
+     *
+     * @return array{status: bool, path: string, error?: string}
+     */
+    public function moveCourseFileToSection(string $sourceKey, int $courseId, int $newSectionId): array
+    {
+        $sourceKey = ltrim($sourceKey, '/');
+        $expectedPrefix = 'Courses/' . $courseId . '/';
+
+        if (!str_starts_with($sourceKey, $expectedPrefix)) {
+            return ['status' => true, 'path' => $sourceKey];
+        }
+
+        $basename = basename($sourceKey);
+        $destPrefix = $this->buildPath($courseId, $newSectionId);
+        $destKey = $destPrefix . '/' . $basename;
+
+        if ($sourceKey === $destKey) {
+            return ['status' => true, 'path' => $sourceKey];
+        }
+
+        try {
+            config(['filesystems.disks.r2.throw' => true]);
+            $disk = Storage::disk('r2');
+
+            if (!$disk->exists($sourceKey)) {
+                return ['status' => false, 'path' => $sourceKey, 'error' => 'source_not_found'];
+            }
+
+            if ($disk->exists($destKey)) {
+                $destKey = $destPrefix . '/' . time() . '_' . $basename;
+            }
+
+            $disk->copy($sourceKey, $destKey);
+
+            try {
+                $disk->delete($sourceKey);
+            } catch (Exception $deleteEx) {
+                \Log::warning('R2 moveCourseFileToSection: copied to new key but source delete failed', [
+                    'source' => $sourceKey,
+                    'dest' => $destKey,
+                    'message' => $deleteEx->getMessage(),
+                ]);
+            }
+
+            return ['status' => true, 'path' => $destKey];
+        } catch (Exception $e) {
+            \Log::error('R2 moveCourseFileToSection failed', [
+                'source' => $sourceKey,
+                'course_id' => $courseId,
+                'section_id' => $newSectionId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return ['status' => false, 'path' => $sourceKey, 'error' => $e->getMessage()];
+        }
+    }
     
     /**
      * Check if a file exists in R2
