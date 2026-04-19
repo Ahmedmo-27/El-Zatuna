@@ -15,6 +15,7 @@
 - resources/views/design_1/web/become_instructor/wizard/form.blade.php:89 -> Certificate upload - commented out
 - resources/views/design_1/web/courses/learning_page/includes/top_header/course_tools.blade.php:22 -> Hidden per request: quizzes and assignments
 - resources/views/design_1/web/courses/learning_page/includes/top_header/course_tools.blade.php:83 -> Hidden per request: quizzes, assignments, and certificates
+- resources/views/design_1/web/courses/learning_page/includes/top_header/course_tools.blade.php:193 -> Hidden per request: notes
 - resources/views/design_1/panel/includes/header.blade.php:13 -> Multi Color (Dark,Light) - Hidden for El Zatuna theme
 - resources/views/admin/theme/create/tabs/includes/landing_component_card.blade.php:10 -> If Disabled
 

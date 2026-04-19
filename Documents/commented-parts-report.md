@@ -9,6 +9,8 @@
 	- Profile overview bar: Articles metric card commented out (Meetings restored).
 - resources/views/design_1/panel/settings/includes/progress.blade.php:8
 	- Additional Information tab commented out from profile settings step navigation.
+- resources/views/design_1/web/courses/learning_page/includes/top_header/course_tools.blade.php:193
+	- Notes item in Course Tools dropdown commented out.
 
 This file is a simplified map of commented sections with lines.
 
@@ -1408,6 +1410,7 @@ This file is a simplified map of commented sections with lines.
 ### resources/views/design_1/web/courses/learning_page/includes/top_header/course_tools.blade.php
 - Hidden per request: quizzes and assignments (line: 22)
 - Hidden per request: quizzes, assignments, and certificates (line: 83, 158)
+- Hidden per request: notes (line: 193)
 
 ### resources/views/design_1/web/courses/learning_page/index.blade.php
 - Noticeboards (line: 47)

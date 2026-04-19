@@ -188,12 +188,15 @@
                     </li>
                 @endif
 
+                {{-- Hidden per request: notes --}}
+                {{--
                 <li class="learning-page__dropdown-menu__item">
                     <a href="/panel/courses/personal-notes" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-note-2 class="icons" width="24px" height="24px"/>
                         <span class="ml-8">{{ trans('update.notes') }}</span>
                     </a>
                 </li>
+                --}}
 
                 <li class="learning-page__dropdown-menu__item">
                     <a href="/panel/support/new" target="_blank" class="d-flex align-items-center w-100 px-16 py-8">
