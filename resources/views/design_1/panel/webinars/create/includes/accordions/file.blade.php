@@ -118,6 +118,10 @@
                         if (!in_array('upload', $availableSources)) {
                             $availableSources = array_merge(['upload'], $availableSources);
                         }
+                        // Ensure YouTube embed is always available in Step 3 course content.
+                        if (!in_array('youtube', $availableSources)) {
+                            $availableSources[] = 'youtube';
+                        }
                     @endphp
                     <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][storage]"
                             class="js-file-storage form-control"

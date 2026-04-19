@@ -102,6 +102,10 @@
                                         if (!in_array('upload', $availableSources)) {
                                             $availableSources = array_merge(['upload'], $availableSources);
                                         }
+                                        // Ensure YouTube embed is always available in Step 3 course content.
+                                        if (!in_array('youtube', $availableSources)) {
+                                            $availableSources[] = 'youtube';
+                                        }
                                     @endphp
                                     @foreach($availableSources as $source)
                                         <option value="{{ $source }}" @if((!empty($file) && in_array($file->storage, ['upload', 'r2']) && $source == 'upload') or (!empty($file) && $file->storage == $source && $source != 'upload') or (empty($file) && $source == 'upload')) selected @endif>{{ trans('update.file_source_'.$source) }}</option>
