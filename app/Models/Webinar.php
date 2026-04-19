@@ -839,9 +839,11 @@ class Webinar extends Model implements TranslatableContract
             $user = auth()->user();
         }
 
+        $userHasBought = !empty($user) && $this->checkUserHasBought($user);
+        $canCalculateProgress = !empty($user) && ($userHasBought || $isLearningPage);
+
         if (
-            !empty($user) and
-            $this->checkUserHasBought() and
+            $canCalculateProgress and
             (
                 !$this->isWebinar() or
                 ($this->isWebinar() and $this->isProgressing()) or
@@ -862,7 +864,9 @@ class Webinar extends Model implements TranslatableContract
             if ($passed > 0 and $count > 0) {
                 $progress = ($passed * 100) / $count;
 
-                $this->handleLearningProgress100Reward($progress, $userId, $this->id);
+                if ($userHasBought) {
+                    $this->handleLearningProgress100Reward($progress, $userId, $this->id);
+                }
             }
         } else if (!is_null($this->capacity)) {
             $salesCount = $this->getSalesCount();

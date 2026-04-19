@@ -1214,7 +1214,9 @@ class WebinarController extends Controller
         $itemId  = $data['item_id'] ?? null;
         $status  = $data['status'] ?? null;
 
-        if (empty($itemKey) || empty($itemId)) {
+        $allowedItems = ['file_id', 'session_id', 'text_lesson_id'];
+
+        if (empty($itemKey) || empty($itemId) || !in_array($itemKey, $allowedItems, true)) {
             abort(403);
         }
 
@@ -1276,11 +1278,42 @@ class WebinarController extends Controller
 
             $course = Webinar::where('slug', $slug)->first();
 
-            if (!empty($course) and $course->checkUserHasBought($user)) {
+            if (!empty($course)) {
                 $data = $request->all();
 
-                $item = $data['item'];
-                $item_id = $data['item_id'];
+                $item = $data['item'] ?? null;
+                $item_id = $data['item_id'] ?? null;
+                $allowedItems = ['file_id', 'session_id', 'text_lesson_id'];
+
+                if (empty($item) || empty($item_id) || !in_array($item, $allowedItems, true)) {
+                    abort(403);
+                }
+
+                // Detect the item's chapter so section-access users can auto-complete accessible content
+                $chapter = null;
+                switch ($item) {
+                    case 'file_id':
+                        $file = \App\Models\File::with('chapter')->find($item_id);
+                        $chapter = $file->chapter ?? null;
+                        break;
+
+                    case 'session_id':
+                        $session = \App\Models\Session::with('chapter')->find($item_id);
+                        $chapter = $session->chapter ?? null;
+                        break;
+
+                    case 'text_lesson_id':
+                        $textLesson = \App\Models\TextLesson::with('chapter')->find($item_id);
+                        $chapter = $textLesson->chapter ?? null;
+                        break;
+                }
+
+                $hasFullCourse = $course->checkUserHasBought($user);
+                $hasSectionAccess = !empty($chapter) && canUserAccessCourseContent($course, $user, $chapter);
+
+                if (!$hasFullCourse && !$hasSectionAccess) {
+                    abort(403);
+                }
 
                 // Check if already marked as complete
                 $exists = CourseLearning::where('user_id', $user->id)
@@ -1288,7 +1321,6 @@ class WebinarController extends Controller
                     ->first();
 
                 if (empty($exists)) {
-                    // Mark as complete
                     CourseLearning::create([
                         'user_id' => $user->id,
                         $item => $item_id,

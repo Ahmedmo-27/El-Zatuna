@@ -308,9 +308,11 @@
                 const $percentBar = $('.js-course-learning-progress-bar-percent');
                 const $percentNum = $('.js-course-learning-progress-percent');
                 
-                if (result.learning_progress_percent && $percentBar.length) {
-                    $percentBar.css('width', result.learning_progress_percent + '%');
-                    $percentNum.text(`${result.learning_progress_percent}%`);
+                const progressPercent = parseFloat(result.learning_progress_percent ?? 0);
+
+                if (!Number.isNaN(progressPercent) && $percentBar.length) {
+                    $percentBar.css('width', progressPercent + '%');
+                    $percentNum.text(`${progressPercent}%`);
                 }
                 
                 // Update checkbox if exists
@@ -325,7 +327,7 @@
                 }
                 
                 // Check for course completion
-                if (result.learning_progress_percent && result.learning_progress_percent >= 100) {
+                if (!Number.isNaN(progressPercent) && progressPercent >= 100) {
                     handleCourseCompletedModal();
                 }
             }
@@ -392,12 +394,14 @@
         postWithCsrf(path, data, function (result) {
             showToast("success", result.title, result.msg);
 
-            if (result.learning_progress_percent && $percentBar.length) {
-                $percentBar.css('width', result.learning_progress_percent + '%');
-                $percentNum.text(`${result.learning_progress_percent}%`)
+            const progressPercent = parseFloat(result.learning_progress_percent ?? 0);
+
+            if (!Number.isNaN(progressPercent) && $percentBar.length) {
+                $percentBar.css('width', progressPercent + '%');
+                $percentNum.text(`${progressPercent}%`)
             }
 
-            if (result.learning_progress_percent && result.learning_progress_percent >= 100) {
+            if (!Number.isNaN(progressPercent) && progressPercent >= 100) {
                 handleCourseCompletedModal()
             }
 
