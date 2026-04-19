@@ -37,11 +37,14 @@
     function handleTrackSpentTime() {
         const path = `${courseLearningUrl}/track-time`;
         let shouldStopTracking = false;
+        let requestInFlight = false;
 
-        setInterval(function () {
-            if (shouldStopTracking) {
+        const trackTime = function () {
+            if (shouldStopTracking || requestInFlight || document.hidden || !navigator.onLine) {
                 return;
             }
+
+            requestInFlight = true;
 
             postWithCsrf(path, {}, function (result) {
                 if (result && result.force_reload) {
@@ -51,8 +54,13 @@
                 if (handleCsrfMismatch(err)) {
                     shouldStopTracking = true;
                 }
+            }).always(function () {
+                requestInFlight = false;
             });
-        }, 10000)
+        };
+
+        setInterval(trackTime, 10000);
+        setTimeout(trackTime, 1500);
     }
 
     function contentEmptyStateHtml() {

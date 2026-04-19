@@ -60,6 +60,6 @@ return [
     'stream' => [
         'token_secret' => env('STREAM_TOKEN_SECRET'),
         'worker_base' => env('STREAM_WORKER_BASE'),
-        'token_ttl' => env('STREAM_TOKEN_TTL', 120), // Default 120 seconds (2 minutes)
+        'token_ttl' => env('STREAM_TOKEN_TTL', 7200), // Default 2 hours
     ],
 ];

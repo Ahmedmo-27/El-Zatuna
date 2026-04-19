@@ -938,7 +938,9 @@ class WebinarController extends Controller
             throw new \RuntimeException('Stream token secret not configured');
         }
 
-        $ttl = $ttlSeconds ?? config('services.stream.token_ttl', 120);
+        // Keep token valid long enough for typical lessons even if env is misconfigured too low.
+        $configuredTtl = (int) config('services.stream.token_ttl', 120);
+        $ttl = $ttlSeconds ?? max(1800, $configuredTtl);
         
         $payload = [
             'key' => $key,

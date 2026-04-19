@@ -171,6 +171,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/learning/{slug}/itemSequenceContentInfo', 'LearningPageController@getItemSequenceContentInfo');
             Route::get('/learning/{slug}/noticeboards', 'LearningPageController@noticeboards');
             Route::post('/learning/{slug}/track-time', 'LearningPageController@trackSpentTime');
+            Route::post('/learning/{slug}/video-performance', 'LearningPageController@trackVideoPerformance');
             Route::post('/learning/{slug}/autoMarkComplete', 'WebinarController@autoMarkComplete');
             Route::get('/learning/{slug}', 'LearningPageController@index');
 
