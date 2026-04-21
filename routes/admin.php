@@ -698,6 +698,11 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['admin.auth', 'admin.loca
             Route::get('/new', 'DiscountController@create')->name('admin.financial.discounts.create');
             Route::post('/', 'DiscountController@store')->name('admin.financial.discounts.store');
             Route::post('/store', 'DiscountController@store');
+            
+            // Bulk discount routes for seasonal/platform-wide promotions
+            Route::get('/bulk/create', 'DiscountController@bulkCreate')->name('admin.financial.discounts.bulk.create');
+            Route::post('/bulk/store', 'DiscountController@bulkStore')->name('admin.financial.discounts.bulk.store');
+            
             Route::get('/{id}/edit', 'DiscountController@edit')->name('admin.financial.discounts.edit');
             Route::post('/{id}/update', 'DiscountController@update')->name('admin.financial.discounts.update');
             Route::delete('/{id}/delete', 'DiscountController@destroy')->name('admin.financial.discounts.delete');

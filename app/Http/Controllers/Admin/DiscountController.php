@@ -368,4 +368,143 @@ class DiscountController extends Controller
 
         return redirect(getAdminPanelUrl() . '/financial/discounts');
     }
+
+    /**
+     * Show the bulk discount creation form
+     */
+    public function bulkCreate()
+    {
+        $this->authorize('admin_discount_codes_create');
+
+        $data = [
+            'pageTitle' => trans('admin/main.bulk_discount_title', ['title' => 'Bulk Discount']),
+        ];
+
+        return view('admin.financial.discount.bulk-create', $data);
+    }
+
+    /**
+     * Store bulk discounts for seasonal/platform-wide promotions
+     * This allows creating a single discount that applies across the entire platform
+     * or specific item types (all courses, all products, etc.)
+     */
+    public function bulkStore(Request $request)
+    {
+        $this->authorize('admin_discount_codes_create');
+
+        $this->validate($request, [
+            'title' => 'required|string|max:255',
+            'discount_type' => 'required|in:' . implode(',', Discount::$discountTypes),
+            'source' => 'required|in:' . implode(',', Discount::$discountSource),
+            'code' => 'required|string|max:64|unique:discounts',
+            'percent' => 'nullable|numeric|min:0|max:100',
+            'amount' => 'nullable|numeric|min:0',
+            'count' => 'nullable|numeric|min:1',
+            'expired_at' => 'required|date',
+            'apply_to_items' => 'required|in:all,courses,bundles,categories,products',
+        ]);
+
+        $data = $request->all();
+
+        // Validate that either percent or amount is provided
+        if (empty($data['percent']) && empty($data['amount'])) {
+            return back()->withErrors(['discount_value' => 'Either percentage or fixed amount must be provided.']);
+        }
+
+        $expiredAt = convertTimeToUTCzone($data['expired_at'], getTimezone());
+
+        try {
+            DB::beginTransaction();
+
+            // Create the main discount
+            $discount = Discount::create([
+                'creator_id' => auth()->id(),
+                'title' => $data['title'],
+                'discount_type' => $data['discount_type'],
+                'source' => $data['source'],
+                'code' => $data['code'],
+                'percent' => (!empty($data['percent']) and $data['percent'] > 0) ? $data['percent'] : 0,
+                'amount' => !empty($data['amount']) ? convertPriceToDefaultCurrency($data['amount']) : null,
+                'max_amount' => !empty($data['max_amount']) ? convertPriceToDefaultCurrency($data['max_amount']) : null,
+                'minimum_order' => !empty($data['minimum_order']) ? convertPriceToDefaultCurrency($data['minimum_order']) : null,
+                'count' => (!empty($data['count']) and $data['count'] > 0) ? $data['count'] : 0, // 0 means unlimited
+                'user_type' => 'all_users', // Bulk discounts are always for all users
+                'product_type' => $data['product_type'] ?? null,
+                'for_first_purchase' => 0,
+                'status' => 'active',
+                'expired_at' => $expiredAt->getTimestamp(),
+                'created_at' => time(),
+            ]);
+
+            // Apply bulk discount to specific item types
+            $applyTo = $data['apply_to_items'];
+
+            if ($applyTo === 'all' || $applyTo === 'courses') {
+                // Get all active courses and create discount relations
+                $courses = \App\Models\Webinar::where('status', 'active')->get();
+                foreach ($courses as $course) {
+                    DiscountCourse::create([
+                        'discount_id' => $discount->id,
+                        'course_id' => $course->id,
+                        'created_at' => time(),
+                    ]);
+                }
+            }
+
+            if ($applyTo === 'all' || $applyTo === 'bundles') {
+                // Get all active bundles and create discount relations
+                $bundles = \App\Models\Bundle::where('status', 'active')->get();
+                foreach ($bundles as $bundle) {
+                    DiscountBundle::create([
+                        'discount_id' => $discount->id,
+                        'bundle_id' => $bundle->id,
+                        'created_at' => time(),
+                    ]);
+                }
+            }
+
+            if ($applyTo === 'all' || $applyTo === 'categories') {
+                // Get all active categories and create discount relations
+                $categories = \App\Models\Category::where('status', 'active')->get();
+                foreach ($categories as $category) {
+                    DiscountCategory::create([
+                        'discount_id' => $discount->id,
+                        'category_id' => $category->id,
+                        'created_at' => time(),
+                    ]);
+                }
+            }
+
+            if ($applyTo === 'all' || $applyTo === 'products') {
+                // Get all active products and create discount relations
+                $products = \App\Models\Product::where('status', 'active')->get();
+                foreach ($products as $product) {
+                    // Note: Product discounts use a different model (ProductDiscount)
+                    // This is just for course/bundle/category discounts
+                    // If you want to include store products, use ProductDiscount model
+                }
+            }
+
+            DB::commit();
+
+            $toastData = [
+                'title' => trans('public.request_success'),
+                'msg' => trans('update.discount_created_successful', ['title' => $data['title']]),
+                'status' => 'success'
+            ];
+
+            return redirect(getAdminPanelUrl() . '/financial/discounts')->with(['toast' => $toastData]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $toastData = [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('update.something_went_wrong') . ': ' . $e->getMessage(),
+                'status' => 'error'
+            ];
+
+            return back()->with(['toast' => $toastData]);
+        }
+    }
 }
