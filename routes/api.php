@@ -51,14 +51,6 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
 
     Route::prefix('instructor')->middleware(['api.auth', 'api.level-access:teacher'])->namespace('Instructor')->group(base_path('routes/api/instructor.php'));
 
-    // Admin API routes
-    Route::group(['prefix' => 'admin'], function () {
-        Route::group(['prefix' => 'discounts'], function () {
-            Route::post('/bulk', 'BulkDiscountController@store')->middleware('api.auth')->name('api.bulk_discounts.store');
-            Route::get('/statistics', 'BulkDiscountController@statistics')->middleware('api.auth')->name('api.bulk_discounts.statistics');
-        });
-    });
-
     // WebSocket/Broadcasting routes
     Route::prefix('broadcasting')->middleware(['api.auth'])->namespace('Panel')->group(function () {
         Route::get('/info', ['uses' => 'BroadcastingController@getConnectionInfo']);

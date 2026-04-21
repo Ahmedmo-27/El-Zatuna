@@ -1114,10 +1114,14 @@ class Webinar extends Model implements TranslatableContract
 
     public function activeSpecialOffer()
     {
-        $activeSpecialOffer = SpecialOffer::where('webinar_id', $this->id)
-            ->where('status', SpecialOffer::$active)
+        $activeSpecialOffer = SpecialOffer::where('status', SpecialOffer::$active)
             ->where('from_date', '<', time())
             ->where('to_date', '>', time())
+            ->where(function ($query) {
+                $query->where('webinar_id', $this->id)
+                    ->orWhereIn('target', [SpecialOffer::$targetAll, SpecialOffer::$targetCourses]);
+            })
+            ->orderByRaw('CASE WHEN webinar_id IS NULL THEN 1 ELSE 0 END ASC')
             ->first();
 
         return $activeSpecialOffer ?? false;
