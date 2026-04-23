@@ -135,6 +135,16 @@ class Webinar extends Model implements TranslatableContract
         return getTranslateAttributeValue($this, 'seo_description');
     }
 
+    public function getThumbnailAttribute($value)
+    {
+        return !empty($value) ? $value : self::getDefaultCourseImagePath();
+    }
+
+    public function getImageCoverAttribute($value)
+    {
+        return !empty($value) ? $value : self::getDefaultCourseImagePath();
+    }
+
     public function getPriceAttribute()
     {
         $result = $this->attributes['price'] ?? null;
@@ -942,6 +952,11 @@ class Webinar extends Model implements TranslatableContract
         return $this->resolveContentAssetUrl($this->thumbnail);
     }
 
+    public static function getDefaultCourseImagePath(): string
+    {
+        return '/course_thumbnail_cover_fallback.png';
+    }
+
     /**
      * Return the playable URL for the course demo video (R2 Course-Assets or local).
      *
@@ -961,7 +976,7 @@ class Webinar extends Model implements TranslatableContract
     protected function resolveContentAssetUrl(?string $path): ?string
     {
         if (empty($path)) {
-            return null;
+            return url(self::getDefaultCourseImagePath());
         }
         if (str_starts_with($path, 'Course-Assets/')) {
             return \App\Helpers\R2Helper::getUrl($path) ?: $path;

@@ -13,6 +13,7 @@ use App\Models\Translation\UpcomingCourseTranslation;
 use App\Models\UpcomingCourse;
 use App\Models\UpcomingCourseFilterOption;
 use App\Models\UpcomingCourseFollower;
+use App\Models\Webinar;
 use App\User;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -143,8 +144,8 @@ class UpcomingCoursesController extends Controller
         $rules = [
             'type' => 'required|in:webinar,course,text_lesson',
             'title' => 'required|max:255',
-            'thumbnail' => 'required',
-            'image_cover' => 'required',
+            'thumbnail' => 'nullable',
+            'image_cover' => 'nullable',
             'description' => 'required',
             'teacher_id' => 'required|exists:users,id',
             'category_id' => 'required|exists:categories,id',
@@ -248,8 +249,8 @@ class UpcomingCoursesController extends Controller
                 'type' => 'required|in:webinar,course,text_lesson',
                 'title' => 'required|max:255',
                 'slug' => 'max:255|unique:upcoming_courses,slug,' . $upcomingCourse->id,
-                'thumbnail' => 'required',
-                'image_cover' => 'required',
+                'thumbnail' => 'nullable',
+                'image_cover' => 'nullable',
                 'description' => 'required',
                 'teacher_id' => 'required|exists:users,id',
                 'category_id' => 'required|exists:categories,id',
@@ -300,8 +301,8 @@ class UpcomingCoursesController extends Controller
             'category_id' => $data['category_id'],
             'slug' => !empty($data['slug']) ? $data['slug'] : UpcomingCourse::makeSlug($data['title']),
             'type' => $data['type'],
-            'thumbnail' => $data['thumbnail'],
-            'image_cover' => $data['image_cover'],
+            'thumbnail' => !empty($data['thumbnail']) ? $data['thumbnail'] : Webinar::getDefaultCourseImagePath(),
+            'image_cover' => !empty($data['image_cover']) ? $data['image_cover'] : Webinar::getDefaultCourseImagePath(),
             'video_demo' => $data['video_demo'] ?? null,
             'video_demo_source' => $data['video_demo'] ? $data['video_demo_source'] : null,
             'publish_date' => $startDate->getTimestamp(),

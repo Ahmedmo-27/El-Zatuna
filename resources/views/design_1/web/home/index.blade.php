@@ -111,7 +111,7 @@
                 @foreach(($upcomingCourses ?? collect()) as $upcomingCourse)
                     @include('design_1.web.components.home.course_card_dark', [
                         'href' => $upcomingCourse->getUrl(),
-                        'image' => $upcomingCourse->getImageCover() ?? $upcomingCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0',
+                        'image' => $upcomingCourse->getImageCover(),
                         'title' => $upcomingCourse->title,
                         'subtitle' => $upcomingCourse->teacher->full_name ?? 'Instructor',
                     ])
@@ -143,7 +143,7 @@
 
                         @include('design_1.web.components.home.course_card_light', [
                             'href' => $course->getUrl(),
-                            'image' => $course->thumbnail ?? 'https://placehold.co/600x400/FAFFE0/072923',
+                            'image' => $course->getImage(),
                             'title' => $course->title,
                             'subtitle' => $course->teacher?->full_name ?? 'Instructor',
                             'originalPrice' => $course->price,
@@ -165,7 +165,7 @@
                 @foreach(($freeCourses ?? collect()) as $freeCourse)
                     @include('design_1.web.components.home.course_card_dark', [
                         'href' => $freeCourse->getUrl(),
-                        'image' => $freeCourse->thumbnail ?? 'https://placehold.co/600x400/072923/FAFFE0',
+                        'image' => $freeCourse->getImage(),
                         'title' => $freeCourse->title,
                         'subtitle' => $freeCourse->teacher->full_name ?? 'Instructor',
                         'height' => 'h-[220px]',
