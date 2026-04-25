@@ -20,26 +20,6 @@
                         <a href="/classes" class="bg-[#C8CD06] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#BDEA42] hover:scale-110 transition-all duration-300 shadow-2xl relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-book class="w-5 h-5 sm:w-6 sm:h-6"/> Enroll on courses</a>
                         <a href="/contact?type=request_course" class="border-2 border-[#072923] text-[#072923] font-bold px-8 sm:px-9 py-4 sm:py-[18px] rounded-full text-sm sm:text-base hover:bg-[#072923] hover:text-[#FAFFE0] transition-all duration-300 relative z-10 block opacity-100 !visible flex items-center justify-center gap-4"><x-iconsax-lin-sms class="w-5 h-5 sm:w-6 sm:h-6"/> Request Course</a>
                     </div>
-
-                    <div data-trust-badge class="mt-10 md:mt-12 inline-flex items-center gap-4 rounded-2xl border border-[#E4EDAA] bg-[#F7FDD4] px-4 sm:px-5 py-3 shadow-[0_8px_24px_rgba(7,41,35,0.08)]">
-                        <div class="flex -space-x-2.5">
-                            <span class="h-8 w-8 rounded-full border-2 border-[#F7FDD4] bg-[#DCEB9B] text-[#072923] text-[11px] font-bold flex items-center justify-center shadow-sm">AR</span>
-                            <span class="h-8 w-8 rounded-full border-2 border-[#F7FDD4] bg-[#0E3A31] text-[#FAFFE0] text-[11px] font-bold flex items-center justify-center shadow-sm">LM</span>
-                            <span class="h-8 w-8 rounded-full border-2 border-[#F7FDD4] bg-[#AFCB2D] text-[#072923] text-[11px] font-bold flex items-center justify-center shadow-sm">SK</span>
-                        </div>
-
-                        <div class="leading-tight">
-                            <div class="flex items-center gap-1 text-[#C8CD06]">
-                                <x-iconsax-bol-star class="w-3.5 h-3.5"/>
-                                <x-iconsax-bol-star class="w-3.5 h-3.5"/>
-                                <x-iconsax-bol-star class="w-3.5 h-3.5"/>
-                                <x-iconsax-bol-star class="w-3.5 h-3.5"/>
-                                <x-iconsax-bol-star class="w-3.5 h-3.5"/>
-                                <span class="ml-1 text-xs font-semibold text-[#072923]/75">4.9</span>
-                            </div>
-                            <p class="mt-1 text-sm sm:text-[15px] font-medium text-[#072923]/80">Trusted by 2,500+ successful students</p>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="hero-right-col mt-10 lg:mt-0">
@@ -341,7 +321,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hero section animations
         gsap.from('h1', { duration: 1.2, y: 80, opacity: 0, ease: 'power4.out' });
         gsap.from('h1 + p', { duration: 1, y: 40, opacity: 0, ease: 'power3.out', delay: 0.3 });
-        gsap.from('[data-trust-badge]', { duration: 0.8, y: 20, opacity: 0, ease: 'power3.out', delay: 0.8 });
         
         // Stats bar animation
         gsap.from('.bg-\\[\\#BDEA42\\].rounded-\\[28px\\]', { 
