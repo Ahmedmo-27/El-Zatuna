@@ -21,6 +21,18 @@
                         <h3 class="course-title font-16 font-weight-bold text-[#000000]" style="color: #000000 !important;">{{ clean($course->title,'title') }}</h3>
                     </a>
 
+                @if(!empty($course->university) || !empty($course->faculty))
+                    <div class="mt-2 text-sm text-[#000000]/70">
+                        @if(!empty($course->university))
+                            <span class="font-semibold">{{ $course->university->name }}</span>
+                        @endif
+
+                        @if(!empty($course->faculty))
+                            <span class="ml-2">- {{ $course->faculty->name }}</span>
+                        @endif
+                    </div>
+                @endif
+
                 @include('design_1.web.components.rate', ['rate' => $course->getRate(), 'rateCount' => $course->getRateCount(), 'rateClassName' => 'mt-12'])
 
                     <div class="d-flex align-items-center my-16">

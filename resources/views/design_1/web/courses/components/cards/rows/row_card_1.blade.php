@@ -20,6 +20,18 @@
                 <h3 class="course-title font-16 font-weight-bold text-[#FAFFE0]">{{ clean($course->title,'title') }}</h3>
             </a>
 
+            @if(!empty($course->university) || !empty($course->faculty))
+                <div class="d-flex align-items-center gap-8 mb-12">
+                    @if(!empty($course->university))
+                        <div class="px-8 py-4 rounded-12 bg-[#E5EDB0]/10 text-[#E5EDB0] font-12">{{ $course->university->name }}</div>
+                    @endif
+
+                    @if(!empty($course->faculty))
+                        <div class="px-8 py-4 rounded-12 bg-[#FAFFE0]/06 text-[#FAFFE0] font-12">{{ $course->faculty->name }}</div>
+                    @endif
+                </div>
+            @endif
+
             @include('design_1.web.components.rate', ['rate' => $course->getRate(), 'rateClassName' => 'mb-12'])
 
             @if(!empty($course->summary))

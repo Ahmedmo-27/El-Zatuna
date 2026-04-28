@@ -43,6 +43,18 @@
 
                 <h3 class="panel-course-grid-card__title font-14 text-dark">{{ $course->title }}</h3>
 
+                @if(!empty($course) && (!empty($course->university) || !empty($course->faculty)))
+                    <div class="font-12 text-gray-600 mt-6">
+                        @if(!empty($course->university))
+                            <span class="font-medium">{{ $course->university->name }}</span>
+                        @endif
+
+                        @if(!empty($course->faculty))
+                            <span class="ml-2">- {{ $course->faculty->name }}</span>
+                        @endif
+                    </div>
+                @endif
+
                 @include("design_1.web.components.rate", [
                         'rate' => round($course->getRate(),1),
                         'rateCount' => $course->reviews()->where('status', 'active')->count(),

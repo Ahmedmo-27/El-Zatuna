@@ -58,6 +58,18 @@
                 <h3 class="course-grid-card__title font-14 text-black">{{ $webinar->title }}</h3>
             </a>
 
+            @if(!empty($webinar) && (!empty($webinar->university) || !empty($webinar->faculty)))
+                <div class="font-12 text-gray-600 mt-6">
+                    @if(!empty($webinar->university))
+                        <span class="font-medium">{{ $webinar->university->name }}</span>
+                    @endif
+
+                    @if(!empty($webinar->faculty))
+                        <span class="ml-2">- {{ $webinar->faculty->name }}</span>
+                    @endif
+                </div>
+            @endif
+
             @include("design_1.web.components.rate", [
                     'rate' => round($webinar->getRate(),1),
                     'rateCount' => $webinar->reviews()->where('status', 'active')->count(),

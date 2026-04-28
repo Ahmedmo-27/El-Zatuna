@@ -72,6 +72,18 @@
                                     </div>
                                 @endif
 
+                                @if(!empty($item) && (!empty($item->university) || !empty($item->faculty)))
+                                    <div class="font-12 text-gray-600 mt-4">
+                                        @if(!empty($item->university))
+                                            <span class="font-medium">{{ $item->university->name }}</span>
+                                        @endif
+
+                                        @if(!empty($item->faculty))
+                                            <span class="ml-2">- {{ $item->faculty->name }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+
                                 @if(!is_null($itemRate))
                                     @include("design_1.web.components.rate", [
                                         'rate' => $itemRate,
@@ -156,6 +168,17 @@
                                         'rateCount' => $itemRateCount,
                                         'rateClassName' => 'mt-8',
                                     ])
+                                @endif
+                                @if(!empty($item) && (!empty($item->university) || !empty($item->faculty)))
+                                    <div class="font-12 text-gray-600 mt-4">
+                                        @if(!empty($item->university))
+                                            <span class="font-medium">{{ $item->university->name }}</span>
+                                        @endif
+
+                                        @if(!empty($item->faculty))
+                                            <span class="ml-2">- {{ $item->faculty->name }}</span>
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
 

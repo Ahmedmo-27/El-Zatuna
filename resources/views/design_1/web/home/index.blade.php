@@ -94,6 +94,7 @@
                         'image' => $upcomingCourse->getImageCover(),
                         'title' => $upcomingCourse->title,
                         'subtitle' => $upcomingCourse->teacher->full_name ?? 'Instructor',
+                        'course' => $upcomingCourse,
                     ])
                 @endforeach
             </div>
@@ -112,7 +113,7 @@
                 </div>
 
                 <div class="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
-                    @foreach(($discountedCourses ?? collect()) as $course)
+                        @foreach(($discountedCourses ?? collect()) as $course)
                         @php
                             $ticketData = $course->bestTicket(true);
                             $discountedPrice = $ticketData['bestTicket'] ?? null;
@@ -129,6 +130,7 @@
                             'originalPrice' => $course->price,
                             'discountedPrice' => $discountedPrice,
                             'discountPercent' => $discountPercent,
+                            'course' => $course,
                         ])
                     @endforeach
                 </div>
@@ -150,6 +152,7 @@
                         'subtitle' => $freeCourse->teacher->full_name ?? 'Instructor',
                         'height' => 'h-[220px]',
                         'bodyPadding' => 'p-4',
+                        'course' => $freeCourse,
                     ])
                 @endforeach
             </div>
