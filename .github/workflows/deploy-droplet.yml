@@ -110,5 +110,6 @@ jobs:
             php artisan migrate --force
             php artisan l5-swagger:generate
             php artisan optimize
+            php artisan view:cache
             # Workers exit gracefully after current job; systemd Restart=always starts fresh processes (see DEPLOY_DROPLET_GUIDE worker unit).
             php artisan queue:restart
