@@ -74,7 +74,7 @@ return [
 'district' => 'District',
 'university' => 'University',
 'faculty' => 'Faculty',
-'all_universities' => 'All universities',
+'all_universities' => 'All Universities',
 'all_faculties' => 'All faculties',
 'new_country' => 'New country',
 'new_province' => 'New province',

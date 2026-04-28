@@ -21,11 +21,9 @@
                         <h3 class="course-title font-16 font-weight-bold text-[#000000]" style="color: #000000 !important;">{{ clean($course->title,'title') }}</h3>
                     </a>
 
-                @if(!empty($course->university) || !empty($course->faculty))
+                @if(!empty($course) && (is_null($course->university_id) || !empty($course->university) || !empty($course->faculty)))
                     <div class="mt-2 text-sm text-[#000000]/70">
-                        @if(!empty($course->university))
-                            <span class="font-semibold">{{ $course->university->name }}</span>
-                        @endif
+                        <span class="font-semibold">{{ !empty($course->university) ? $course->university->name : trans('update.all_universities') }}</span>
 
                         @if(!empty($course->faculty))
                             <span class="ml-2">- {{ $course->faculty->name }}</span>

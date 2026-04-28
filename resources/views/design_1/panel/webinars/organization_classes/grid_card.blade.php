@@ -43,11 +43,9 @@
 
                 <h3 class="panel-course-grid-card__title font-14 text-dark">{{ $course->title }}</h3>
 
-                @if(!empty($course) && (!empty($course->university) || !empty($course->faculty)))
+                @if(!empty($course) && (is_null($course->university_id) || !empty($course->university) || !empty($course->faculty)))
                     <div class="font-12 text-gray-600 mt-6">
-                        @if(!empty($course->university))
-                            <span class="font-medium">{{ $course->university->name }}</span>
-                        @endif
+                        <span class="font-medium">{{ !empty($course->university) ? $course->university->name : trans('update.all_universities') }}</span>
 
                         @if(!empty($course->faculty))
                             <span class="ml-2">- {{ $course->faculty->name }}</span>

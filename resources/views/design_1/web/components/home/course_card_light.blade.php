@@ -20,11 +20,9 @@
         <div class="font-semibold text-base">{{ $title }}</div>
         <div class="mt-3 text-xs text-[#072923]/70">{{ $subtitle }}</div>
 
-        @if(!empty($course) && (!empty($course->university) || !empty($course->faculty)))
+        @if(!empty($course) && (is_null($course->university_id) || !empty($course->university) || !empty($course->faculty)))
             <div class="mt-2 text-xs text-[#072923]/60">
-                @if(!empty($course->university))
-                    <span class="font-medium">{{ $course->university->name }}</span>
-                @endif
+                <span class="font-medium">{{ !empty($course->university) ? $course->university->name : trans('update.all_universities') }}</span>
 
                 @if(!empty($course->faculty))
                     <span class="ml-2">- {{ $course->faculty->name }}</span>

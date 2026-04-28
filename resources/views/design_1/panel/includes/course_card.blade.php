@@ -72,11 +72,9 @@
                                     </div>
                                 @endif
 
-                                @if(!empty($item) && (!empty($item->university) || !empty($item->faculty)))
+                                @if(!empty($item) && (is_null($item->university_id) || !empty($item->university) || !empty($item->faculty)))
                                     <div class="font-12 text-gray-600 mt-4">
-                                        @if(!empty($item->university))
-                                            <span class="font-medium">{{ $item->university->name }}</span>
-                                        @endif
+                                        <span class="font-medium">{{ !empty($item->university) ? $item->university->name : trans('update.all_universities') }}</span>
 
                                         @if(!empty($item->faculty))
                                             <span class="ml-2">- {{ $item->faculty->name }}</span>
@@ -169,11 +167,9 @@
                                         'rateClassName' => 'mt-8',
                                     ])
                                 @endif
-                                @if(!empty($item) && (!empty($item->university) || !empty($item->faculty)))
+                                @if(!empty($item) && (is_null($item->university_id) || !empty($item->university) || !empty($item->faculty)))
                                     <div class="font-12 text-gray-600 mt-4">
-                                        @if(!empty($item->university))
-                                            <span class="font-medium">{{ $item->university->name }}</span>
-                                        @endif
+                                        <span class="font-medium">{{ !empty($item->university) ? $item->university->name : trans('update.all_universities') }}</span>
 
                                         @if(!empty($item->faculty))
                                             <span class="ml-2">- {{ $item->faculty->name }}</span>
