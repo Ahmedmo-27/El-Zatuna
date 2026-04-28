@@ -64,7 +64,7 @@ class HomeController extends Controller
                 ->where(function ($query) {
                     $query->whereNull('price')->orWhere('price', 0);
                 })
-                ->with('teacher');
+                ->with(['teacher', 'university', 'faculty']);
 
             if (!auth()->check()) {
                 $fallbackFreeQuery->whereNull('university_id')

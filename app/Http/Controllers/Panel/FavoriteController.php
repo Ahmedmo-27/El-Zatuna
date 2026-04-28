@@ -49,7 +49,9 @@ class FavoriteController extends Controller
                         'teacher' => function ($qu) {
                             $qu->select('id', 'full_name', 'role_name', 'role_id', 'username', 'avatar', 'avatar_settings', 'mobile', 'email');
                         },
-                        'category'
+                        'category',
+                        'university',
+                        'faculty'
                     ]);
                 }
             ])

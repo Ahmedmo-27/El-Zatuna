@@ -44,7 +44,9 @@ class FrontComponentsDataMixins
                 },
                 'reviews' => function ($query) {
                     $query->where('status', 'active');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -77,7 +79,9 @@ class FrontComponentsDataMixins
                 },
                 'reviews' => function ($query) {
                     $query->where('status', 'active');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->inRandomOrder()
@@ -107,7 +111,9 @@ class FrontComponentsDataMixins
             ->with([
                 'teacher' => function ($qu) {
                     $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -162,7 +168,9 @@ class FrontComponentsDataMixins
                 },
                 'sales',
                 'tickets',
-                'feature'
+                'feature',
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -192,7 +200,9 @@ class FrontComponentsDataMixins
                     $query->where('status', 'active');
                 },
                 'tickets',
-                'feature'
+                'feature',
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -215,7 +225,9 @@ class FrontComponentsDataMixins
             ->with([
                 'teacher' => function ($qu) {
                     $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();

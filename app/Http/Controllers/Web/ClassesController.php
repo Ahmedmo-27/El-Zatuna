@@ -260,6 +260,7 @@ class ClassesController extends Controller
 
         $query->limit($count);
         $query->offset(($page - 1) * $count);
+        $query->with(['university', 'faculty']);
 
         $courses = $query->get();
 
