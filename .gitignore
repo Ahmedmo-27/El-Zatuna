@@ -22,3 +22,4 @@ storage/debugbar/.gitignore
 /.env
 # Firebase credentials (sensitive)
 firebase-auth.json
+/claude-desings

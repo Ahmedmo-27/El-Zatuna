@@ -75,6 +75,29 @@
         @include('design_1.web.includes.floating_bar')
     @endif
 
+    {{-- Announcement ticker --}}
+    <div style="background:var(--ink);color:var(--cream);overflow:hidden;height:48px;display:flex;align-items:center;">
+        <div class="marquee-track" style="display:inline-flex;align-items:center;white-space:nowrap;gap:0;">
+            @php
+                $tickerItems = [
+                    'STUDENTS',
+                    ($professionalCoursesCount ?? '48') . ' COURSES',
+                    '12 UNIVERSITIES',
+                    'BUILT FOR UNIVERSITY STUDENTS BY UNIVERSITY TUTORS',
+                    "FALL '25 ENROLLMENT NOW OPEN",
+                    'FREE TRIAL AVAILABLE',
+                    'CAIRO · ALEXANDRIA · ONLINE',
+                    'COURSE-SPECIFIC TUTORING',
+                ];
+                $sep = '<span style="display:inline-block;width:6px;height:6px;background:var(--citron);border-radius:50%;margin:0 20px;"></span>';
+            @endphp
+            @foreach(array_merge($tickerItems, $tickerItems) as $item)
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;">{{ $item }}</span>
+                {!! $sep !!}
+            @endforeach
+        </div>
+    </div>
+
     @include('design_1.web.partials.navbar')
 
     {{-- Content --}}

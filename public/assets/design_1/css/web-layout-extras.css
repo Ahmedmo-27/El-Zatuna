@@ -203,3 +203,204 @@ p,
 .font-14 {
     line-height: 1.55;
 }
+
+/* ─────────────────────────────────────────────────────────
+   EL ZATUNA — Editorial design system 2026
+   ───────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    --ink:    #072923;
+    --cream:  #FAFFE0;
+    --cream-2:#eef3c6;
+    --citron: #C8CD06;
+    --muted:  #5a7265;
+    --line:   rgba(7,41,35,0.14);
+    --line-2: rgba(7,41,35,0.07);
+    --leaf:   #0d3a31;
+}
+
+/* Typography */
+.serif {
+    font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif !important;
+}
+.mono {
+    font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+a.btn-dark, button.btn-dark {
+    background: var(--ink);
+    color: var(--cream) !important;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: opacity .2s ease;
+}
+a.btn-dark:hover, button.btn-dark:hover {
+    opacity: .82;
+    color: var(--cream) !important;
+    text-decoration: none;
+}
+a.btn-ghost, button.btn-ghost {
+    background: transparent;
+    color: var(--ink) !important;
+    border: 1.5px solid var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background .2s ease, color .2s ease;
+}
+a.btn-ghost:hover, button.btn-ghost:hover {
+    background: var(--ink);
+    color: var(--cream) !important;
+    text-decoration: none;
+}
+a.btn-primary, button.btn-primary {
+    background: var(--citron);
+    color: var(--ink) !important;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background .2s ease;
+}
+a.btn-primary:hover, button.btn-primary:hover {
+    background: #BDEA42;
+    color: var(--ink) !important;
+    text-decoration: none;
+}
+
+/* ── Card hover ─────────────────────────────────────────── */
+.card-hover {
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(7,41,35,.12);
+}
+
+/* ── Underline link ─────────────────────────────────────── */
+.uline {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ── Fade up ────────────────────────────────────────────── */
+@keyframes ez-fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: ez-fade-up .45s ease both; }
+
+/* ── Editorial marquee (home, announcement bar) ─────────── */
+.marquee-track {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: ez-marquee-run 34s linear infinite;
+}
+@keyframes ez-marquee-run {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* ── EZ form inputs (editorial contact) ─────────────────── */
+.ez-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--ink);
+    border-radius: 0;
+    padding: 10px 0;
+    font-size: 16px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .2s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.ez-input:focus {
+    border-bottom-color: var(--citron);
+    box-shadow: none;
+    outline: none;
+}
+.ez-input::placeholder { color: var(--muted); }
+
+textarea.ez-input {
+    resize: vertical;
+    border: 1px solid rgba(7,41,35,.18);
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+textarea.ez-input:focus { border-color: var(--citron); }
+
+select.ez-input {
+    cursor: pointer;
+    border: 1px solid rgba(7,41,35,.18);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+select.ez-input:focus { border-color: var(--citron); }
+
+/* ── EZ Container ───────────────────────────────────────── */
+.ez-container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+@media (max-width: 640px) { .ez-container { padding: 0 20px; } }
+
+/* ── Editorial grid helpers ─────────────────────────────── */
+.ez-hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 80px;
+    align-items: end;
+}
+.ez-two-col {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 80px;
+    align-items: end;
+}
+.ez-three-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+.ez-four-col {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+@media (max-width: 1024px) {
+    .ez-hero-grid, .ez-two-col { grid-template-columns: 1fr; gap: 48px; }
+    .ez-four-col { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .ez-three-col { grid-template-columns: 1fr; }
+    .ez-image-strip { display: none; }
+}
+
+/* ── FAQ accordion ──────────────────────────────────────── */
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .35s ease;
+}
+.faq-item.open .faq-answer { max-height: 240px; }
+.faq-toggle-icon {
+    transition: transform .3s ease, background .3s ease;
+}
+.faq-item.open .faq-toggle-icon {
+    transform: rotate(45deg);
+    background: var(--ink) !important;
+    color: var(--cream) !important;
+}

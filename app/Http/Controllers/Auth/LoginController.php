@@ -365,15 +365,18 @@ class LoginController extends Controller
         // Fallback to global security settings if needed
         $securitySettings = getGeneralSecuritySettings();
         if (!empty($securitySettings) and !empty($securitySettings['login_device_limit'])) {
-            // If user's allowed_devices is not set or is 1 (default), use global setting
             if (empty($user->allowed_devices) || $user->allowed_devices == 1) {
                 $limitCount = !empty($securitySettings['number_of_allowed_devices']) ? $securitySettings['number_of_allowed_devices'] : 1;
             }
         }
 
-        $count = $user->logged_count;
+        // Sync logged_count against actual active sessions before checking —
+        // prevents permanent lockout when sessions expire without a proper logout.
+        $sessionManager = new SessionManager();
+        $sessionManager->syncLoggedCount($user);
+        $user->refresh();
 
-        if ($count >= $limitCount) {
+        if ($user->logged_count >= $limitCount) {
             return "no";
         }
 

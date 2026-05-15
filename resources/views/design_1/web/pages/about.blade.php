@@ -1,201 +1,457 @@
 @extends('design_1.web.layouts.app')
 
+@push('styles_top')
+<style>
+    @media (max-width: 1024px) {
+        .ag2 { grid-template-columns: 1fr !important; gap: 48px !important; }
+        .ag4 { grid-template-columns: repeat(2,1fr) !important; }
+        .ag3 { grid-template-columns: 1fr !important; gap: 24px !important; }
+    }
+    @media (max-width: 640px) {
+        .ag4 { grid-template-columns: 1fr !important; }
+        .tl-grid { grid-template-columns: 64px 32px 1fr !important; }
+        .tl-year { font-size: 36px !important; }
+    }
+</style>
+@endpush
+
 @section('content')
-    <main class="bg-[#FAFFE0] text-[#072923] min-h-screen">
-        
-        <!-- Hero Section -->
-        <section class="max-w-[1700px] mx-auto px-12 md:px-24 lg:px-32 xl:px-44 pt-32 pb-24">
-            <div class="text-center animate-[fadeIn_0.8s_ease-in-out] pl-4 md:pl-10">
-                <h1 class="text-4xl md:text-6xl font-bold mb-4">About <span class="text-[#C8CD06]">El Zatuna</span></h1>
-                <p class="text-lg md:text-xl text-[#072923]/70 max-w-3xl mx-auto">
-                    Your trusted platform for quality education and skill development
+<div class="bg-[#FAFFE0] text-[#072923]">
+
+
+{{-- ══════════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════════ --}}
+<section style="padding-top:64px;padding-bottom:72px;">
+    <div class="ez-container">
+
+        {{-- Eyebrow --}}
+        <div class="hidden md:flex" style="justify-content:space-between;align-items:center;
+            font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;
+            text-transform:uppercase;color:var(--muted);
+            padding-bottom:32px;border-bottom:1px solid var(--line);margin-bottom:64px;">
+            <span>—— THE COMPANY</span>
+            <span>· Est. 2023 · Cairo ·</span>
+            <span>STAFF Nº 12 · STUDENTS 257</span>
+        </div>
+
+        <div class="ag2" style="display:grid;grid-template-columns:1.3fr 1fr;gap:80px;align-items:end;">
+            <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;
+                    letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:28px;">
+                    About <span style="color:var(--ink);">·</span> elzatuna
+                </div>
+                <h1 class="serif" style="font-size:clamp(36px,6.5vw,88px);line-height:0.96;
+                    margin:0;letter-spacing:-0.035em;font-weight:400;">
+                    We're a tiny team<br>
+                    building a <em style="font-style:italic;">big</em>,<br>
+                    patient olive tree.
+                </h1>
+            </div>
+
+            <div style="padding-bottom:12px;">
+                <p class="serif" style="font-size:22px;line-height:1.38;margin:0;letter-spacing:-0.005em;">
+                    <span style="color:var(--muted);">The olive grows slow.</span>
+                    It takes seven years to bear fruit, sixty to grow tall, six hundred to feed a village.
+                    <span style="color:var(--muted);"> So that's the timescale we chose for what we're trying to do here.</span>
                 </p>
-                <div class="mt-10 flex justify-center">
-                    <img src="/assets/design_1/img/no-result/instructors.svg" alt="Instructors" class="w-72 md:w-96 lg:w-[520px] opacity-90" />
+
+                <div style="margin-top:32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+                    border-top:1px solid var(--ink);padding-top:14px;">
+                    @foreach([['Yr 02','where we are'],['Yr 07','first profit'],['Yr 60','where we\'re going']] as $s)
+                    <div>
+                        <div class="serif" style="font-size:28px;line-height:1;letter-spacing:-0.02em;">{{ $s[0] }}</div>
+                        <div style="font-size:11px;margin-top:6px;color:var(--muted);font-family:'JetBrains Mono',monospace;
+                            letter-spacing:0.08em;text-transform:uppercase;">{{ $s[1] }}</div>
+                    </div>
+                    @endforeach
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Mission & Vision -->
-        <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-16">
-            <div class="grid md:grid-cols-2 gap-10">
-                <div class="bg-[#072923] rounded-[32px] p-8 md:p-12 text-[#FAFFE0] hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl mb-6"><x-iconsax-lin-clipboard-tick class="w-12 h-12 text-[#C8CD06]"/></div>
-                    <h2 class="text-2xl md:text-3xl font-bold mb-4">Our Mission</h2>
-                    <p class="text-[#FAFFE0]/80">
-                        To provide accessible, high-quality education that empowers learners worldwide to achieve their goals 
-                        and unlock their full potential through innovative online learning experiences.
-                    </p>
-                </div>
-                <div class="bg-[#072923] rounded-[32px] p-8 md:p-12 text-[#FAFFE0] hover:scale-105 transition-transform duration-300">
-                    <div class="text-5xl mb-6"><x-iconsax-lin-eye class="w-12 h-12 text-[#C8CD06]"/></div>
-                    <h2 class="text-2xl md:text-3xl font-bold mb-4">Our Vision</h2>
-                    <p class="text-[#FAFFE0]/80">
-                        To become the leading educational platform that bridges the gap between knowledge and opportunity, 
-                        creating a global community of lifelong learners and expert instructors.
-                    </p>
-                </div>
+        {{-- Olive name strip --}}
+        <div style="margin-top:80px;background:var(--ink);color:var(--cream);border-radius:24px;
+            padding:40px 48px;position:relative;overflow:hidden;
+            display:flex;align-items:center;justify-content:space-between;">
+            <div style="position:absolute;left:-20px;top:10px;opacity:0.18;">
+                <svg width="360" height="220" viewBox="0 0 120 72" fill="none" aria-hidden="true">
+                    <path d="M10 60 C 30 50, 60 35, 110 12" stroke="var(--citron)" stroke-width="1.5" stroke-linecap="round"/>
+                    <ellipse cx="28" cy="48" rx="6" ry="3.5" transform="rotate(-30 28 48)" fill="var(--citron)"/>
+                    <ellipse cx="46" cy="40" rx="6.5" ry="3.6" transform="rotate(-30 46 40)" fill="var(--citron)"/>
+                    <ellipse cx="64" cy="32" rx="7" ry="3.8" transform="rotate(-30 64 32)" fill="var(--citron)"/>
+                    <ellipse cx="82" cy="24" rx="6.5" ry="3.6" transform="rotate(-30 82 24)" fill="var(--citron)"/>
+                </svg>
             </div>
-        </section>
-
-        <!-- Platform Stats -->
-        <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Growing <span class="text-[#C8CD06]">Together</span></h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 text-center hover:scale-110 transition-transform duration-300">
-                    <div class="text-4xl mb-3"><x-iconsax-lin-profile-2user class="w-10 h-10 text-[#072923] mx-auto"/></div>
-                    <div class="text-3xl font-bold text-[#072923]">2,500+</div>
-                    <div class="text-sm text-[#072923]/70">Active Students</div>
-                </div>
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 text-center hover:scale-110 transition-transform duration-300">
-                    <div class="text-4xl mb-3"><x-iconsax-lin-teacher class="w-10 h-10 text-[#072923] mx-auto"/></div>
-                    <div class="text-3xl font-bold text-[#072923]">257</div>
-                    <div class="text-sm text-[#072923]/70">Expert Instructors</div>
-                </div>
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 text-center hover:scale-110 transition-transform duration-300">
-                    <div class="text-4xl mb-3"><x-iconsax-lin-book class="w-10 h-10 text-[#072923] mx-auto"/></div>
-                    <div class="text-3xl font-bold text-[#072923]">29</div>
-                    <div class="text-sm text-[#072923]/70">Professional Courses</div>
-                </div>
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 text-center hover:scale-110 transition-transform duration-300">
-                    <div class="text-4xl mb-3"><x-iconsax-lin-building-3 class="w-10 h-10 text-[#072923] mx-auto"/></div>
-                    <div class="text-3xl font-bold text-[#072923]">6</div>
-                    <div class="text-sm text-[#072923]/70">Partner Organizations</div>
-                </div>
+            <div style="position:relative;z-index:1;max-width:700px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
+                    text-transform:uppercase;color:var(--citron);margin-bottom:16px;">What zatuna means</div>
+                <h2 class="serif" style="font-size:clamp(24px,3.8vw,52px);line-height:1.1;
+                    margin:0;letter-spacing:-0.015em;">
+                    <em style="font-style:italic;">"الزيتونة"</em> — <span style="color:var(--citron);">the olive</span>.
+                    Patient, ancient, generous. Plants its own shade.
+                </h2>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
-        <!-- Why Choose Us -->
-        <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose <span class="text-[#C8CD06]">El Zatuna</span>?</h2>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-[#072923] rounded-[24px] p-8 text-[#FAFFE0] hover:translate-y-[-8px] transition-transform duration-300">
-                    <div class="h-14 w-14 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4"><x-iconsax-lin-star class="w-7 h-7 text-[#072923]"/></div>
-                    <h3 class="text-xl font-bold mb-3">Quality Content</h3>
-                    <p class="text-[#FAFFE0]/70">
-                        Expert-curated courses designed to deliver practical knowledge and real-world skills.
-                    </p>
-                </div>
-                <div class="bg-[#072923] rounded-[24px] p-8 text-[#FAFFE0] hover:translate-y-[-8px] transition-transform duration-300">
-                    <div class="h-14 w-14 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4"><x-iconsax-lin-clock-1 class="w-7 h-7 text-[#072923]"/></div>
-                    <h3 class="text-xl font-bold mb-3">Flexible Learning</h3>
-                    <p class="text-[#FAFFE0]/70">
-                        Learn at your own pace, on your own schedule, from anywhere in the world.
-                    </p>
-                </div>
-                <div class="bg-[#072923] rounded-[24px] p-8 text-[#FAFFE0] hover:translate-y-[-8px] transition-transform duration-300">
-                    <div class="h-14 w-14 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4"><x-iconsax-lin-medal class="w-7 h-7 text-[#072923]"/></div>
-                    <h3 class="text-xl font-bold mb-3">Certified Success</h3>
-                    <p class="text-[#FAFFE0]/70">
-                        Earn recognized certificates that showcase your achievements and expertise.
-                    </p>
-                </div>
-                <div class="bg-[#072923] rounded-[24px] p-8 text-[#FAFFE0] hover:translate-y-[-8px] transition-transform duration-300">
-                    <div class="h-14 w-14 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4"><x-iconsax-lin-note-2 class="w-7 h-7 text-[#072923]"/></div>
-                    <h3 class="text-xl font-bold mb-3">Interactive Learning</h3>
-                    <p class="text-[#FAFFE0]/70">
-                        Engage with course materials through quizzes, assignments, and hands-on projects.
-                    </p>
-                </div>
-                <div class="bg-[#072923] rounded-[24px] p-8 text-[#FAFFE0] hover:translate-y-[-8px] transition-transform duration-300">
-                    <div class="h-14 w-14 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4"><x-iconsax-lin-messages class="w-7 h-7 text-[#072923]"/></div>
-                    <h3 class="text-xl font-bold mb-3">Community Support</h3>
-                    <p class="text-[#FAFFE0]/70">
-                        Join a thriving community of learners and connect with peers and mentors.
-                    </p>
-                </div>
-                <div class="bg-[#072923] rounded-[24px] p-8 text-[#FAFFE0] hover:translate-y-[-8px] transition-transform duration-300">
-                    <div class="h-14 w-14 bg-[#C8CD06] rounded-full flex items-center justify-center mb-4"><x-iconsax-lin-moneys class="w-7 h-7 text-[#072923]"/></div>
-                    <h3 class="text-xl font-bold mb-3">Affordable Pricing</h3>
-                    <p class="text-[#FAFFE0]/70">
-                        Access world-class education at prices that won't break the bank.
-                    </p>
-                </div>
+
+{{-- ══════════════════════════════════════════════════════
+     ORIGIN / OUR STORY
+══════════════════════════════════════════════════════ --}}
+<section style="padding:100px 0;">
+    <div class="ez-container">
+        <div class="ag2" style="display:grid;grid-template-columns:0.85fr 1.4fr;gap:80px;align-items:flex-start;">
+            <div style="position:sticky;top:100px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:24px;">—— 01 / Origin</div>
+                <h2 class="serif" style="font-size:clamp(40px,5.5vw,72px);line-height:0.98;
+                    margin:0;letter-spacing:-0.025em;font-weight:400;">
+                    Why we<br>
+                    built <em style="font-style:italic;">this</em>,<br>
+                    instead of<br>
+                    something<br>
+                    easier.
+                </h2>
             </div>
-        </section>
 
-        <!-- Our Story -->
-        <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-16">
-            <div class="bg-[#072923] rounded-[32px] p-8 md:p-16">
-                <h2 class="text-3xl md:text-4xl font-bold text-[#FAFFE0] mb-8 text-center">Our <span class="text-[#C8CD06]">Story</span></h2>
-                <div class="text-[#FAFFE0]/80 space-y-4 max-w-4xl mx-auto">
-                    <p>
-                        El Zatuna was founded with a simple yet powerful vision: to make quality education accessible to everyone, 
-                        everywhere. We believe that knowledge should not be limited by geographical boundaries, financial constraints, 
-                        or traditional educational barriers.
-                    </p>
-                    <p>
-                        Our platform brings together expert instructors from around the world with ambitious learners eager to 
-                        develop new skills and advance their careers. Through innovative technology and a commitment to educational 
-                        excellence, we've created a learning ecosystem that adapts to each student's unique needs.
-                    </p>
-                    <p>
-                        Today, we're proud to serve thousands of students across multiple countries, offering courses in diverse 
-                        subjects ranging from technology and business to arts and personal development. Every course on our platform 
-                        is carefully designed to deliver practical, actionable knowledge that our students can immediately apply to 
-                        their professional and personal lives.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Values -->
-        <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-16">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12">Our Core <span class="text-[#C8CD06]">Values</span></h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 hover:scale-105 transition-transform duration-300">
-                    <div class="text-3xl mb-3"><x-iconsax-lin-search-normal class="w-8 h-8 text-[#072923]"/></div>
-                    <h3 class="text-lg font-bold text-[#072923] mb-2">Excellence</h3>
-                    <p class="text-sm text-[#072923]/70">Striving for the highest quality in everything we do</p>
-                </div>
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 hover:scale-105 transition-transform duration-300">
-                    <div class="text-3xl mb-3"><x-iconsax-lin-status-up class="w-8 h-8 text-[#072923]"/></div>
-                    <h3 class="text-lg font-bold text-[#072923] mb-2">Innovation</h3>
-                    <p class="text-sm text-[#072923]/70">Continuously improving and embracing new technologies</p>
-                </div>
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 hover:scale-105 transition-transform duration-300">
-                    <div class="text-3xl mb-3"><x-iconsax-lin-global class="w-8 h-8 text-[#072923]"/></div>
-                    <h3 class="text-lg font-bold text-[#072923] mb-2">Accessibility</h3>
-                    <p class="text-sm text-[#072923]/70">Making education available to learners everywhere</p>
-                </div>
-                <div class="bg-[#BDEA42] rounded-[24px] p-6 hover:scale-105 transition-transform duration-300">
-                    <div class="text-3xl mb-3"><x-iconsax-lin-heart class="w-8 h-8 text-[#072923]"/></div>
-                    <h3 class="text-lg font-bold text-[#072923] mb-2">Integrity</h3>
-                    <p class="text-sm text-[#072923]/70">Building trust through transparency and honesty</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section class="max-w-[1600px] mx-auto px-6 md:px-8 py-16">
-            <div class="bg-[#C8CD06] rounded-[32px] p-12 text-center">
-                <h2 class="text-3xl md:text-4xl font-bold text-[#072923] mb-4">Ready to Start Learning?</h2>
-                <p class="text-lg text-[#072923]/70 mb-8 max-w-2xl mx-auto">
-                    Join thousands of students already learning on El Zatuna. Browse our courses and start your journey today!
+            <div style="font-family:'Instrument Serif','Playfair Display',serif;
+                font-size:22px;line-height:1.5;letter-spacing:-0.005em;color:var(--ink);">
+                <p style="margin:0;">
+                    <span style="float:left;font-size:112px;line-height:0.85;font-style:italic;
+                        color:var(--citron);padding:6px 16px 0 0;
+                        font-family:'Instrument Serif','Playfair Display',serif;">E</span>l Zatuna was founded
+                    with a simple yet powerful vision: to make quality education accessible to everyone, everywhere.
+                    We believe that knowledge should not be limited by geographical boundaries, financial constraints,
+                    or traditional educational barriers.
                 </p>
-                <div class="flex flex-wrap gap-4 justify-center">
-                    <a href="/classes" class="bg-[#072923] text-[#FAFFE0] font-semibold px-8 py-4 rounded-full text-lg hover:scale-105 transition-transform duration-200 inline-flex items-center gap-3">
-                        <x-iconsax-lin-book class="w-5 h-5"/> Browse Courses
+
+                <p style="margin-top:32px;">
+                    Our platform brings together expert instructors from across Egypt with ambitious students eager to
+                    develop new skills and pass their exams. Through course-specific tutoring and a commitment to
+                    educational excellence, we've created a learning ecosystem that adapts to
+                    <span style="color:var(--citron);">each student's exact university, exact course, and exact semester.</span>
+                </p>
+
+                <p style="margin-top:32px;">
+                    Today, we're proud to serve thousands of students across multiple universities, offering courses
+                    carefully designed by tutors who sat through the exact same lectures — usually just one or two
+                    years ago.
+                </p>
+
+                <p style="margin-top:32px;font-size:26px;font-style:italic;color:var(--ink);">
+                    Course-specific tutoring, built for Egyptian universities, taught by students who finished
+                    the course one or two years ago.
+                </p>
+
+                <p style="margin-top:32px;font-size:16px;color:var(--muted);
+                    font-family:'Poppins','Inter',sans-serif;line-height:1.65;">
+                    We're not trying to replace your professor. We're not trying to replace Khan Academy.
+                    We're the thing in between — the friend who took the course last year, who remembers
+                    which slides actually matter and which past papers will probably show up again.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+{{-- ══════════════════════════════════════════════════════
+     TIMELINE
+══════════════════════════════════════════════════════ --}}
+<section style="padding:40px 0 100px;">
+    <div class="ez-container">
+        <div class="ag2" style="display:grid;grid-template-columns:0.9fr 1.4fr;gap:80px;
+            align-items:end;margin-bottom:64px;">
+            <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:24px;">—— 02 / Timeline</div>
+                <h2 class="serif" style="font-size:clamp(44px,6.5vw,96px);line-height:0.96;
+                    margin:0;letter-spacing:-0.025em;font-weight:400;">
+                    Two years,<br>
+                    <em style="font-style:italic;">six</em> milestones.
+                </h2>
+            </div>
+            <p style="font-size:16px;line-height:1.55;color:var(--muted);margin:0;max-width:480px;">
+                No fundraising rounds, no growth-hacking, no twitter announcements.
+                Just one new course at a time, one new tutor at a time.
+            </p>
+        </div>
+
+        @php
+            $events = [
+                ['yr'=>'2023','mo'=>'SEP','t'=>'A Google Doc','d'=>'Three friends needed help through their OS final. Notes lived in one shared doc. They passed.','tag'=>'beginning','current'=>false],
+                ['yr'=>'2024','mo'=>'JAN','t'=>'First paid lesson','d'=>'A friend-of-a-friend pays for one-on-one help. The doc earns its first cup of coffee.','tag'=>'first $','current'=>false],
+                ['yr'=>'2024','mo'=>'JUN','t'=>'Platform launches','d'=>'V1 built from scratch. Course-specific tutoring goes live for Cairo University students.','tag'=>'launch','current'=>false],
+                ['yr'=>'2024','mo'=>'OCT','t'=>'First cohort','d'=>'12 students enroll for the Fall semester. 11 pass. The 12th switched majors.','tag'=>'cohort','current'=>false],
+                ['yr'=>'2025','mo'=>'MAR','t'=>'5 universities','d'=>'Coverage expands from Cairo Uni to AUC, Ain Shams, Alexandria, and GUC. 7 tutors on the roster.','tag'=>'growth','current'=>false],
+                ['yr'=>'2025','mo'=>'SEP','t'=>'12 universities · 257 students','d'=>'Where we are now. Three new courses launching every month. Slow and steady.','tag'=>'today','current'=>true],
+            ];
+        @endphp
+
+        <div style="position:relative;">
+            {{-- vertical rail --}}
+            <div style="position:absolute;left:calc(120px + 16px);top:12px;bottom:12px;
+                width:1px;background:var(--line);"></div>
+
+            @foreach($events as $i => $e)
+            <div class="tl-grid" style="display:grid;grid-template-columns:120px 40px 1fr;
+                gap:0;padding:32px 0;
+                {{ $i < count($events)-1 ? 'border-bottom:1px solid var(--line);' : '' }}
+                align-items:flex-start;">
+                <div>
+                    <div class="serif tl-year" style="font-size:52px;line-height:0.9;letter-spacing:-0.02em;">{{ $e['yr'] }}</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;
+                        letter-spacing:0.14em;color:var(--muted);margin-top:6px;">{{ $e['mo'] }}</div>
+                </div>
+
+                <div style="display:flex;justify-content:center;padding-top:18px;">
+                    <div style="width:14px;height:14px;border-radius:50%;
+                        background:{{ $e['current'] ? 'var(--citron)' : 'var(--cream)' }};
+                        border:2px solid var(--ink);position:relative;z-index:1;
+                        box-shadow:{{ $e['current'] ? '0 0 0 6px rgba(200,205,6,0.2)' : 'none' }};"></div>
+                </div>
+
+                <div style="padding-left:32px;">
+                    <div style="display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;
+                        letter-spacing:0.14em;text-transform:uppercase;
+                        background:{{ $e['current'] ? 'var(--citron)' : 'transparent' }};
+                        border:{{ $e['current'] ? 'none' : '1px solid var(--line)' }};
+                        color:{{ $e['current'] ? 'var(--ink)' : 'var(--muted)' }};
+                        padding:5px 10px;border-radius:999px;font-weight:600;margin-bottom:14px;">{{ $e['tag'] }}</div>
+                    <h3 class="serif" style="font-size:30px;line-height:1.1;margin:0;
+                        letter-spacing:-0.015em;font-weight:400;">{{ $e['t'] }}</h3>
+                    <p style="margin:12px 0 0;font-size:16px;line-height:1.55;
+                        color:var(--muted);max-width:600px;">{{ $e['d'] }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+
+{{-- ══════════════════════════════════════════════════════
+     BY THE NUMBERS
+══════════════════════════════════════════════════════ --}}
+<section style="padding:40px 0 100px;">
+    <div class="ez-container">
+        <div style="margin-bottom:56px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
+                text-transform:uppercase;color:var(--muted);margin-bottom:24px;">—— 03 / By the numbers</div>
+            <h2 class="serif" style="font-size:clamp(44px,6.5vw,96px);line-height:0.96;
+                margin:0;letter-spacing:-0.025em;max-width:900px;font-weight:400;">
+                We don't have <em style="font-style:italic;">millions</em> of<br>
+                users. We have these.
+            </h2>
+        </div>
+
+        @php
+            $stats = [
+                ['n'=>'2,500+','sub'=>'active students','t'=>'cream'],
+                ['n'=>'48','sub'=>'courses live','t'=>'leaf'],
+                ['n'=>'32','sub'=>'tutors on the roster','t'=>'citron'],
+                ['n'=>'12','sub'=>'universities covered','t'=>'cream'],
+                ['n'=>'94%','sub'=>'first-time pass rate','t'=>'leaf'],
+                ['n'=>'48h','sub'=>'avg. tutor reply','t'=>'citron'],
+                ['n'=>'$240k','sub'=>'saved by students this year','t'=>'cream'],
+                ['n'=>'4.9','sub'=>'/ 5 average rating','t'=>'leaf'],
+            ];
+        @endphp
+        <div class="ag4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+            @foreach($stats as $i => $s)
+            @php
+                $bg = $s['t'] === 'cream' ? 'var(--cream)' : ($s['t'] === 'leaf' ? '#d4edda' : 'var(--citron)');
+                $border = $s['t'] !== 'citron' ? 'border:1px solid var(--line);' : '';
+            @endphp
+            <div style="background:{{ $bg }};{{ $border }}border-radius:20px;padding:28px;min-height:200px;
+                display:flex;flex-direction:column;justify-content:space-between;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;
+                    letter-spacing:0.14em;color:var(--ink);opacity:0.55;">
+                    {{ str_pad($i+1, 2, '0', STR_PAD_LEFT) }} / {{ str_pad(count($stats), 2, '0', STR_PAD_LEFT) }}
+                </div>
+                <div>
+                    <div class="serif" style="font-size:64px;line-height:0.85;letter-spacing:-0.03em;color:var(--ink);">{{ $s['n'] }}</div>
+                    <div style="margin-top:14px;font-size:13px;color:var(--ink);
+                        font-family:'JetBrains Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;">{{ $s['sub'] }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+
+{{-- ══════════════════════════════════════════════════════
+     PRINCIPLES / WHAT WE BELIEVE
+══════════════════════════════════════════════════════ --}}
+<section style="padding:40px 0 100px;">
+    <div class="ez-container">
+        <div class="ag2" style="display:grid;grid-template-columns:0.9fr 1.4fr;gap:80px;
+            align-items:end;margin-bottom:56px;">
+            <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
+                    text-transform:uppercase;color:var(--muted);margin-bottom:24px;">—— 04 / What we believe</div>
+                <h2 class="serif" style="font-size:clamp(44px,6.5vw,96px);line-height:0.96;
+                    margin:0;letter-spacing:-0.025em;font-weight:400;">
+                    Six things<br>
+                    we won't<br>
+                    <em style="font-style:italic;">change</em>.
+                </h2>
+            </div>
+            <p style="font-size:16px;line-height:1.55;color:var(--muted);margin:0;max-width:460px;">
+                These are the rules we believe in. If we ever break one,
+                it's probably time to start a new company.
+            </p>
+        </div>
+
+        @php
+            $principles = [
+                ['n'=>'01','t'=>'Quality first.','d'=>'Expert-curated courses designed to deliver practical knowledge. Each course is reviewed by tutors who actually took it.'],
+                ['n'=>'02','t'=>'Specific beats generic.','d'=>'A course called "Operating Systems" is useless. A course called "CSE 305 at Cairo Uni with Dr. Mansour, Fall semester" is what students need.'],
+                ['n'=>'03','t'=>'The tutor is the product.','d'=>'Slides, videos, and PDFs are accessories. The thing that matters is the human at the other end — someone who passed your exact course recently.'],
+                ['n'=>'04','t'=>'Flexible learning, real commitment.','d'=>'Learn at your own pace, on your own schedule. But we\'re here when you need us — not a pre-recorded video with no one to answer your questions.'],
+                ['n'=>'05','t'=>'Community matters.','d'=>'Join a community of students navigating the same exams, same professors, same pressure. You\'re not alone in this.'],
+                ['n'=>'06','t'=>'Local always.','d'=>'We know Egyptian universities, syllabi, and the slang. We will never expand to a country we don\'t live in — proximity is the whole point.'],
+            ];
+        @endphp
+        <div style="border-top:1px solid var(--ink);">
+            @foreach($principles as $it)
+            <div style="display:grid;grid-template-columns:80px 1fr 1.4fr;gap:40px;
+                padding:36px 0;border-bottom:1px solid var(--ink);align-items:baseline;"
+                class="ag2 principle-row">
+                <div class="serif" style="font-size:52px;line-height:0.9;letter-spacing:-0.02em;color:var(--citron);">{{ $it['n'] }}</div>
+                <h3 class="serif" style="font-size:34px;line-height:1.05;margin:0;letter-spacing:-0.02em;font-weight:400;">{{ $it['t'] }}</h3>
+                <p style="font-size:17px;line-height:1.55;color:var(--muted);margin:0;">{{ $it['d'] }}</p>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+
+{{-- ══════════════════════════════════════════════════════
+     VOICES / TESTIMONIALS
+══════════════════════════════════════════════════════ --}}
+<section style="padding:40px 0 100px;">
+    <div class="ez-container">
+        <div style="margin-bottom:56px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
+                text-transform:uppercase;color:var(--muted);margin-bottom:24px;">—— 05 / Voices</div>
+            <h2 class="serif" style="font-size:clamp(44px,6.5vw,96px);line-height:0.96;
+                margin:0;letter-spacing:-0.025em;font-weight:400;">
+                What students <em style="font-style:italic;">actually</em> say.
+            </h2>
+        </div>
+
+        @php
+            $quotes = [
+                ['q'=>'I failed my OS midterm in March. By May, my tutor at Zatuna had me at an A-minus. He literally took the same course with the same professor two years ago.','n'=>'Yara Mahmoud','d'=>'3rd year · CS · Cairo Uni'],
+                ['q'=>"I'm not a great student, honestly. I just needed someone patient who'd answer the same dumb question four times. That's what I got here.",'n'=>'Hossam Kheir','d'=>'2nd year · Business · AUC'],
+                ['q'=>"I tutor here. I'm a real person. They actually pay on time. There's not much else to say.",'n'=>'Adam Khalil','d'=>'Tutor since 2024'],
+            ];
+        @endphp
+        <div class="ag3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+            @foreach($quotes as $i => $q)
+            <blockquote style="margin:0;
+                background:{{ $i === 1 ? 'var(--citron)' : 'var(--cream)' }};
+                border:{{ $i === 1 ? 'none' : '1px solid var(--line)' }};
+                border-radius:24px;padding:32px;
+                display:flex;flex-direction:column;justify-content:space-between;min-height:320px;">
+                <div class="serif" style="font-size:72px;line-height:0.6;
+                    color:{{ $i === 1 ? 'var(--ink)' : 'var(--citron)' }};font-style:italic;">"</div>
+                <p class="serif" style="font-size:21px;line-height:1.35;margin:24px 0 28px;
+                    letter-spacing:-0.005em;color:var(--ink);flex:1;">{{ $q['q'] }}</p>
+                <div style="padding-top:16px;border-top:1px solid rgba(7,41,35,0.15);
+                    display:flex;align-items:center;gap:12px;">
+                    <div style="width:38px;height:38px;border-radius:50%;
+                        background:{{ $i === 1 ? 'var(--ink)' : 'var(--leaf)' }};flex-shrink:0;"></div>
+                    <div>
+                        <div style="font-size:14px;font-weight:600;">{{ $q['n'] }}</div>
+                        <div style="font-size:12px;color:rgba(7,41,35,0.65);">{{ $q['d'] }}</div>
+                    </div>
+                </div>
+            </blockquote>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+
+{{-- ══════════════════════════════════════════════════════
+     CTA
+══════════════════════════════════════════════════════ --}}
+<section style="padding:40px 0 80px;">
+    <div class="ez-container">
+        <div style="background:var(--ink);color:var(--cream);border-radius:32px;
+            padding:88px 64px;position:relative;overflow:hidden;text-align:center;">
+            <div style="position:absolute;left:-40px;top:-20px;opacity:0.15;">
+                <svg width="360" height="220" viewBox="0 0 120 72" fill="none" aria-hidden="true">
+                    <path d="M10 60 C 30 50, 60 35, 110 12" stroke="var(--citron)" stroke-width="1.5" stroke-linecap="round"/>
+                    <ellipse cx="28" cy="48" rx="6" ry="3.5" transform="rotate(-30 28 48)" fill="var(--citron)"/>
+                    <ellipse cx="46" cy="40" rx="6.5" ry="3.6" transform="rotate(-30 46 40)" fill="var(--citron)"/>
+                    <ellipse cx="64" cy="32" rx="7" ry="3.8" transform="rotate(-30 64 32)" fill="var(--citron)"/>
+                    <ellipse cx="82" cy="24" rx="6.5" ry="3.6" transform="rotate(-30 82 24)" fill="var(--citron)"/>
+                </svg>
+            </div>
+            <div style="position:absolute;right:-40px;bottom:-20px;opacity:0.15;transform:scaleX(-1);">
+                <svg width="360" height="220" viewBox="0 0 120 72" fill="none" aria-hidden="true">
+                    <path d="M10 60 C 30 50, 60 35, 110 12" stroke="var(--citron)" stroke-width="1.5" stroke-linecap="round"/>
+                    <ellipse cx="28" cy="48" rx="6" ry="3.5" transform="rotate(-30 28 48)" fill="var(--citron)"/>
+                    <ellipse cx="46" cy="40" rx="6.5" ry="3.6" transform="rotate(-30 46 40)" fill="var(--citron)"/>
+                    <ellipse cx="64" cy="32" rx="7" ry="3.8" transform="rotate(-30 64 32)" fill="var(--citron)"/>
+                    <ellipse cx="82" cy="24" rx="6.5" ry="3.6" transform="rotate(-30 82 24)" fill="var(--citron)"/>
+                </svg>
+            </div>
+
+            <div style="position:relative;z-index:1;max-width:900px;margin:0 auto;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;
+                    text-transform:uppercase;color:var(--citron);margin-bottom:24px;">—— 06 / Last thing</div>
+                <h2 class="serif" style="font-size:clamp(56px,8vw,124px);line-height:0.94;
+                    margin:0;letter-spacing:-0.035em;font-weight:400;">
+                    Plant the<br>
+                    <em style="font-style:italic;color:var(--citron);">olive</em>.
+                </h2>
+                <p style="margin-top:32px;font-size:18px;line-height:1.55;
+                    color:rgba(250,255,224,0.78);max-width:580px;margin-left:auto;margin-right:auto;">
+                    Take one course. See if your tutor is actually any good. If they're
+                    not — full refund, no awkwardness. We'd rather you tried us than
+                    "looked into it later".
+                </p>
+                <div style="margin-top:44px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+                    <a href="/classes" class="btn-primary"
+                        style="padding:18px 28px;border-radius:999px;font-size:15px;font-weight:600;
+                        display:inline-flex;align-items:center;gap:10px;">
+                        Browse courses
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
                     </a>
-                    <a href="/register" class="bg-[#FAFFE0] text-[#072923] font-semibold px-8 py-4 rounded-full text-lg hover:scale-105 transition-transform duration-200 border-2 border-[#072923] inline-flex items-center gap-3">
-                        <x-iconsax-lin-user-add class="w-5 h-5"/> Sign Up Free
+                    <a href="/contact" style="padding:18px 28px;border-radius:999px;
+                        background:transparent;color:var(--cream);
+                        border:1px solid rgba(250,255,224,0.35);
+                        font-size:15px;font-weight:600;text-decoration:none;
+                        display:inline-flex;align-items:center;gap:10px;">
+                        Say hi first
                     </a>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
-    </main>
 
-    <style>
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
+</div>
 @endsection
+
+@push('styles_top')
+<style>
+    /* principle rows collapse on tablet */
+    @media (max-width: 900px) {
+        .principle-row { grid-template-columns: 60px 1fr !important; gap: 20px !important; }
+        .principle-row p { grid-column: 2; }
+    }
+    @media (max-width: 640px) {
+        .principle-row { grid-template-columns: 1fr !important; gap: 12px !important; }
+        .principle-row p { grid-column: 1; }
+    }
+</style>
+@endpush
