@@ -8,6 +8,7 @@ use App\Models\LiveSession;
 use App\Models\LiveSessionBooking;
 use Illuminate\Support\Facades\DB;
 use App\Events\LiveSessionOverbooked;
+use App\Events\LiveSessionPurchased;
 use Exception;
 
 class LiveSessionCheckoutService

@@ -312,7 +312,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/{id}/join', [\App\Http\Controllers\LiveSessionController::class, 'join'])->whereNumber('id')->name('panel.meetings.live_sessions.join');
     });
 
-    Route::group(['prefix' => 'meetings/live-sessions/manage', 'middleware' => ['role:teacher']], function () {
+    Route::group(['prefix' => 'meetings/live-sessions/manage', 'middleware' => ['role:teacher,organization']], function () {
         Route::get('/', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'index'])->name('panel.meetings.live_sessions.manage.index');
         Route::get('/create', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'create'])->name('panel.meetings.live_sessions.manage.create');
         Route::post('/', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'store'])->name('panel.meetings.live_sessions.manage.store');

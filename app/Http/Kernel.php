@@ -105,5 +105,6 @@ class Kernel extends HttpKernel
         'api.version' => \App\Http\Middleware\ApiVersion::class,
         'video.referrer' => \App\Http\Middleware\ValidateVideoReferrer::class,
         'block.downloaders' => \App\Http\Middleware\BlockDownloadManagers::class,
+        'role' => \App\Http\Middleware\EnsureUserHasRole::class,
     ];
 }
