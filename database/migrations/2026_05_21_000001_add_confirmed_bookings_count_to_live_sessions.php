@@ -8,15 +8,19 @@ class AddConfirmedBookingsCountToLiveSessions extends Migration
 {
     public function up()
     {
-        Schema::table('live_sessions', function (Blueprint $table) {
-            $table->unsignedInteger('confirmed_bookings_count')->default(0)->after('max_students');
-        });
+        if (!Schema::hasColumn('live_sessions', 'confirmed_bookings_count')) {
+            Schema::table('live_sessions', function (Blueprint $table) {
+                $table->unsignedInteger('confirmed_bookings_count')->default(0)->after('max_students');
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('live_sessions', function (Blueprint $table) {
-            $table->dropColumn('confirmed_bookings_count');
-        });
+        if (Schema::hasColumn('live_sessions', 'confirmed_bookings_count')) {
+            Schema::table('live_sessions', function (Blueprint $table) {
+                $table->dropColumn('confirmed_bookings_count');
+            });
+        }
     }
 }
