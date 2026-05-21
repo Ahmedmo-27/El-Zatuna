@@ -7,8 +7,26 @@ use App\Models\LiveSessionActivityLog;
 use App\User;
 use Illuminate\Http\Request;
 
+/**
+ * @OA\Tag(
+ *     name="Admin Live Session Logs",
+ *     description="Admin live-session activity logs"
+ * )
+ */
+
 class LiveSessionLogController extends Controller
 {
+    /**
+     * List live-session activity logs.
+     *
+     * @OA\Get(
+     *     path="/admin/live-sessions/logs",
+     *     summary="List live session logs",
+     *     tags={"Admin Live Session Logs"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Activity logs list")
+     * )
+     */
     public function index(Request $request)
     {
         $query = LiveSessionActivityLog::with(['liveSession', 'user'])

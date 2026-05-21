@@ -11,8 +11,37 @@ use App\Models\Meeting;
 use App\Models\MeetingTime;
 use App\Models\ReserveMeeting;
 
+/**
+ * @OA\Tag(
+ *     name="Meetings",
+ *     description="Meeting reservation APIs"
+ * )
+ */
+
 class MeetingsController extends Controller
 {
+    /**
+     * Reserve a meeting time.
+     *
+     * @OA\Post(
+     *     path="/v1/meetings/reserve",
+     *     summary="Reserve a meeting",
+     *     tags={"Meetings"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"time_id","date","meeting_type"},
+     *             @OA\Property(property="time_id", type="integer"),
+     *             @OA\Property(property="date", type="string", format="date"),
+     *             @OA\Property(property="meeting_type", type="string", enum={"in_person","online"}),
+     *             @OA\Property(property="student_count", type="integer", nullable=true),
+     *             @OA\Property(property="description", type="string", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Meeting reserved or rejected")
+     * )
+     */
     public function reserve(Request $request)
     {
         validateParam($request->all(), [

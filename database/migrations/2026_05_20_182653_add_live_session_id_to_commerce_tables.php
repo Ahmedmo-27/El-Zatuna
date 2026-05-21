@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('carts', function (Blueprint $table) {
+        Schema::table('cart', function (Blueprint $table) {
             $table->unsignedBigInteger('live_session_id')->nullable()->after('meeting_id');
         });
         
@@ -33,7 +33,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('carts', function (Blueprint $table) {
+        Schema::table('cart', function (Blueprint $table) {
             $table->dropColumn('live_session_id');
         });
         

@@ -9,9 +9,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
+/**
+ * @OA\Tag(
+ *     name="Admin Live Sessions",
+ *     description="Admin live-session oversight pages"
+ * )
+ */
+
 class LiveSessionController extends Controller
 {
-    /** List all live sessions for admin overview */
+    /**
+     * List all live sessions for admin overview.
+     *
+     * @OA\Get(
+     *     path="/admin/live-sessions",
+     *     summary="List admin live sessions",
+     *     tags={"Admin Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Admin live sessions list")
+     * )
+     */
     public function index()
     {
         $sessions = LiveSession::with('teacher')
@@ -20,7 +37,18 @@ class LiveSessionController extends Controller
         return view('admin.live-sessions.index', compact('sessions'));
     }
 
-    /** Show details and analytics for a session */
+    /**
+     * Show details and analytics for a session.
+     *
+     * @OA\Get(
+     *     path="/admin/live-sessions/{id}",
+     *     summary="Show admin live session",
+     *     tags={"Admin Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Admin live session details")
+     * )
+     */
     public function show($id)
     {
         $session = LiveSession::with(['teacher', 'bookings.student'])
@@ -28,7 +56,18 @@ class LiveSessionController extends Controller
         return view('admin.live-sessions.show', compact('session'));
     }
 
-    /** Cancel a session (admin) */
+    /**
+     * Cancel a session (admin).
+     *
+     * @OA\Post(
+     *     path="/admin/live-sessions/{id}/cancel",
+     *     summary="Cancel live session",
+     *     tags={"Admin Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=302, description="Redirect after cancel")
+     * )
+     */
     public function cancel($id)
     {
         $session = LiveSession::findOrFail($id);
@@ -36,7 +75,18 @@ class LiveSessionController extends Controller
         return Redirect::back()->with('success', 'Session cancelled.');
     }
 
-    /** Override capacity (admin) */
+    /**
+     * Override capacity (admin).
+     *
+     * @OA\Post(
+     *     path="/admin/live-sessions/{id}/override-capacity",
+     *     summary="Override live session capacity",
+     *     tags={"Admin Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=302, description="Redirect after override")
+     * )
+     */
     public function overrideCapacity(Request $request, $id)
     {
         $request->validate(['max_students' => 'required|integer|min:1']);

@@ -9,10 +9,25 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
 
+/**
+ * @OA\Tag(
+ *     name="Teacher Live Sessions",
+ *     description="Teacher live-session management pages"
+ * )
+ */
+
 class LiveSessionController extends Controller
 {
     /**
      * List sessions created by the authenticated teacher.
+     *
+     * @OA\Get(
+     *     path="/teacher/live-sessions",
+     *     summary="List teacher live sessions",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Teacher live sessions list")
+     * )
      */
     public function index()
     {
@@ -23,13 +38,33 @@ class LiveSessionController extends Controller
         return view('teacher.live-sessions.index', compact('sessions'));
     }
 
-    /** Show the create form. */
+    /**
+     * Show the create form.
+     *
+     * @OA\Get(
+     *     path="/teacher/live-sessions/create",
+     *     summary="Create live session form",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Create form")
+     * )
+     */
     public function create()
     {
         return view('teacher.live-sessions.create');
     }
 
-    /** Store a new live session (draft by default). */
+    /**
+     * Store a new live session (draft by default).
+     *
+     * @OA\Post(
+     *     path="/teacher/live-sessions",
+     *     summary="Store live session",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=302, description="Redirect after create")
+     * )
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -54,7 +89,18 @@ class LiveSessionController extends Controller
             ->with('success', 'Live session created as draft.');
     }
 
-    /** Show session details for the teacher. */
+    /**
+     * Show session details for the teacher.
+     *
+     * @OA\Get(
+     *     path="/teacher/live-sessions/{id}",
+     *     summary="Show teacher live session",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Teacher live session details")
+     * )
+     */
     public function show($id)
     {
         $session = LiveSession::with('bookings.student')->findOrFail($id);
@@ -62,7 +108,18 @@ class LiveSessionController extends Controller
         return view('teacher.live-sessions.show', compact('session'));
     }
 
-    /** Show edit form – only allowed for draft or when no bookings exist. */
+    /**
+     * Show edit form – only allowed for draft or when no bookings exist.
+     *
+     * @OA\Get(
+     *     path="/teacher/live-sessions/{id}/edit",
+     *     summary="Edit live session form",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Edit form")
+     * )
+     */
     public function edit($id)
     {
         $session = LiveSession::findOrFail($id);
@@ -70,7 +127,18 @@ class LiveSessionController extends Controller
         return view('teacher.live-sessions.edit', compact('session'));
     }
 
-    /** Update a session. */
+    /**
+     * Update a session.
+     *
+     * @OA\Put(
+     *     path="/teacher/live-sessions/{id}",
+     *     summary="Update live session",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=302, description="Redirect after update")
+     * )
+     */
     public function update(Request $request, $id)
     {
         $session = LiveSession::findOrFail($id);
@@ -97,7 +165,18 @@ class LiveSessionController extends Controller
             ->with('success', 'Live session updated.');
     }
 
-    /** Publish a draft session. */
+    /**
+     * Publish a draft session.
+     *
+     * @OA\Post(
+     *     path="/teacher/live-sessions/{id}/publish",
+     *     summary="Publish live session",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=302, description="Redirect after publish")
+     * )
+     */
     public function publish($id)
     {
         $session = LiveSession::findOrFail($id);
@@ -107,7 +186,18 @@ class LiveSessionController extends Controller
             ->with('success', 'Live session published.');
     }
 
-    /** Cancel a session (teacher). */
+    /**
+     * Cancel a session (teacher).
+     *
+     * @OA\Post(
+     *     path="/teacher/live-sessions/{id}/cancel",
+     *     summary="Cancel live session",
+     *     tags={"Teacher Live Sessions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=302, description="Redirect after cancel")
+     * )
+     */
     public function cancel($id)
     {
         $session = LiveSession::findOrFail($id);
