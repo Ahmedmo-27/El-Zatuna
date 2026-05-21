@@ -138,6 +138,22 @@ class SessionManager
     }
 
     /**
+     * Remove expired sessions for a single user before counting
+     *
+     * @param int $userId
+     * @param int $inactiveMinutes
+     * @return int
+     */
+    public function cleanupUserInactiveSessions(int $userId, int $inactiveMinutes = 120)
+    {
+        $threshold = now()->subMinutes($inactiveMinutes)->timestamp;
+
+        return UserActiveSession::where('user_id', $userId)
+            ->where('last_activity', '<', $threshold)
+            ->delete();
+    }
+
+    /**
      * Sync logged_count with actual active sessions
      *
      * @param User $user
@@ -146,7 +162,7 @@ class SessionManager
     public function syncLoggedCount(User $user)
     {
         $actualCount = $this->getActiveSessionsCount($user->id);
-        
+
         if ($user->logged_count != $actualCount) {
             $user->update(['logged_count' => $actualCount]);
         }

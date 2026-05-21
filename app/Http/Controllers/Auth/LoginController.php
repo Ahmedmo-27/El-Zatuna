@@ -370,9 +370,11 @@ class LoginController extends Controller
             }
         }
 
-        // Sync logged_count against actual active sessions before checking —
-        // prevents permanent lockout when sessions expire without a proper logout.
+        // Clear this user's expired sessions first, then sync the count.
+        // Without this, stale records from browser-close/timeout logouts
+        // keep logged_count high and permanently lock the user out.
         $sessionManager = new SessionManager();
+        $sessionManager->cleanupUserInactiveSessions($user->id, config('session.lifetime', 120));
         $sessionManager->syncLoggedCount($user);
         $user->refresh();
 
