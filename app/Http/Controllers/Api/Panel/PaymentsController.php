@@ -13,6 +13,7 @@ use App\Models\ReserveMeeting;
 use App\Models\Sale;
 use App\Models\TicketUser;
 use App\PaymentChannels\ChannelManager;
+use App\Events\PaymentSucceeded;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -386,6 +387,13 @@ class PaymentsController extends Controller
         } else {
             foreach ($order->orderItems as $orderItem) {
                 $sale = Sale::createSales($orderItem, $order->payment_method);
+
+                event(new PaymentSucceeded(
+                    $sale->id,
+                    $orderItem->user_id,
+                    [$orderItem->toArray()],
+                    $order->payment_method . ':' . $order->id
+                ));
 
                 if (!empty($orderItem->reserve_meeting_id)) {
                     $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();

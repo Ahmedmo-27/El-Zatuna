@@ -74,6 +74,11 @@ class Cart extends Model
         return $this->belongsTo(Gift::class, 'gift_id', 'id');
     }
 
+    public function liveSession()
+    {
+        return $this->belongsTo(LiveSession::class, 'live_session_id', 'id');
+    }
+
     public static function emptyCart($userId)
     {
         Cart::where('creator_id', $userId)->delete();
@@ -119,6 +124,8 @@ class Cart extends Model
             $product = $cart->productOrder->product;
 
             $price += (($product->price * $cart->productOrder->quantity) - $product->getDiscountPrice());
+        } else if (!empty($cart->live_session_id) and !empty($cart->liveSession)) {
+            $price += $cart->liveSession->price;
         }
 
         return $price;

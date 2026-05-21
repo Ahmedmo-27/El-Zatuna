@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\LiveSessionBookingCreated;
+use App\Events\PaymentSucceeded;
+use App\Listeners\CreateLiveSessionBooking;
+use App\Listeners\UnlockLiveSessionAccess;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -17,6 +21,12 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         Registered::class => [
             SendEmailVerificationNotification::class,
+        ],
+        PaymentSucceeded::class => [
+            CreateLiveSessionBooking::class,
+        ],
+        LiveSessionBookingCreated::class => [
+            UnlockLiveSessionAccess::class,
         ],
     ];
 
