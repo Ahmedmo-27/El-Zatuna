@@ -2,12 +2,15 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Faculty;
+use App\Models\University;
 use App\Services\LiveSessionManagementService;
 use Illuminate\Http\Request;
 use App\Models\LiveSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 
 /**
  * @OA\Tag(
@@ -51,7 +54,10 @@ class LiveSessionController extends Controller
      */
     public function create()
     {
-        return view('teacher.live-sessions.create');
+        $universities = University::orderBy('name')->get();
+        $faculties = Faculty::orderBy('name')->get();
+
+        return view('teacher.live-sessions.create', compact('universities', 'faculties'));
     }
 
     /**
@@ -70,8 +76,13 @@ class LiveSessionController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'university_id' => 'required|integer',
-            'faculty_id' => 'required|integer',
+            'university_id' => 'required|exists:universities,id',
+            'faculty_id' => [
+                'required',
+                Rule::exists('faculties', 'id')->where(function ($query) use ($request) {
+                    $query->where('university_id', $request->input('university_id'));
+                }),
+            ],
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
             'price' => 'required|numeric|min:0',
@@ -124,7 +135,10 @@ class LiveSessionController extends Controller
     {
         $session = LiveSession::findOrFail($id);
         $this->authorize('update', $session);
-        return view('teacher.live-sessions.edit', compact('session'));
+        $universities = University::orderBy('name')->get();
+        $faculties = Faculty::orderBy('name')->get();
+
+        return view('teacher.live-sessions.edit', compact('session', 'universities', 'faculties'));
     }
 
     /**
@@ -146,8 +160,13 @@ class LiveSessionController extends Controller
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'university_id' => 'required|integer',
-            'faculty_id' => 'required|integer',
+            'university_id' => 'required|exists:universities,id',
+            'faculty_id' => [
+                'required',
+                Rule::exists('faculties', 'id')->where(function ($query) use ($request) {
+                    $query->where('university_id', $request->input('university_id'));
+                }),
+            ],
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
             'price' => 'required|numeric|min:0',
