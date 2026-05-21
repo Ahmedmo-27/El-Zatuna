@@ -10,7 +10,6 @@ use App\Models\LiveSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Validation\Rule;
 
 /**
  * @OA\Tag(
@@ -54,8 +53,8 @@ class LiveSessionController extends Controller
      */
     public function create()
     {
-        $universities = University::orderBy('name')->get();
-        $faculties = Faculty::orderBy('name')->get();
+        $universities = University::orderBy('name')->get()->unique('name')->values();
+        $faculties = Faculty::orderBy('name')->get()->unique('name')->values();
 
         return view('teacher.live-sessions.create', compact('universities', 'faculties'));
     }
@@ -76,13 +75,8 @@ class LiveSessionController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'university_id' => 'required|exists:universities,id',
-            'faculty_id' => [
-                'required',
-                Rule::exists('faculties', 'id')->where(function ($query) use ($request) {
-                    $query->where('university_id', $request->input('university_id'));
-                }),
-            ],
+            'university_id' => 'nullable|exists:universities,id',
+            'faculty_id' => 'nullable|exists:faculties,id',
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
             'price' => 'required|numeric|min:0',
@@ -91,6 +85,27 @@ class LiveSessionController extends Controller
             'provider_url' => 'required|url',
             'instructions' => 'nullable|string',
         ]);
+
+        if (empty($data['university_id']) && !empty($data['faculty_id'])) {
+            $faculty = Faculty::find($data['faculty_id']);
+
+            if (!empty($faculty)) {
+                $data['university_id'] = $faculty->university_id;
+            }
+        }
+
+        if (!empty($data['faculty_id']) && !empty($data['university_id'])) {
+            $faculty = Faculty::where('id', $data['faculty_id'])
+                ->where('university_id', $data['university_id'])
+                ->first();
+
+            if (empty($faculty)) {
+                return back()->withErrors([
+                    'faculty_id' => ['The selected faculty does not belong to the selected university.'],
+                ])->withInput();
+            }
+        }
+
         $data['creator_id'] = Auth::id();
         $data['provider'] = $data['provider_type'];
         unset($data['provider_type']);
@@ -135,8 +150,8 @@ class LiveSessionController extends Controller
     {
         $session = LiveSession::findOrFail($id);
         $this->authorize('update', $session);
-        $universities = University::orderBy('name')->get();
-        $faculties = Faculty::orderBy('name')->get();
+        $universities = University::orderBy('name')->get()->unique('name')->values();
+        $faculties = Faculty::orderBy('name')->get()->unique('name')->values();
 
         return view('teacher.live-sessions.edit', compact('session', 'universities', 'faculties'));
     }
@@ -160,13 +175,8 @@ class LiveSessionController extends Controller
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'university_id' => 'required|exists:universities,id',
-            'faculty_id' => [
-                'required',
-                Rule::exists('faculties', 'id')->where(function ($query) use ($request) {
-                    $query->where('university_id', $request->input('university_id'));
-                }),
-            ],
+            'university_id' => 'nullable|exists:universities,id',
+            'faculty_id' => 'nullable|exists:faculties,id',
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
             'price' => 'required|numeric|min:0',
@@ -177,6 +187,27 @@ class LiveSessionController extends Controller
         ];
         // Prevent status change via this endpoint – publishing uses a dedicated action.
         $data = $request->validate($rules);
+
+        if (empty($data['university_id']) && !empty($data['faculty_id'])) {
+            $faculty = Faculty::find($data['faculty_id']);
+
+            if (!empty($faculty)) {
+                $data['university_id'] = $faculty->university_id;
+            }
+        }
+
+        if (!empty($data['faculty_id']) && !empty($data['university_id'])) {
+            $faculty = Faculty::where('id', $data['faculty_id'])
+                ->where('university_id', $data['university_id'])
+                ->first();
+
+            if (empty($faculty)) {
+                return back()->withErrors([
+                    'faculty_id' => ['The selected faculty does not belong to the selected university.'],
+                ])->withInput();
+            }
+        }
+
         $data['provider'] = $data['provider_type'];
         unset($data['provider_type']);
         $session->update($data);
