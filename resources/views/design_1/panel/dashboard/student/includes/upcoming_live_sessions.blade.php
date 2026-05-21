@@ -97,7 +97,7 @@
                 <p class="mt-4 font-12 text-gray-500">{{ trans('update.find_your_desired_live_class') }}</p>
             </div>
 
-            <a href="/classes?type[]=webinar" target="_blank" class="d-flex-center size-40 bg-white border-gray-200 rounded-circle bg-hover-gray-100">
+            <a href="{{ route('panel.meetings.live_sessions.index') }}" target="_blank" class="d-flex-center size-40 bg-white border-gray-200 rounded-circle bg-hover-gray-100">
                 <x-iconsax-lin-arrow-right class="icons text-gray-500" width="16px" height="16px"/>
             </a>
         </div>
