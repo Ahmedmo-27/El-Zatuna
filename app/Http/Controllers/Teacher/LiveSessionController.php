@@ -75,8 +75,8 @@ class LiveSessionController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'university_id' => 'nullable|exists:universities,id',
-            'faculty_id' => 'nullable|exists:faculties,id',
+            'university_id' => 'required|exists:universities,id',
+            'faculty_id' => 'required|exists:faculties,id',
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
             'price' => 'required|numeric|min:0',
@@ -86,24 +86,14 @@ class LiveSessionController extends Controller
             'instructions' => 'nullable|string',
         ]);
 
-        if (empty($data['university_id']) && !empty($data['faculty_id'])) {
-            $faculty = Faculty::find($data['faculty_id']);
+        $faculty = Faculty::where('id', $data['faculty_id'])
+            ->where('university_id', $data['university_id'])
+            ->first();
 
-            if (!empty($faculty)) {
-                $data['university_id'] = $faculty->university_id;
-            }
-        }
-
-        if (!empty($data['faculty_id']) && !empty($data['university_id'])) {
-            $faculty = Faculty::where('id', $data['faculty_id'])
-                ->where('university_id', $data['university_id'])
-                ->first();
-
-            if (empty($faculty)) {
-                return back()->withErrors([
-                    'faculty_id' => ['The selected faculty does not belong to the selected university.'],
-                ])->withInput();
-            }
+        if (empty($faculty)) {
+            return back()->withErrors([
+                'faculty_id' => ['The selected faculty does not belong to the selected university.'],
+            ])->withInput();
         }
 
         $data['creator_id'] = Auth::id();
@@ -175,8 +165,8 @@ class LiveSessionController extends Controller
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'university_id' => 'nullable|exists:universities,id',
-            'faculty_id' => 'nullable|exists:faculties,id',
+            'university_id' => 'required|exists:universities,id',
+            'faculty_id' => 'required|exists:faculties,id',
             'start_at' => 'required|date',
             'end_at' => 'required|date|after:start_at',
             'price' => 'required|numeric|min:0',
@@ -188,24 +178,14 @@ class LiveSessionController extends Controller
         // Prevent status change via this endpoint – publishing uses a dedicated action.
         $data = $request->validate($rules);
 
-        if (empty($data['university_id']) && !empty($data['faculty_id'])) {
-            $faculty = Faculty::find($data['faculty_id']);
+        $faculty = Faculty::where('id', $data['faculty_id'])
+            ->where('university_id', $data['university_id'])
+            ->first();
 
-            if (!empty($faculty)) {
-                $data['university_id'] = $faculty->university_id;
-            }
-        }
-
-        if (!empty($data['faculty_id']) && !empty($data['university_id'])) {
-            $faculty = Faculty::where('id', $data['faculty_id'])
-                ->where('university_id', $data['university_id'])
-                ->first();
-
-            if (empty($faculty)) {
-                return back()->withErrors([
-                    'faculty_id' => ['The selected faculty does not belong to the selected university.'],
-                ])->withInput();
-            }
+        if (empty($faculty)) {
+            return back()->withErrors([
+                'faculty_id' => ['The selected faculty does not belong to the selected university.'],
+            ])->withInput();
         }
 
         $data['provider'] = $data['provider_type'];

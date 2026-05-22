@@ -21,8 +21,8 @@
                 <div class="col-12 col-lg-6">
                     <div class="form-group">
                         <label class="form-group-label">University</label>
-                        <select name="university_id" class="form-control form-control-lg">
-                            <option value="" {{ empty(old('university_id', $session->university_id)) ? 'selected' : '' }}>All universities</option>
+                        <select name="university_id" id="university_id" class="form-control form-control-lg" required>
+                            <option value="" {{ empty(old('university_id', $session->university_id)) ? 'selected' : '' }}>Select university</option>
                             @foreach($universities as $university)
                                 <option value="{{ $university->id }}" {{ old('university_id', $session->university_id) == $university->id ? 'selected' : '' }}>{{ $university->name }}</option>
                             @endforeach
@@ -32,10 +32,10 @@
                 <div class="col-12 col-lg-6">
                     <div class="form-group">
                         <label class="form-group-label">Faculty</label>
-                        <select name="faculty_id" class="form-control form-control-lg">
-                            <option value="" {{ empty(old('faculty_id', $session->faculty_id)) ? 'selected' : '' }}>All faculties</option>
+                        <select name="faculty_id" id="faculty_id" class="form-control form-control-lg" required disabled>
+                            <option value="" {{ empty(old('faculty_id', $session->faculty_id)) ? 'selected' : '' }}>Select university first</option>
                             @foreach($faculties as $faculty)
-                                <option value="{{ $faculty->id }}" {{ old('faculty_id', $session->faculty_id) == $faculty->id ? 'selected' : '' }}>{{ $faculty->name }}</option>
+                                <option value="{{ $faculty->id }}" data-university-id="{{ $faculty->university_id }}" {{ old('faculty_id', $session->faculty_id) == $faculty->id ? 'selected' : '' }}>{{ $faculty->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -90,3 +90,51 @@
         </form>
     </div>
 @endsection
+
+@push('scripts_bottom')
+    <script>
+        (function ($) {
+            'use strict';
+
+            const $university = $('#university_id');
+            const $faculty = $('#faculty_id');
+            const allFacultyOptions = $faculty.find('option').clone();
+
+            function resetFacultyOptions() {
+                const universityId = $university.val();
+
+                $faculty.empty();
+
+                if (!universityId) {
+                    $faculty.append('<option value="">Select university first</option>');
+                    $faculty.prop('disabled', true);
+                    return;
+                }
+
+                $faculty.append('<option value="">Select faculty</option>');
+
+                allFacultyOptions.each(function () {
+                    const option = $(this);
+                    const facultyUniversityId = option.data('university-id');
+
+                    if (!option.val()) {
+                        return;
+                    }
+
+                    if (String(facultyUniversityId) === String(universityId)) {
+                        $faculty.append(option.clone());
+                    }
+                });
+
+                $faculty.prop('disabled', false);
+            }
+
+            $university.on('change', function () {
+                $faculty.val('');
+                resetFacultyOptions();
+            });
+
+            resetFacultyOptions();
+        })(jQuery);
+    </script>
+@endpush
