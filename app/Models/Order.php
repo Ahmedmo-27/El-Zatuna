@@ -26,6 +26,7 @@ class Order extends Model
     public static $gift = 'gift';
     public static $file = 'file';
     public static $chapter = 'chapter';
+    public static $liveSession = 'live_session';
 
     public static $addiction = 'addiction';
     public static $deduction = 'deduction';

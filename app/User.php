@@ -1240,4 +1240,13 @@ class User extends Authenticatable
         return ($seconds > 0) ? round($seconds, 2) : 0;
     }
 
+    public function liveSessions()
+    {
+        return $this->hasMany(\App\Models\LiveSession::class, 'creator_id', 'id');
+    }
+
+    public function liveSessionBookings()
+    {
+        return $this->hasMany(\App\Models\LiveSessionBooking::class, 'student_id', 'id');
+    }
 }

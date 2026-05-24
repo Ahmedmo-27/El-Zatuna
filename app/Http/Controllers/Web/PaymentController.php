@@ -20,6 +20,7 @@ use App\Models\Sale;
 use App\Models\SubscribeUse;
 use App\Models\TicketUser;
 use App\PaymentChannels\ChannelManager;
+use App\Events\PaymentSucceeded;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -233,6 +234,13 @@ class PaymentController extends Controller
 
                 // Set Sale After All Accounting
                 $sale = Sale::createSales($orderItem, $order->payment_method);
+
+                event(new PaymentSucceeded(
+                    $sale->id,
+                    $orderItem->user_id,
+                    [$orderItem->toArray()],
+                    $order->payment_method . ':' . $order->id
+                ));
 
                 // Track "10 sections" subscription coupon usage after Sale exists (sale_id is NOT NULL).
                 if (!empty($orderItem->applied_subscribe_id) && !empty($orderItem->chapter_id)) {

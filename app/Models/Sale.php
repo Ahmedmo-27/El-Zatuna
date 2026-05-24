@@ -19,6 +19,7 @@ class Sale extends Model
     public static $installmentPayment = 'installment_payment';
     public static $file = 'file';
     public static $chapter = 'chapter';
+    public static $liveSession = 'live_session';
 
     public static $credit = 'credit';
     public static $paymentChannel = 'payment_channel';
@@ -136,6 +137,8 @@ class Sale extends Model
             $orderType = Order::$file;
         } elseif (!empty($orderItem->chapter_id)) {
             $orderType = Order::$chapter;
+        } elseif (!empty($orderItem->live_session_id)) {
+            $orderType = Order::$liveSession;
         }
 
         if (!empty($orderItem->gift_id)) {
@@ -160,6 +163,7 @@ class Sale extends Model
             'product_order_id' => (!empty($orderItem->product_order_id)) ? $orderItem->product_order_id : null,
             'installment_payment_id' => $orderItem->installment_payment_id ?? null,
             'gift_id' => $orderItem->gift_id ?? null,
+            'live_session_id' => (!empty($orderItem->live_session_id)) ? $orderItem->live_session_id : null,
             'type' => $orderType,
             'payment_method' => $payment_method,
             'amount' => $orderItem->amount,
@@ -357,5 +361,10 @@ class Sale extends Model
         }
 
         return $result;
+    }
+
+    public function liveSession()
+    {
+        return $this->belongsTo(\App\Models\LiveSession::class, 'live_session_id', 'id');
     }
 }

@@ -529,19 +529,51 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::get('/forms/{url}', 'FormsController@index');
     Route::post('/forms/{url}/store', 'FormsController@store');
 
-    // Get Iconsax
-    Route::group(['prefix' => '/iconsax'], function () {
-        Route::post("/search", "IconsaxController@search");
+    // Live Sessions (student public area)
+    Route::group(['prefix' => 'live-sessions', 'middleware' => ['auth']], function () {
+        // List all live sessions (discovery)
+        Route::get('/', [\App\Http\Controllers\LiveSessionController::class, 'index'])->name('live_sessions.index');
+        // Student dashboard – my booked sessions
+        Route::get('/me', [\App\Http\Controllers\LiveSessionController::class, 'mySessions'])->name('live_sessions.me');
+        // Session detail page
+        Route::get('/{id}', [\App\Http\Controllers\LiveSessionController::class, 'show'])->name('live_sessions.show');
+        // Secure join endpoint – backend decides eligibility
+        Route::get('/{id}/join', [\App\Http\Controllers\LiveSessionController::class, 'join'])->name('live_sessions.join');
     });
 
-    /* Landings */
-    Route::group(['prefix' => 'landings'], function () {
-        Route::get('/{landing_url}', 'LandingController@index');
+    // Teacher Live Sessions (keep existing structure)
+    Route::group(['prefix' => 'teacher/live-sessions', 'middleware' => ['auth', 'role:teacher']], function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'index'])->name('teacher.live_sessions.index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'create'])->name('teacher.live_sessions.create');
+        Route::post('/', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'store'])->name('teacher.live_sessions.store');
+        Route::get('/{id}', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'show'])->name('teacher.live_sessions.show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'edit'])->name('teacher.live_sessions.edit');
+        Route::put('/{id}', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'update'])->name('teacher.live_sessions.update');
+        Route::post('/{id}/publish', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'publish'])->name('teacher.live_sessions.publish');
+        Route::post('/{id}/cancel', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'cancel'])->name('teacher.live_sessions.cancel');
     });
 
-    Route::fallback(function () {
-        abort(404);
+    // Admin Live Sessions overview
+    Route::group(['prefix' => 'admin/live-sessions', 'middleware' => ['auth', 'role:admin']], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\LiveSessionController::class, 'index'])->name('admin.live_sessions.index');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\LiveSessionController::class, 'show'])->name('admin.live_sessions.show');
+        Route::post('/{id}/cancel', [\App\Http\Controllers\Admin\LiveSessionController::class, 'cancel'])->name('admin.live_sessions.cancel');
+        Route::post('/{id}/override-capacity', [\App\Http\Controllers\Admin\LiveSessionController::class, 'overrideCapacity'])->name('admin.live_sessions.override_capacity');
     });
+
+    // Admin Refunds
+    Route::group(['prefix' => 'admin/refunds', 'middleware' => ['auth', 'role:admin']], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\RefundController::class, 'index'])->name('admin.refunds.index');
+        Route::post('/{id}/retry', [\App\Http\Controllers\Admin\RefundController::class, 'retry'])->name('admin.refunds.retry');
+    });
+
+    // Admin Activity Logs
+    Route::group(['prefix' => 'admin/live-sessions/logs', 'middleware' => ['auth', 'role:admin']], function () {
+        Route::get('/', [\App\Http\Controllers\Admin\LiveSessionLogController::class, 'index'])->name('admin.live_sessions.logs');
+    });
+
+
+
 });
 
 

@@ -195,6 +195,8 @@ class SidebarItems
                 $items['meetings']['items'][] = ['text' => trans('public.my_reservation'), 'url' => '/panel/meetings/reservation'];
             }
 
+            $items['meetings']['items'][] = ['text' => 'Live Sessions', 'url' => '/panel/meetings/live-sessions'];
+
             if ($user->isOrganization() || $user->isTeacher()) {
                 if ($user->can('panel_meetings_requests')) {
                     $items['meetings']['items'][] = ['text' => trans('panel.requests'), 'url' => '/panel/meetings/requests'];
@@ -203,6 +205,8 @@ class SidebarItems
                 if ($user->can('panel_meetings_settings')) {
                     $items['meetings']['items'][] = ['text' => trans('panel.settings'), 'url' => '/panel/meetings/settings'];
                 }
+
+                $items['meetings']['items'][] = ['text' => 'Manage Live Sessions', 'url' => '/panel/meetings/live-sessions/manage'];
             }
         }
 

@@ -32,7 +32,7 @@ class CartController extends Controller
      *     summary="List cart",
      *     tags={"Panel", "Cart"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, or meeting."),
+    *     @OA\Response(response=200, description="Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, meeting, or live session."),
      *     @OA\Response(response=401, description="Unauthorized")
      * )
      */
