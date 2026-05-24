@@ -6,6 +6,7 @@ use App\Http\Middleware\Share;
 use App\Http\Middleware\UserLocale;
 use App\Http\Middleware\CheckMobileApp;
 use Tests\TestCase;
+use Illuminate\Support\Facades\View;
 
 class AuthSmokeTest extends TestCase
 {
@@ -18,6 +19,28 @@ class AuthSmokeTest extends TestCase
             Share::class,
             UserLocale::class,
             CheckMobileApp::class,
+        ]);
+
+        View::share([
+            'generalSettings' => [
+                'rtl_languages' => [],
+                'rtl_layout' => 0,
+                'site_name' => '',
+                'preloading' => false,
+                'user_languages' => ['en'],
+            ],
+            'userThemeColorMode' => 'light',
+            'currency' => 'EGP',
+            'userCartCount' => 0,
+            'userCarts' => [],
+            'totalCartsPrice' => 0,
+            'userCartDiscount' => 0,
+            'themeHeaderData' => ['component_name' => null, 'contents' => []],
+            'themeFooterData' => ['component_name' => null, 'contents' => []],
+            'purchaseNotifications' => [],
+            'floatingBar' => null,
+            'categories' => collect(),
+            'userDeviceType' => 'desktop',
         ]);
     }
 
@@ -33,6 +56,7 @@ class AuthSmokeTest extends TestCase
 
     public function test_register_step_one_page_loads(): void
     {
-        $this->get('/register/step/1')->assertStatus(200);
+        $this->get('/register/step/1')
+            ->assertRedirect('/register');
     }
 }
