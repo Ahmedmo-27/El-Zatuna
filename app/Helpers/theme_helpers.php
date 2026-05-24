@@ -7,6 +7,10 @@ function getActiveTheme()
     global $themeCache;
 
     if (empty($themeCache)) {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('themes')) {
+            return null;
+        }
+
         $withRelations = [
             'homeLanding' => function ($query) {
                 $query->with([

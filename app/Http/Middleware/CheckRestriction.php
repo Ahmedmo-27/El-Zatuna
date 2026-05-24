@@ -18,6 +18,10 @@ class CheckRestriction
      */
     public function handle(Request $request, Closure $next)
     {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('ip_restrictions')) {
+            return $next($request);
+        }
+
         $block = false;
         $userIp = $request->ip();
 

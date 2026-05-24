@@ -1564,6 +1564,10 @@ function getPageRobotNoIndex()
 
 function getDefaultLocale()
 {
+    if (!\Illuminate\Support\Facades\Schema::hasTable('settings') || !\Illuminate\Support\Facades\Schema::hasTable('setting_translations')) {
+        return config('app.locale', 'en');
+    }
+
     $key = 'site_language';
     $name = \App\Models\Setting::$generalName;
 
