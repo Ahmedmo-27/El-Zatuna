@@ -101,9 +101,11 @@ class RegisterController extends Controller
                 ];
 
                 $expiresAt = now()->addMinutes(60);
-                $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
+                $tokenAndCode = RegistrationVerificationToken::generateTokenAndCode($tokenData, 60);
+                $verificationCode = $tokenAndCode['code'];
+                $verificationToken = $tokenAndCode['token'];
 
-                $userCase->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+                $userCase->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt, $verificationToken));
 
                 return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
                     'message' => 'Please check your email for a 6-digit verification code.',
@@ -172,12 +174,14 @@ class RegisterController extends Controller
         }
 
         $expiresAt = now()->addMinutes(60);
-        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
+        $tokenAndCode = RegistrationVerificationToken::generateTokenAndCode($tokenData, 60);
+        $verificationCode = $tokenAndCode['code'];
+        $verificationToken = $tokenAndCode['token'];
 
         $notifiable = new User();
         $notifiable->email = $data['email'];
         $notifiable->full_name = $data['full_name'];
-        $notifiable->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+        $notifiable->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt, $verificationToken));
 
         return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
             'message' => 'Please check your email for a 6-digit verification code.',

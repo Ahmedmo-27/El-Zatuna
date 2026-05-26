@@ -106,6 +106,33 @@
 @push('scripts_bottom')
     <script>
         $(document).ready(function() {
+            var verificationPollTimer = setInterval(function() {
+                var email = $('input[name="email"]').val();
+
+                if (!email) {
+                    return;
+                }
+
+                $.ajax({
+                    url: '/register/check-verification',
+                    method: 'GET',
+                    dataType: 'json',
+                    data: {
+                        email: email
+                    },
+                    success: function(res) {
+                        if (res && res.verified) {
+                            var redirectUrl = res.redirect_url || res.redirect;
+
+                            if (redirectUrl) {
+                                clearInterval(verificationPollTimer);
+                                window.location.href = redirectUrl;
+                            }
+                        }
+                    }
+                });
+            }, 3000);
+
             $('.auth-verification-code-field').first().focus();
 
             $('#verificationCodeForm').on('submit', function(e) {
