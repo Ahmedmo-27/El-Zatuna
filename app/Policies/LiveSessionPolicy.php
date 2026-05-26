@@ -14,9 +14,9 @@ class LiveSessionPolicy
     /**
      * Determine whether the user can view the live session.
      */
-    public function view(User $user, LiveSession $session)
+    public function view(?User $user, LiveSession $session)
     {
-        if ($user->isAdmin() || $user->id === $session->creator_id) {
+        if ($user && ($user->isAdmin() || $user->id === $session->creator_id)) {
             return true;
         }
 
@@ -25,11 +25,11 @@ class LiveSessionPolicy
             return false;
         }
 
-        if ($session->university_id && $user->university_id !== $session->university_id) {
+        if ($user && $session->university_id && $user->university_id !== $session->university_id) {
             return false;
         }
 
-        if ($session->faculty_id && $user->faculty_id !== $session->faculty_id) {
+        if ($user && $session->faculty_id && $user->faculty_id !== $session->faculty_id) {
             return false;
         }
 

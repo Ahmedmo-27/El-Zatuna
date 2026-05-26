@@ -140,6 +140,7 @@ class LiveSessionController extends Controller
     {
         $session = LiveSession::findOrFail($id);
         $this->authorize('update', $session);
+        abort_if($session->status !== 'draft' && $session->bookings()->count() > 0, 403, 'Cannot edit a session that has bookings and is not draft.');
         $universities = University::orderBy('name')->get()->unique('name')->values();
         $faculties = Faculty::orderBy('name')->get()->unique('name')->values();
 
@@ -162,6 +163,7 @@ class LiveSessionController extends Controller
     {
         $session = LiveSession::findOrFail($id);
         $this->authorize('update', $session);
+        abort_if($session->status !== 'draft' && $session->bookings()->count() > 0, 403, 'Cannot edit a session that has bookings and is not draft.');
         $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

@@ -8,7 +8,6 @@ use App\Models\LiveSession;
 use App\Models\LiveSessionBooking;
 use Illuminate\Support\Facades\DB;
 use App\Events\LiveSessionOverbooked;
-use App\Events\LiveSessionPurchased;
 use Exception;
 
 class LiveSessionCheckoutService
@@ -77,8 +76,6 @@ class LiveSessionCheckoutService
                     'payment_reference' => $paymentReference,
                     'status' => 'paid',
                 ]);
-
-                event(new LiveSessionPurchased($booking));
 
                 return $booking;
             });
