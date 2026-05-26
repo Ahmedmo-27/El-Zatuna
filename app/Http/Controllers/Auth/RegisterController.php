@@ -247,7 +247,7 @@ class RegisterController extends Controller
                     Cache::forget($this->step3TokenCacheKey($userCase->email));
 
                 $expiresAt = now()->addMinutes(60);
-                $tokenAndCode = RegistrationVerificationToken::generateTokenAndCode($tokenData, 60);
+                $tokenAndCode = $this->createRegistrationTokenAndCode($tokenData, 60);
                 $verificationCode = $tokenAndCode['code'];
                 $verificationToken = $tokenAndCode['token'];
 
@@ -343,7 +343,7 @@ class RegisterController extends Controller
         Cache::forget($this->step3TokenCacheKey($data['email']));
 
         $expiresAt = now()->addMinutes(60);
-        $tokenAndCode = RegistrationVerificationToken::generateTokenAndCode($tokenData, 60);
+        $tokenAndCode = $this->createRegistrationTokenAndCode($tokenData, 60);
         $verificationCode = $tokenAndCode['code'];
         $verificationToken = $tokenAndCode['token'];
 
@@ -769,6 +769,25 @@ class RegisterController extends Controller
         $token = Cache::get($this->step3TokenCacheKey($email));
 
         return is_string($token) && !empty($token) ? $token : null;
+    }
+
+    private function createRegistrationTokenAndCode(array $data, int $expiryMinutes = 60): array
+    {
+        $token = Str::random(64);
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        RegistrationVerificationToken::create([
+            'token' => hash('sha256', $token),
+            'verification_code' => $verificationCode,
+            'data' => $data,
+            'expires_at' => now()->addMinutes($expiryMinutes),
+            'used' => false,
+        ]);
+
+        return [
+            'token' => $token,
+            'code' => $verificationCode,
+        ];
     }
 
 
