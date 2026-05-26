@@ -600,6 +600,15 @@ class RegisterController extends Controller
         // Mark token as used
         RegistrationVerificationToken::markAsUsed($data['verification_token']);
 
+        // Clear cached step-3 token for this email to avoid stale handoffs
+        try {
+            if (!empty($user) && !empty($user->email)) {
+                Cache::forget($this->step3TokenCacheKey($user->email));
+            }
+        } catch (\Throwable $e) {
+            // ignore cache failures
+        }
+
         // Handle referral code
         $referralCode = $data['referral_code'] ?? null;
         if (!empty($referralCode)) {
@@ -700,6 +709,65 @@ class RegisterController extends Controller
             }
 
             Cache::forget($this->step3TokenCacheKey($email));
+        }
+
+        // If no step-3 token found, check whether the user already completed registration
+        try {
+            $user = \App\User::where('email', $email)->first();
+            if (!empty($user) && $user->status === \App\User::$active) {
+                return response()->json([
+                    'verified' => true,
+                    'redirect_url' => url('/panel'),
+                    'redirect' => url('/panel'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // ignore lookup errors and fall through to not-verified
+        }
+
+        return response()->json(['verified' => false]);
+    }
+
+    /**
+     * Pollable endpoint for step3 pages to detect registration completion by token.
+     * Accepts `token` query param (plain token as sent in URLs).
+     */
+    public function checkRegistrationByToken(Request $request)
+    {
+        $token = $request->query('token');
+        if (empty($token)) {
+            return response()->json(['verified' => false]);
+        }
+
+        $hashed = hash('sha256', $token);
+        $record = RegistrationVerificationToken::where('token', $hashed)->first();
+
+        if ($record) {
+            // If token has been marked used, registration completed elsewhere
+            if (!empty($record->used)) {
+                return response()->json([
+                    'verified' => true,
+                    'redirect_url' => url('/panel'),
+                    'redirect' => url('/panel'),
+                ]);
+            }
+
+            // Otherwise, check if associated email already has an active user
+            $email = data_get($record->data, 'email');
+            if (!empty($email)) {
+                try {
+                    $user = \App\User::where('email', $email)->first();
+                    if (!empty($user) && $user->status === \App\User::$active) {
+                        return response()->json([
+                            'verified' => true,
+                            'redirect_url' => url('/panel'),
+                            'redirect' => url('/panel'),
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
         }
 
         return response()->json(['verified' => false]);

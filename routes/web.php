@@ -101,6 +101,7 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['check_mobile_app', 'share
     Route::post('/register/step/{step}', 'RegisterController@stepRegister'); // New 3-step registration
     Route::get('/register/verify/{token}', 'RegisterController@verifyTokenLink');
     Route::get('/register/check-verification', 'RegisterController@checkVerificationStatus');
+    Route::get('/register/check-registration', 'RegisterController@checkRegistrationByToken');
     Route::get('/verify-email/{token}', '\App\Http\Controllers\Api\Auth\VerifyEmailController@verify'); // Email verification link
     Route::post('/register', 'RegisterController@register'); // Old single-step (deprecated)
     Route::post('/register/form-fields', 'RegisterController@getFormFieldsByUserType');
