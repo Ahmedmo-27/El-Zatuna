@@ -129,6 +129,11 @@ return [
             'path' => storage_path('logs/clickpay.log'),
             'level' => 'info',
         ],
+        'brevo' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/brevo_webhooks.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
     ],
 
 ];
