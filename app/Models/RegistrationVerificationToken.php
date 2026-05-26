@@ -62,6 +62,32 @@ class RegistrationVerificationToken extends Model
     }
 
     /**
+     * Generate both a token and a verification code
+     *
+     * @param array $data
+     * @param int $expiryMinutes
+     * @return array
+     */
+    public static function generateTokenAndCode(array $data, int $expiryMinutes = 60): array
+    {
+        $token = Str::random(64);
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        self::create([
+            'token' => hash('sha256', $token),
+            'verification_code' => $verificationCode,
+            'data' => $data,
+            'expires_at' => now()->addMinutes($expiryMinutes),
+            'used' => false,
+        ]);
+
+        return [
+            'token' => $token,
+            'code' => $verificationCode
+        ];
+    }
+
+    /**
      * Verify code and retrieve data
      *
      * @param string $email
