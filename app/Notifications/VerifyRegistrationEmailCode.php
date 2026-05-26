@@ -2,15 +2,11 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class VerifyRegistrationEmailCode extends Notification implements ShouldQueue
+class VerifyRegistrationEmailCode extends Notification
 {
-    use Queueable;
-
     private $verificationCode;
     private $expiresAt;
     private $verificationToken;
