@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeleteAccountRequest;
 use App\Notifications\SendResetPasswordSMS;
 use App\User;
 use Carbon\Carbon;
@@ -85,6 +86,8 @@ class ForgotPasswordController extends Controller
                 'password' => Hash::make($newPass)
             ]);
 
+            DeleteAccountRequest::cancelPendingForUserId((int) $user->id);
+
             $toastData = [
                 'title' => trans('public.request_success'),
                 'msg' => trans('update.the_new_password_has_been_sent_to_your_number'),
@@ -104,6 +107,8 @@ class ForgotPasswordController extends Controller
         $email = $request->get('email');
         $token = \Illuminate\Support\Str::random(60);
 
+        DB::table('password_resets')->where('email', $email)->delete();
+
         DB::table('password_resets')->insert([
             'email' => $email,
             'token' => $token,
@@ -117,11 +122,11 @@ class ForgotPasswordController extends Controller
             'email' => $email
         ];
 
-        $senderEmail = !empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS');
-        $senderName = !empty($generalSettings['site_name']) ? $generalSettings['site_name'] : env('MAIL_FROM_NAME');
+        $senderEmail = getMailSenderAddress();
+        $senderName = getMailSenderName();
 
         try {
-            Mail::send('design_1.web.emails..password_verify', $emailData, function ($message) use ($email, $senderEmail, $senderName) {
+            Mail::send('design_1.web.emails.password_verify', $emailData, function ($message) use ($email, $senderEmail, $senderName) {
                 $message->from($senderEmail, $senderName);
                 $message->to($email);
                 $message->subject(trans('auth.reset_password_notification'));

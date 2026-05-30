@@ -70,6 +70,7 @@
                             @endforeach
                         </select>
                         <div class="invalid-feedback"></div>
+                        @include('design_1.panel.webinars.create.includes.change_section_hint')
                     </div>
                 @else
                     <input type="hidden" name="ajax[new][chapter_id]" value="" class="chapter-input">
@@ -116,6 +117,10 @@
                         }));
                         if (!in_array('upload', $availableSources)) {
                             $availableSources = array_merge(['upload'], $availableSources);
+                        }
+                        // Ensure YouTube embed is always available in Step 3 course content.
+                        if (!in_array('youtube', $availableSources)) {
+                            $availableSources[] = 'youtube';
                         }
                     @endphp
                     <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][storage]"
@@ -252,7 +257,7 @@
                                aria-label="{{ trans('update.choose_file') }}"
                                aria-describedby="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}">
                         <span class="custom-file-text">{{ $hasExistingFile ? getFileNameByPath($file->file) : '' }}</span>
-                        <label class="custom-file-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('update.browse') }}</label>
+                        <label class="custom-file-label" for="file_upload_input_{{ !empty($file) ? $file->id : 'record' }}" data-default-label="{{ e(trans('update.browse')) }}">{{ trans('update.browse') }}</label>
                     </div>
 
                     <div id="file_upload_help_{{ !empty($file) ? $file->id : 'record' }}" class="font-12 text-gray-500 mt-8">
@@ -428,6 +433,18 @@
         .file-drag-drop-zone:focus-visible {
             outline: 3px solid #007bff;
             outline-offset: 2px;
+        }
+
+        .js-file-upload-locked .js-file-drag-drop-zone {
+            pointer-events: none;
+            cursor: not-allowed;
+            opacity: 0.55;
+            background-color: #e9ecef !important;
+            border-color: #ced4da !important;
+        }
+
+        .js-file-upload-locked .js-file-drag-drop-zone:hover {
+            border-color: #ced4da !important;
         }
         
         /* Screen reader only text */

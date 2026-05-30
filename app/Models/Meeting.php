@@ -10,9 +10,18 @@ class Meeting extends Model
 
     protected $guarded = ['id'];
 
+    protected static function booted()
+    {
+        static::creating(function (Meeting $meeting) {
+            if (empty($meeting->teacher_id) && !empty($meeting->creator_id)) {
+                $meeting->teacher_id = $meeting->creator_id;
+            }
+        });
+    }
+
     public function teacher()
     {
-        return $this->belongsTo('App\User', 'creator_id', 'id');
+        return $this->belongsTo('App\User', 'teacher_id', 'id');
     }
 
     public function creator()

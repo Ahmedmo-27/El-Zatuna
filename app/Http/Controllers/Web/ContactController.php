@@ -47,6 +47,13 @@ class ContactController extends Controller
             'course_name' => 'required_if:contact_type,request_course|nullable|string',
             'study_year' => 'required_if:contact_type,request_course|nullable|integer|between:1,5',
             'can_provide_materials' => 'required_if:contact_type,request_course|nullable|in:yes,no',
+        ], [
+            'university_name.required_if' => 'Please enter your university name to request a course.',
+            'college_name.required_if' => 'Please enter your college name to request a course.',
+            'study_field.required_if' => 'Please enter your field of study to request a course.',
+            'course_name.required_if' => 'Please enter the course name you want to request.',
+            'study_year.required_if' => 'Please select your study year to request a course.',
+            'can_provide_materials.required_if' => 'Please choose whether you can provide materials for this course request.',
         ]);
 
         $data = $request->only([

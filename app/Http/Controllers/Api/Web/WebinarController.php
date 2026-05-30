@@ -15,8 +15,10 @@ use App\Models\Api\Webinar;
 use App\Models\WebinarChapter;
 use App\Models\WebinarFilterOption;
 use App\Models\WebinarReport;
+use App\Support\ApiPayloadCache;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class WebinarController extends Controller
@@ -37,7 +39,20 @@ class WebinarController extends Controller
      */
     public function index()
     {
-        $webinars = Webinar::where('webinars.status', 'active')
+        $cacheKey = 'api:v1:courses:index:' . ApiPayloadCache::requestFingerprint() . ':' . ApiPayloadCache::localeTag();
+        $webinars = ApiPayloadCache::rememberForGuest($cacheKey, 'courses_index', function () {
+            return $this->queryCoursesIndex()->values()->all();
+        });
+
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $webinars);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, mixed>
+     */
+    private function queryCoursesIndex()
+    {
+        return Webinar::where('webinars.status', 'active')
             ->with([
                 "badges" => function ($query) {
                     $query->where('targetable_type', 'App\Models\Webinar');
@@ -71,13 +86,10 @@ class WebinarController extends Controller
             })
             ->where('private', false)
             ->handleFilters()
-            ->get()->map(function ($webinar) {
+            ->get()
+            ->map(function ($webinar) {
                 return $webinar->brief;
             });
-
-
-        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $webinars);
-
     }
 
     /**
@@ -93,28 +105,55 @@ class WebinarController extends Controller
      */
     public function show($id)
     {
-        $user = apiAuth();
+        $cacheKey = 'api:v1:courses:show:' . $id . ':' . ApiPayloadCache::localeTag();
+        $ttl = ApiPayloadCache::ttl('courses_show_guest');
 
+        if (ApiPayloadCache::enabled() && $ttl > 0 && !apiAuth()) {
+            $cached = Cache::get($cacheKey);
+            if ($cached !== null) {
+                return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $cached);
+            }
+        }
+
+        $payload = $this->buildCourseShowPayload($id);
+
+        if (empty($payload['found'])) {
+            return apiResponse2(0, 'invalid', trans('api.public.invalid'));
+        }
+
+        if (ApiPayloadCache::enabled() && $ttl > 0 && !apiAuth()) {
+            Cache::put($cacheKey, $payload['data'], now()->addSeconds($ttl));
+        }
+
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $payload['data']);
+    }
+
+    /**
+     * @return array{found: bool, data?: array<string, mixed>}
+     */
+    private function buildCourseShowPayload($id): array
+    {
+        $user = apiAuth();
         $webinar = Webinar::where('status', 'active')
             ->where('private', false)
             ->where('id', $id)
             ->first();
 
-        if (!empty($webinar)) {
-            $data = $webinar->details;
-            $cashbackRules = null;
-
-            if (!empty($data["price"]) and getFeaturesSettings('cashback_active') and (empty($user) or !$user->disable_cashback)) {
-                $cashbackRulesMixin = new CashbackRules($user);
-                $cashbackRules = $cashbackRulesMixin->getRules('courses', $data["id"], $data["type"], null, null);
-            }
-
-            $data["cashbackRules"] = $cashbackRules;
-
-            return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
+        if (empty($webinar)) {
+            return ['found' => false];
         }
 
-        return apiResponse2(0, 'invalid', trans('api.public.invalid'));
+        $data = $webinar->details;
+        $cashbackRules = null;
+
+        if (!empty($data["price"]) and getFeaturesSettings('cashback_active') and (empty($user) or !$user->disable_cashback)) {
+            $cashbackRulesMixin = new CashbackRules($user);
+            $cashbackRules = $cashbackRulesMixin->getRules('courses', $data["id"], $data["type"], null, null);
+        }
+
+        $data["cashbackRules"] = $cashbackRules;
+
+        return ['found' => true, 'data' => $data];
     }
 
     /**
@@ -131,6 +170,23 @@ class WebinarController extends Controller
     public function content($id)
     {
         $user = apiAuth();
+        $cacheKey = 'api:v1:courses:content:' . $id . ':' . ApiPayloadCache::localeTag();
+        $content = ApiPayloadCache::rememberForGuest($cacheKey, 'courses_content_guest', function () use ($id, $user) {
+            return $this->buildCourseContentItems($id, $user);
+        });
+
+        if ($content === null) {
+            return apiResponse2(0, 'invalid', trans('api.public.invalid'));
+        }
+
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $content);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>|null
+     */
+    private function buildCourseContentItems($id, $user)
+    {
         $webinar = Webinar::where('id', $id)
             ->with([
                 'chapters' => function ($query) use ($user) {
@@ -184,26 +240,25 @@ class WebinarController extends Controller
             ])
             ->first();
 
-        if (!empty($webinar)) {
-            $chapters = collect(WebinarChapterResource::collection($webinar->chapters))->map(function (WebinarChapterResource $item) {
-                return array_merge(['type' => 'chapter'], $item->toArray(null));
-            });
-
-            $files = collect(FileResource::collection($webinar->files->whereNull('chapter_id')))->map(function (FileResource $item) {
-                return array_merge(['type' => 'file'], $item->toArray(null));
-            });
-            $sessions = collect(SessionResource::collection($webinar->sessions->whereNull('chapter_id')))->map(function (SessionResource $item) {
-                return array_merge(['type' => 'session'], $item->toArray(null));
-            });
-            $textLessons = collect(TextLessonResource::collection($webinar->textLessons->whereNull('chapter_id')))->map(function (TextLessonResource $item) {
-                return array_merge(['type' => 'text_lesson'], $item->toArray(null));
-            });
-
-            $content = $chapters->merge($files)->merge($sessions)->merge($textLessons);
-            return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $content);
+        if (empty($webinar)) {
+            return null;
         }
 
-        return apiResponse2(0, 'invalid', trans('api.public.invalid'));
+        $chapters = collect(WebinarChapterResource::collection($webinar->chapters))->map(function (WebinarChapterResource $item) {
+            return array_merge(['type' => 'chapter'], $item->toArray(null));
+        });
+
+        $files = collect(FileResource::collection($webinar->files->whereNull('chapter_id')))->map(function (FileResource $item) {
+            return array_merge(['type' => 'file'], $item->toArray(null));
+        });
+        $sessions = collect(SessionResource::collection($webinar->sessions->whereNull('chapter_id')))->map(function (SessionResource $item) {
+            return array_merge(['type' => 'session'], $item->toArray(null));
+        });
+        $textLessons = collect(TextLessonResource::collection($webinar->textLessons->whereNull('chapter_id')))->map(function (TextLessonResource $item) {
+            return array_merge(['type' => 'text_lesson'], $item->toArray(null));
+        });
+
+        return $chapters->merge($files)->merge($sessions)->merge($textLessons);
     }
 
     /**

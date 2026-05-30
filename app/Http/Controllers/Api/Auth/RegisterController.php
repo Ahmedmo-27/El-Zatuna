@@ -73,72 +73,82 @@ class RegisterController extends Controller
         // Step 1: Initial registration - collect full_name and email only
         $rules = [
             'full_name' => 'required|string|min:3',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255',
         ];
 
         validateParam($data, $rules);
 
+        $disableRegistrationVerificationProcess = getGeneralOptionsSettings('disable_registration_verification_process');
+        $roleName = Role::$user;
+        $roleId = Role::getUserRoleId();
+
         // Check if user already exists
-        $userCase = User::where('email', $data['email'])
-            ->first();
+        $userCase = User::where('email', $data['email'])->first();
 
         if ($userCase) {
             if ($userCase->username && $userCase->status == User::$active) {
                 return apiResponse2(0, 'already_registered', trans('api.auth.already_registered'));
-            } else {
-                // User exists but incomplete - generate new token for step 3
+            }
+
+            if (empty($userCase->email_verified_at) && empty($disableRegistrationVerificationProcess)) {
                 $tokenData = [
                     'user_id' => $userCase->id,
                     'email' => $userCase->email,
-                    'step' => 3,
+                    'full_name' => $userCase->full_name,
+                    'role_name' => $userCase->role_name,
+                    'role_id' => $userCase->role_id,
+                    'step' => 2,
                 ];
-                
-                $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
-                
-                return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
-                    'verification_token' => $verificationToken,
-                    'expires_at' => now()->addMinutes(60)->toIso8601String(),
+
+                $expiresAt = now()->addMinutes(60);
+                $tokenAndCode = $this->createRegistrationTokenAndCode($tokenData, 60);
+                $verificationCode = $tokenAndCode['code'];
+                $verificationToken = $tokenAndCode['token'];
+
+                $userCase->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt, $verificationToken));
+
+                return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
+                    'message' => 'Please check your email for a 6-digit verification code.',
+                    'expires_at' => $expiresAt->toIso8601String(),
                 ]);
             }
+
+            $tokenData = [
+                'user_id' => $userCase->id,
+                'email' => $userCase->email,
+                'full_name' => $userCase->full_name,
+                'role_name' => $userCase->role_name,
+                'role_id' => $userCase->role_id,
+                'step' => 3,
+                'email_verified' => (!empty($userCase->email_verified_at) || !empty($disableRegistrationVerificationProcess)),
+            ];
+
+            $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
+
+            return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
+                'verification_token' => $verificationToken,
+                'expires_at' => now()->addMinutes(60)->toIso8601String(),
+            ]);
         }
 
-        $disableRegistrationVerificationProcess = getGeneralOptionsSettings('disable_registration_verification_process');
-
         if ($disableRegistrationVerificationProcess) {
-            // If verification is disabled, create user directly and skip to step 3
-            $referralSettings = getReferralSettings();
-            $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
-
-            $user = User::create([
-                'role_name' => Role::$user,
-                'role_id' => Role::getUserRoleId(),
-                'full_name' => $data['full_name'],
+            $tokenData = [
                 'email' => $data['email'],
-                'status' => User::$pending,
-                'password' => Hash::make(Str::random(32)), // Temporary password, will be set in step 3
-                'affiliate' => $usersAffiliateStatus,
-                'created_at' => time()
-            ]);
+                'full_name' => $data['full_name'],
+                'role_name' => $roleName,
+                'role_id' => $roleId,
+                'step' => 3,
+                'email_verified' => true,
+            ];
 
             if (!empty($data['certificate_additional'])) {
-                UserMeta::updateOrCreate([
-                    'user_id' => $user->id,
-                    'name' => 'certificate_additional'
-                ], [
-                    'value' => $data['certificate_additional']
-                ]);
+                $tokenData['certificate_additional'] = $data['certificate_additional'];
             }
 
-            $form = $this->getFormFieldsByType($request->get('account_type'));
-            $this->storeFormFields($data, $user);
+            if (!empty($data['fields']) && is_array($data['fields'])) {
+                $tokenData['fields'] = $data['fields'];
+            }
 
-            // Generate token for step 3 (profile completion)
-            $tokenData = [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'step' => 3,
-            ];
-            
             $verificationToken = RegistrationVerificationToken::generateToken($tokenData, 60); // 60 minutes
 
             return apiResponse2(1, 'go_step_3', trans('api.public.stored') . ' Please complete your profile.', [
@@ -147,42 +157,31 @@ class RegisterController extends Controller
             ]);
         }
 
-        // Create user and send email verification (step 2) via Brevo
-        $referralSettings = getReferralSettings();
-        $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
-
-        $user = User::create([
-            'role_name' => Role::$user,
-            'role_id' => Role::getUserRoleId(),
-            'full_name' => $data['full_name'],
-            'email' => $data['email'],
-            'status' => User::$pending,
-            'password' => Hash::make(Str::random(32)),
-            'affiliate' => $usersAffiliateStatus,
-            'created_at' => time()
-        ]);
-
-        if (!empty($data['certificate_additional'])) {
-            UserMeta::updateOrCreate([
-                'user_id' => $user->id,
-                'name' => 'certificate_additional'
-            ], [
-                'value' => $data['certificate_additional']
-            ]);
-        }
-
-        $form = $this->getFormFieldsByType($request->get('account_type'));
-        $this->storeFormFields($data, $user);
-
         $tokenData = [
-            'user_id' => $user->id,
-            'email' => $user->email,
+            'email' => $data['email'],
+            'full_name' => $data['full_name'],
+            'role_name' => $roleName,
+            'role_id' => $roleId,
             'step' => 2,
         ];
-        $expiresAt = now()->addMinutes(60);
-        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
 
-        $user->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+        if (!empty($data['certificate_additional'])) {
+            $tokenData['certificate_additional'] = $data['certificate_additional'];
+        }
+
+        if (!empty($data['fields']) && is_array($data['fields'])) {
+            $tokenData['fields'] = $data['fields'];
+        }
+
+        $expiresAt = now()->addMinutes(60);
+        $tokenAndCode = $this->createRegistrationTokenAndCode($tokenData, 60);
+        $verificationCode = $tokenAndCode['code'];
+        $verificationToken = $tokenAndCode['token'];
+
+        $notifiable = new User();
+        $notifiable->email = $data['email'];
+        $notifiable->full_name = $data['full_name'];
+        $notifiable->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt, $verificationToken));
 
         return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
             'message' => 'Please check your email for a 6-digit verification code.',
@@ -195,7 +194,7 @@ class RegisterController extends Controller
         $data = $request->all();
 
         $rules = [
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
             'verification_code' => 'required|string|size:6',
         ];
         validateParam($data, $rules);
@@ -208,21 +207,19 @@ class RegisterController extends Controller
 
         $user = User::where('email', $data['email'])->first();
 
-        if (!$user) {
-            return apiResponse2(0, 'user_not_found', 'User not found');
-        }
-
         RegistrationVerificationToken::markCodeAsUsed($data['verification_code'], $data['email']);
 
-        if (empty($user->email_verified_at)) {
+        if (!empty($user) && empty($user->email_verified_at)) {
             $user->update(['email_verified_at' => time()]);
         }
 
-        $newTokenData = [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'step' => 3,
-        ];
+        $newTokenData = $tokenData;
+        $newTokenData['step'] = 3;
+        $newTokenData['email_verified'] = true;
+
+        if (!empty($user) && empty($newTokenData['user_id'])) {
+            $newTokenData['user_id'] = $user->id;
+        }
         $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
 
         return apiResponse2(1, 'email_verified', trans('api.auth.email_verified'), [
@@ -242,6 +239,7 @@ class RegisterController extends Controller
             'username' => 'required|string|min:3|max:255|unique:users',
             'password' => ['required', 'string', 'confirmed', new \App\Rules\StrongPassword($data['username'] ?? '')],
             'password_confirmation' => 'required|same:password',
+            'term' => 'accepted',
             'university_id' => 'required|exists:universities,id',
             'faculty_id' => [
                 'required',
@@ -274,7 +272,46 @@ class RegisterController extends Controller
         }
 
         if (!$user) {
-            return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
+            $email = $tokenData['email'] ?? null;
+
+            if (empty($email)) {
+                return apiResponse2(0, 'user_not_found', 'User not found. Please complete step 1 first.');
+            }
+
+            $existingUser = User::where('email', $email)->first();
+            if ($existingUser) {
+                return apiResponse2(0, 'already_registered', trans('api.auth.already_registered'));
+            }
+
+            $referralSettings = getReferralSettings();
+            $usersAffiliateStatus = (!empty($referralSettings) and !empty($referralSettings['users_affiliate_status']));
+            $roleName = $tokenData['role_name'] ?? Role::$user;
+            $roleId = $tokenData['role_id'] ?? Role::getUserRoleId();
+
+            $user = User::create([
+                'role_name' => $roleName,
+                'role_id' => $roleId,
+                'full_name' => $tokenData['full_name'] ?? null,
+                'email' => $email,
+                'status' => User::$pending,
+                'password' => Hash::make($data['password']),
+                'affiliate' => $usersAffiliateStatus,
+                'created_at' => time(),
+                'email_verified_at' => !empty($tokenData['email_verified']) ? time() : null,
+            ]);
+
+            if (!empty($tokenData['certificate_additional'])) {
+                UserMeta::updateOrCreate([
+                    'user_id' => $user->id,
+                    'name' => 'certificate_additional'
+                ], [
+                    'value' => $tokenData['certificate_additional']
+                ]);
+            }
+
+            if (!empty($tokenData['fields']) && is_array($tokenData['fields'])) {
+                $this->storeFormFields(['fields' => $tokenData['fields']], $user);
+            }
         }
 
         // Ensure email is marked verified (fallback for older flows)
@@ -349,6 +386,25 @@ class RegisterController extends Controller
         }
 
         return $this->username ?? '';
+    }
+
+    private function createRegistrationTokenAndCode(array $data, int $expiryMinutes = 60): array
+    {
+        $token = Str::random(64);
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        RegistrationVerificationToken::create([
+            'token' => hash('sha256', $token),
+            'verification_code' => $verificationCode,
+            'data' => $data,
+            'expires_at' => now()->addMinutes($expiryMinutes),
+            'used' => false,
+        ]);
+
+        return [
+            'token' => $token,
+            'code' => $verificationCode,
+        ];
     }
 
 

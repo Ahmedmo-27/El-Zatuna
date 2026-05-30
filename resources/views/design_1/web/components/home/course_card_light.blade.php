@@ -20,6 +20,16 @@
         <div class="font-semibold text-base">{{ $title }}</div>
         <div class="mt-3 text-xs text-[#072923]/70">{{ $subtitle }}</div>
 
+        @if(!empty($course) && (is_null($course->university_id) || !empty($course->university) || !empty($course->faculty)))
+            <div class="mt-2 text-xs text-[#072923]/60">
+                <span class="font-medium">{{ !empty($course->university) ? $course->university->name : trans('update.all_universities') }}</span>
+
+                @if(!empty($course->faculty))
+                    <span class="ml-2">- {{ $course->faculty->name }}</span>
+                @endif
+            </div>
+        @endif
+
         @if(!empty($originalPrice) && !empty($discountedPrice) && $discountedPrice < $originalPrice)
             <div class="mt-4 flex items-center gap-3">
                 <span class="text-lg font-semibold">{{ handlePrice($discountedPrice, true, true, false, null, true) }}</span>

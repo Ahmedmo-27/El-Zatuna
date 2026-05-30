@@ -2,75 +2,14 @@
 
 namespace App\Http\Controllers\Web\traits;
 
-use App\Models\PaymentChannel;
 use App\Models\Product;
 use App\Models\ProductOrder;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
-use App\PaymentChannels\ChannelManager;
 use Illuminate\Http\Request;
 
 trait PaymentsTrait
 {
-    /*
-     * | this methode only run for payku.result
-     * */
-    public function paykuPaymentVerify(Request $request, $id)
-    {
-        $paymentChannel = PaymentChannel::where('class_name', PaymentChannel::$payku)
-            ->where('status', 'active')
-            ->first();
-
-        try {
-            $channelManager = ChannelManager::makeChannel($paymentChannel);
-
-            $request->request->add(['transaction_id' => $id]);
-
-            $order = $channelManager->verify($request);
-
-            return $this->paymentOrderAfterVerify($order);
-
-        } catch (\Exception $exception) {
-            $toastData = [
-                'title' => trans('cart.fail_purchase'),
-                'msg' => trans('cart.gateway_error'),
-                'status' => 'error'
-            ];
-            return redirect('cart')->with(['toast' => $toastData]);
-        }
-    }
-
-    /*
-     * | this methode only run for Chapa.result
-     * */
-    public function chapaPaymentVerify(Request $request, $reference)
-    {
-        $paymentChannel = PaymentChannel::where('class_name', PaymentChannel::$chapa)
-            ->where('status', 'active')
-            ->first();
-
-        try {
-            $channelManager = ChannelManager::makeChannel($paymentChannel);
-
-            $request->replace([
-                'reference' => $reference,
-            ]);
-
-            $order = $channelManager->verify($request);
-
-            return $this->paymentOrderAfterVerify($order);
-
-        } catch (\Exception $exception) {
-            $toastData = [
-                'title' => trans('cart.fail_purchase'),
-                'msg' => trans('cart.gateway_error'),
-                'status' => 'error'
-            ];
-            return redirect('cart')->with(['toast' => $toastData]);
-        }
-    }
-
-
     private function handleMeetingReserveReward($user)
     {
         if ($user->isUser()) {
@@ -188,6 +127,4 @@ trait PaymentsTrait
 
         }
     }
-
-
 }

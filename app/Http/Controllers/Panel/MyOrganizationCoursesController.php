@@ -98,7 +98,9 @@ class MyOrganizationCoursesController extends Controller
                 $query->where('status', 'active');
             },
             'category',
-            'teacher'
+            'teacher',
+            'university',
+            'faculty'
         ])
             ->orderBy('updated_at', 'desc')
             ->get();

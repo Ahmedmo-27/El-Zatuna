@@ -43,6 +43,14 @@
 
 
 @push('scripts_bottom')
+    @php
+        $showCourseScriptPath = getDesign1ScriptPath("show_course");
+        $showCourseScriptSep = str_contains($showCourseScriptPath, '?') ? '&' : '?';
+        $showCourseScriptVersion = file_exists(public_path('assets/design_1/js/parts/show_course.min.js'))
+            ? filemtime(public_path('assets/design_1/js/parts/show_course.min.js'))
+            : time();
+    @endphp
+
     <script src="/assets/vendors/plyr.io/plyr.min.js"></script>
     <script src="/assets/default/vendors/swiper/swiper-bundle.min.js"></script>
 
@@ -64,5 +72,5 @@
     </script>
 
     <script src="{{ getDesign1ScriptPath("comments") }}"></script>
-    <script src="{{ getDesign1ScriptPath("show_course") }}"></script>
+    <script src="{{ $showCourseScriptPath }}{{ $showCourseScriptSep }}v={{ $showCourseScriptVersion }}"></script>
 @endpush

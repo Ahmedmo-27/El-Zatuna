@@ -94,6 +94,11 @@ class OrderItem extends Model
         return $this->belongsTo(Gift::class, 'gift_id', 'id');
     }
 
+    public function liveSession()
+    {
+        return $this->belongsTo(LiveSession::class, 'live_session_id', 'id');
+    }
+
 
     public static function getSeller($orderItem)
     {
@@ -111,6 +116,8 @@ class OrderItem extends Model
             $seller = $orderItem->product->creator_id;
         } elseif (!empty($orderItem->bundle_id)) {
             $seller = $orderItem->bundle->creator_id;
+        } elseif (!empty($orderItem->live_session_id)) {
+            $seller = $orderItem->liveSession->creator_id;
         }
 
         return $seller;

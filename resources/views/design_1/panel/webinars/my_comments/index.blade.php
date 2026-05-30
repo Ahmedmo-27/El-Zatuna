@@ -62,6 +62,7 @@
         var saveLang = '{{ trans('public.save') }}';
         var closeLang = '{{ trans('public.close') }}';
         var failedLang = '{{ trans('quiz.failed') }}';
+        var endDateMustBeAfterStartDateLang = '{{ trans('validation.after_or_equal', ['attribute' => trans('public.to'), 'date' => trans('public.from')]) }}';
     </script>
 
     <script src="/assets/default/vendors/moment.min.js"></script>

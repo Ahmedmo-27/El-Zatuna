@@ -14,4 +14,14 @@ class DeleteAccountRequest extends Model
     {
         return $this->belongsTo('App\User', 'user_id', 'id');
     }
+
+    /**
+     * Clear pending admin-review deletion when the user proves control (e.g. password reset).
+     */
+    public static function cancelPendingForUserId(?int $userId): void
+    {
+        if (!empty($userId)) {
+            static::where('user_id', $userId)->delete();
+        }
+    }
 }

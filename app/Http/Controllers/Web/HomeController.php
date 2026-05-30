@@ -53,8 +53,7 @@ class HomeController extends Controller
             ->take(3)
             ->values();
 
-        // Upcoming courses = only pending webinars (no fallback to active)
-        $upcomingCourses = $frontComponentsDataMixins->getUpcomingCoursesData(3);
+        $upcomingCourses = $frontComponentsDataMixins->getUpcomingCoursesData(6);
 
         $freeCourses = $frontComponentsDataMixins->getFreeCoursesData(3);
         if ($freeCourses->isEmpty()) {
@@ -64,7 +63,7 @@ class HomeController extends Controller
                 ->where(function ($query) {
                     $query->whereNull('price')->orWhere('price', 0);
                 })
-                ->with('teacher');
+                ->with(['teacher', 'university', 'faculty']);
 
             if (!auth()->check()) {
                 $fallbackFreeQuery->whereNull('university_id')

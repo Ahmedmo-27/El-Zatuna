@@ -6,86 +6,117 @@
     <link rel="stylesheet" href="{{ getDesign1StylePath("courses_lists") }}">
     <link rel="stylesheet" href="/assets/design_1/css/course-list-elzatuna.css">
     <link rel="stylesheet" href="/assets/design_1/css/list-filters-elzatuna.css">
+    <link rel="stylesheet" href="/assets/design_1/css/editorial-lists.css?v={{ @filemtime(public_path('assets/design_1/css/editorial-lists.css')) }}">
 @endpush
 
 @section("content")
-    <main class="pb-120">
+    <main class="editorial-lists" style="background: var(--cream); color: var(--ink); padding-bottom: 96px;">
 
-        @php
-            $pageHeroImage = getThemePageBackgroundSettings('classes_lists');
-            $pageOverlayImage = getThemePageBackgroundSettings('classes_lists_overlay_image');
-        @endphp
+        {{-- ──────────────────────────────────────────────── HERO ──── --}}
+        <section class="ez-list-hero">
+            <div class="ez-container">
+                <div class="ez-list-hero__eyebrow">
+                    <span>—— THE CATALOG</span>
+                    <span>· {{ count($courses) }} courses · all universities ·</span>
+                    <span>FALL ENROLLMENT '25</span>
+                </div>
 
-        <section class="courses-lists-hero position-relative">
-            <div class="courses-lists-hero__mask"></div>
-            <img src="{{ $pageHeroImage }}" class="img-cover" alt="{{ trans('update.search_categories') }}"/>
-        </section>
-
-
-        {{-- Header --}}
-        <div class="w-full max-w-7xl mx-auto px-4 md:px-8">
-            <div class="courses-lists-header position-relative">
-                <div class="courses-lists-header__mask"></div>
-                <div class="position-relative d-flex align-items-start bg-[#072923] rounded-32 z-index-2">
-                    <div class="d-flex flex-column p-32">
-                        <div class="d-flex-center size-72 rounded-16 bg-[#FAFFE0] courses-lists-header__icon-box">
-                            <x-iconsax-bul-video-play class="icons text-[#072923] courses-lists-header__icon" width="84px" height="84px"/>
+                <div class="ez-list-hero__grid">
+                    <div>
+                        <div class="ez-list-hero__kicker">
+                            {{ trans('update.courses') }} <span style="color: var(--ink);">·</span> elzatuna
                         </div>
 
-                        <div class="d-flex align-items-center mt-16 text-[#FAFFE0]/70">
-                            <a href="/" class="text-[#FAFFE0]/70">{{ getPlatformName() }}</a>
-                            <x-iconsax-lin-arrow-right-1 class="mx-4" width="16px" height="16px"/>
-                            <span class="">{{ trans('update.courses') }}</span>
-                        </div>
-
-                        <h1 class="font-24 font-weight-bold mt-12 text-[#FAFFE0]">{{ $pageTitle }}</h1>
+                        <h1 class="ez-list-hero__title">
+                            Find <em>your</em><br>
+                            course. Not<br>
+                            a course.
+                        </h1>
                     </div>
 
-                    @if(!empty($pageOverlayImage))
-                        <div class="courses-lists-header__overlay-img">
-                            <img src="{{ $pageOverlayImage }}" alt="{{ $pageTitle }}" class="img-cover">
+                    <div style="padding-bottom: 12px;">
+                        <p class="ez-list-hero__lede">
+                            <span class="muted">Filter by university, faculty, professor, year.</span>
+                            Every course is built around a specific syllabus at a specific
+                            Egyptian university — taught by someone who passed it in the
+                            last two years.
+                        </p>
+
+                        <div class="ez-list-stats">
+                            <div>
+                                <div class="ez-list-stat__k">{{ count($courses) }}</div>
+                                <div class="ez-list-stat__v">live courses</div>
+                            </div>
+                            <div>
+                                <div class="ez-list-stat__k">12</div>
+                                <div class="ez-list-stat__v">universities</div>
+                            </div>
                         </div>
-                    @endif
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
+        <form action="{{ $pageBasePath }}" class="js-get-view-data-by-timeout-change" data-container-id="listsContainer">
+            <div class="ez-container">
 
-        <form action="{{ $pageBasePath }}" class="js-get-view-data-by-timeout-change w-full max-w-7xl mx-auto px-4 md:px-8 mt-24" data-container-id="listsContainer">
-            {{-- Top Filters --}}
-            @include("design_1.web.courses.lists.includes.top_filters")
+                {{-- ── Top toolbar (search, sort, view, free/discount toggles) ── --}}
+                @include("design_1.web.courses.lists.includes.top_filters")
 
-            <div class="row">
-                {{-- Left Filters --}}
-                <div class="col-12 col-lg-3 mt-28">
-                    @include("design_1.web.courses.lists.includes.left_filters")
-                </div>
+                {{-- ── Sidebar + grid ── --}}
+                <button type="button" class="ez-sidebar-toggle d-none d-lg-none js-ez-sidebar-toggle" style="display:none;">
+                    <x-iconsax-lin-setting-4 class="icons" width="14px" height="14px"/>
+                    <span>Filters</span>
+                </button>
 
-                {{-- Courses Lists --}}
-                <div class="col-12 col-lg-9 mt-4">
-                    <div id="listsContainer" class="" data-body=".js-lists-body" data-view-data-path="{{ $pageBasePath }}">
-                        <div class="js-lists-body row">
-                            @if(request()->get('card') == "list")
-                                @include('design_1.web.courses.components.cards.rows.index',['courses' => $courses, 'rowCardClassName' => "col-12 mt-24"])
+                <div class="ez-lists-layout">
+
+                    <aside class="ez-sidebar js-ez-sidebar">
+                        @include("design_1.web.courses.lists.includes.left_filters")
+                    </aside>
+
+                    <div>
+                        <div class="ez-list-stats-bar">
+                            <span class="ez-list-stats-bar__count">
+                                Showing {{ str_pad(count($courses), 2, '0', STR_PAD_LEFT) }} courses
+                            </span>
+                            <span style="color: var(--muted);">Filter by university, faculty, language, rating.</span>
+                        </div>
+
+                        <div id="listsContainer" data-body=".js-lists-body" data-view-data-path="{{ $pageBasePath }}">
+                            @if(count($courses))
+                                <div class="js-lists-body @if(request()->get('card') == 'list') row @else ez-card-grid @endif">
+                                    @if(request()->get('card') == "list")
+                                        @include('design_1.web.courses.components.cards.rows.index', ['courses' => $courses, 'rowCardClassName' => "col-12 mt-24"])
+                                    @else
+                                        @foreach($courses as $course)
+                                            @include('design_1.web.courses.components.cards.grids.grid_card_1', ['course' => $course, 'idx' => $loop->iteration])
+                                        @endforeach
+                                    @endif
+                                </div>
                             @else
-                                @include('design_1.web.courses.components.cards.grids.index',['courses' => $courses, 'gridCardClassName' => "col-12 col-md-6 col-lg-4 mt-24"])
+                                <div class="js-lists-body">
+                                    <div class="ez-empty">
+                                        <div class="ez-empty__title">No courses available.</div>
+                                        <div class="ez-empty__body">Try clearing some filters — or request a new course.</div>
+                                    </div>
+                                </div>
                             @endif
+
+                            {{-- Pagination --}}
+                            <div id="pagination" class="js-ajax-pagination mt-40" data-container-id="listsContainer" data-container-items=".js-lists-body">
+                                {!! $pagination !!}
+                            </div>
                         </div>
 
-                        {{-- Pagination --}}
-                        <div id="pagination" class="js-ajax-pagination" data-container-id="listsContainer" data-container-items=".js-lists-body">
-                            {!! $pagination !!}
-                        </div>
+                        {{-- Seo Content --}}
+                        @if(!empty($category->bottom_seo_title) and !empty($category->bottom_seo_content))
+                            <section class="bg-gray-100 p-16 rounded-24 border-gray-200 mt-48">
+                                <h3 class="font-14">{{ $category->bottom_seo_title }}</h3>
+                                <div class="mt-12 text-gray-500">{!! nl2br($category->bottom_seo_content) !!}</div>
+                            </section>
+                        @endif
                     </div>
-
-
-                    {{-- Seo Content --}}
-                    @if(!empty($category->bottom_seo_title) and !empty($category->bottom_seo_content))
-                        <section class="bg-gray-100 p-16 rounded-24 border-gray-200 mt-48">
-                            <h3 class="font-14">{{ $category->bottom_seo_title }}</h3>
-                            <div class="mt-12 text-gray-500">{!! nl2br($category->bottom_seo_content) !!}</div>
-                        </section>
-                    @endif
                 </div>
             </div>
         </form>

@@ -14,6 +14,13 @@ class SpecialOffer extends Model
     public static $active = 'active';
     public static $inactive = 'inactive';
 
+    public static $targetItem = 'item';
+    public static $targetAll = 'all';
+    public static $targetCourses = 'courses';
+    public static $targetBundles = 'bundles';
+    public static $targetSubscriptionPackages = 'subscription_packages';
+    public static $targetRegistrationPackages = 'registration_packages';
+
     public function webinar()
     {
         return $this->belongsTo('App\Models\Webinar', 'webinar_id', 'id');

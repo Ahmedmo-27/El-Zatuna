@@ -54,6 +54,16 @@ class UpcomingCourse extends Model implements TranslatableContract
         return getTranslateAttributeValue($this, 'seo_description');
     }
 
+    public function getThumbnailAttribute($value)
+    {
+        return !empty($value) ? $value : self::getDefaultCourseImagePath();
+    }
+
+    public function getImageCoverAttribute($value)
+    {
+        return !empty($value) ? $value : self::getDefaultCourseImagePath();
+    }
+
     public function creator()
     {
         return $this->belongsTo('App\User', 'creator_id', 'id');
@@ -158,12 +168,34 @@ class UpcomingCourse extends Model implements TranslatableContract
 
     public function getImageCover()
     {
-        return $this->image_cover;
+        return $this->resolveContentAssetUrl($this->image_cover);
     }
 
     public function getImage()
     {
-        return $this->thumbnail;
+        return $this->resolveContentAssetUrl($this->thumbnail);
+    }
+
+    public static function getDefaultCourseImagePath(): string
+    {
+        return '/course_thumbnail_cover_fallback.png';
+    }
+
+    protected function resolveContentAssetUrl(?string $path): string
+    {
+        if (empty($path)) {
+            return url(self::getDefaultCourseImagePath());
+        }
+
+        if (str_starts_with($path, 'Course-Assets/')) {
+            return \App\Helpers\R2Helper::getUrl($path) ?: $path;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return url($path);
     }
 
     public function getUrl()

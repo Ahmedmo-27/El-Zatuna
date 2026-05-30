@@ -138,14 +138,6 @@ class SubscribesController extends Controller
             'created_at' => time(),
         ]);
 
-        $razorpay = false;
-        foreach ($paymentChannels as $paymentChannel) {
-            if ($paymentChannel->class_name == 'Razorpay') {
-                $razorpay = true;
-            }
-        }
-
-
         $data = [
             //  'pageTitle' => trans('public.checkout_page_title'),
             'paymentChannels' => $paymentChannels,
@@ -153,7 +145,6 @@ class SubscribesController extends Controller
             'order' => $order,
             // 'count' => 1,
             'userCharge' => $user->getAccountingCharge(),
-            'razorpay' => $razorpay
         ];
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
@@ -315,12 +306,6 @@ class SubscribesController extends Controller
         ]);
 
         $paymentChannels = PaymentChannel::where('status', 'active')->get();
-        $razorpay = false;
-        foreach ($paymentChannels as $paymentChannel) {
-            if ($paymentChannel->class_name == 'Razorpay') {
-                $razorpay = true;
-            }
-        }
 
         $data = [
             'subscription' => [
@@ -334,7 +319,6 @@ class SubscribesController extends Controller
             'total' => $order->total_amount,
             'order' => $order,
             'userCharge' => $user->getAccountingCharge(),
-            'razorpay' => $razorpay
         ];
 
         return apiResponse2(1, 'subscription_created', trans('api.public.retrieved'), $data);

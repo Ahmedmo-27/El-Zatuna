@@ -18,6 +18,16 @@
                 <h3 class="panel-course-grid-card__title font-14 text-dark">{{ $webinar->title }}</h3>
             </a>
 
+            @if(!empty($webinar) && (is_null($webinar->university_id) || !empty($webinar->university) || !empty($webinar->faculty)))
+                <div class="font-12 text-gray-600 mt-6">
+                    <span class="font-medium">{{ !empty($webinar->university) ? $webinar->university->name : trans('update.all_universities') }}</span>
+
+                    @if(!empty($webinar->faculty))
+                        <span class="ml-2">- {{ $webinar->faculty->name }}</span>
+                    @endif
+                </div>
+            @endif
+
             @include("design_1.web.components.rate", [
                     'rate' => round($webinar->getRate(),1),
                     'rateCount' => $webinar->reviews()->where('status', 'active')->count(),

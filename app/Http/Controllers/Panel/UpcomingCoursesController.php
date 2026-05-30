@@ -143,8 +143,8 @@ class UpcomingCoursesController extends Controller
         $rules = [
             'type' => 'required|in:webinar,course,text_lesson',
             'title' => 'required|max:255',
-            'thumbnail' => 'required',
-            'image_cover' => 'required',
+            'thumbnail' => 'nullable',
+            'image_cover' => 'nullable',
             'description' => 'required',
         ];
 
@@ -490,8 +490,8 @@ class UpcomingCoursesController extends Controller
 
     protected function storeWebinarMedia(Request $request, $upcomingCourse)
     {
-        $thumbnail = $upcomingCourse->thumbnail ?? null;
-        $imageCover = $upcomingCourse->image_cover ?? null;
+        $thumbnail = $upcomingCourse->thumbnail ?? Webinar::getDefaultCourseImagePath();
+        $imageCover = $upcomingCourse->image_cover ?? Webinar::getDefaultCourseImagePath();
         $videoDemoSource = $upcomingCourse->video_demo_source ?? null;
         $videoDemo = $upcomingCourse->video_demo ?? null;
 

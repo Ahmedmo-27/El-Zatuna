@@ -58,6 +58,7 @@
 
                             @php
                                 $types = [
+                                    'all' => 'all',
                                     'courses' => 'webinar_id',
                                     'bundles' => 'bundle_id',
                                     'subscription_packages' => 'subscribe_id',
@@ -72,7 +73,9 @@
                                         <option value="">{{ trans('update.select_type') }}</option>
 
                                         @foreach($types as $type => $typeItem)
-                                            <option value="{{ $typeItem }}" {{ (request()->get('type') == $typeItem) ? 'selected' : '' }}>{{ trans('update.'.$type) }}</option>
+                                            <option value="{{ $typeItem }}" {{ (request()->get('type') == $typeItem) ? 'selected' : '' }}>
+                                                {{ $type == 'all' ? trans('admin/main.all') : trans('update.'.$type) }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -135,7 +138,10 @@
                                             <td>{{ $specialOffer->name }}</td>
 
                                             <td class="text-left">
-                                                @if(!empty($specialOffer->webinar_id))
+                                                @if(($specialOffer->target ?? null) == 'all')
+                                                    <span class="d-block font-14">{{ trans('admin/main.all') }}</span>
+                                                    <span class="d-block font-12 text-gray-500">{{ trans('admin/main.special_offers') }}</span>
+                                                @elseif(!empty($specialOffer->webinar_id))
                                                     <span class="d-block font-14">{{ $specialOffer->webinar->title }}</span>
                                                     <span class="d-block font-12 text-gray-500">{{ trans('admin/main.course') }}</span>
                                                 @elseif($specialOffer->bundle_id)

@@ -668,11 +668,13 @@ class Webinar extends Model
             $user = apiAuth();
         }
 
+        $userHasBought = !empty($user) && $this->checkUserHasBought($user);
+
         if (!$user and !$this->isWebinar()) {
             return null;
         }
         if ($this->isWebinar()) {
-            if ($user and ($this->isProgressing() or $isLearningPage) and $this->checkUserHasBought($user)) {
+            if ($user and ($this->isProgressing() or $isLearningPage) and ($userHasBought or $isLearningPage)) {
                 $user_id = $user->id;
                 $sessions = $this->sessions;
                 $files = $this->files;
@@ -701,7 +703,9 @@ class Webinar extends Model
                 if ($passed > 0) {
                     $progress = ($passed * 100) / ($sessions->count() + $files->count());
 
-                    $this->handleLearningProgress100Reward($progress, $user_id, $this->id);
+                    if ($userHasBought) {
+                        $this->handleLearningProgress100Reward($progress, $user_id, $this->id);
+                    }
                 }
             } else if (!empty($this->capacity)) {
                 $salesCount = !empty($this->sales_count) ? $this->sales_count : $this->sales()->count();
@@ -710,7 +714,7 @@ class Webinar extends Model
                     $progress = ($salesCount * 100) / $this->capacity;
                 }
             }
-        } elseif ($this->checkUserHasBought($user)) {
+        } elseif ($user and ($userHasBought or $isLearningPage)) {
             $user_id = $user->id;
             $files = $this->files;
             $textLessons = $this->textLessons;
@@ -740,7 +744,9 @@ class Webinar extends Model
             if ($passed > 0) {
                 $progress = ($passed * 100) / ($files->count() + $textLessons->count());
 
-                $this->handleLearningProgress100Reward($progress, $user_id, $this->id);
+                if ($userHasBought) {
+                    $this->handleLearningProgress100Reward($progress, $user_id, $this->id);
+                }
             }
         }
 

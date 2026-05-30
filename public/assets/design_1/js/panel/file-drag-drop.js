@@ -21,6 +21,10 @@
             this.init();
         }
 
+        isLocked() {
+            return this.$zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked');
+        }
+
         init() {
             const fileInputId = this.$zone.data('file-input-id');
             this.$fileInput = $(`#${fileInputId}`);
@@ -46,6 +50,12 @@
                 if ($(e.target).closest('.js-remove-file').length) {
                     return;
                 }
+
+                if (this.isLocked()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
                 
                 // Allow clicks anywhere on the zone (including overlay)
                 e.preventDefault();
@@ -59,6 +69,9 @@
 
             // Keyboard support (Enter/Space to activate)
             this.$zone.on('keydown', (e) => {
+                if (this.isLocked()) {
+                    return;
+                }
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     this.$fileInput.trigger('click');
@@ -87,6 +100,9 @@
         handleDragOver(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (this.isLocked()) {
+                return;
+            }
             this.$zone.addClass('drag-over');
             this.$overlay.removeClass('d-none');
         }
@@ -108,6 +124,10 @@
             
             this.$zone.removeClass('drag-over');
             this.$overlay.addClass('d-none');
+
+            if (this.isLocked()) {
+                return;
+            }
 
             const files = e.originalEvent.dataTransfer?.files;
             if (files && files.length > 0) {
@@ -141,6 +161,10 @@
             if (this.processingFile) {
                 return;
             }
+
+            if (this.isLocked()) {
+                return;
+            }
             
             const files = e.target.files;
             if (files && files.length > 0) {
@@ -151,6 +175,10 @@
         processFiles(files) {
             // Prevent recursive calls
             if (this.processingFile) {
+                return;
+            }
+
+            if (this.isLocked()) {
                 return;
             }
             

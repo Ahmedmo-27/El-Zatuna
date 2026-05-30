@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Panel;
 use App\Http\Controllers\Api\Controller;
 use App\Models\Api\Bundle;
 use App\Models\Cart;
+use App\Models\LiveSession;
 use App\Models\Api\Product;
 use App\Models\ProductOrder;
 use App\Models\ReserveMeeting;
@@ -20,6 +21,40 @@ use PhpOffice\PhpSpreadsheet\Calculation\Web;
 class AddCartController extends Controller
 {
     public $cookieKey = 'carts';
+
+    public function storeUserLiveSessionCart($user, $data)
+    {
+        $liveSessionId = $data['item_id'];
+
+        validateParam($data, [
+            'item_id' => Rule::exists('live_sessions', 'id')->where('status', 'published')
+        ]);
+
+        $liveSession = LiveSession::where('id', $liveSessionId)
+            ->where('status', 'published')
+            ->first();
+
+        if (empty($liveSession)) {
+            return apiResponse2(0, 'not_found', 'Live session not found or not available');
+        }
+
+        if (empty($user)) {
+            return apiResponse2(0, 'unauthorized', trans('auth.not_login'));
+        }
+
+        if (Cart::where('creator_id', $user->id)->where('live_session_id', $liveSessionId)->count()) {
+            return apiResponse2(0, 'already_in_cart', 'this item is in the cart');
+        }
+
+        Cart::updateOrCreate([
+            'creator_id' => $user->id,
+            'live_session_id' => $liveSessionId,
+        ], [
+            'created_at' => time(),
+        ]);
+
+        return 'ok';
+    }
 
     public function storeUserWebinarCart($user, $data)
     {
@@ -232,7 +267,7 @@ class AddCartController extends Controller
     }
 
     /**
-     * Add item to cart (course, bundle, product, or course section).
+    * Add item to cart (course, bundle, product, course section, subscription, or live session).
      *
      * @OA\Post(
      *     path="/v1/panel/cart",
@@ -243,8 +278,8 @@ class AddCartController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"item_id","item_name"},
-     *             @OA\Property(property="item_id", type="integer", description="Course/bundle/product/section (chapter) ID"),
-     *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product","chapter","subscribe"}, description="webinar=full course, chapter=paid course section, subscribe=subscription plan"),
+    *             @OA\Property(property="item_id", type="integer", description="Course/bundle/product/section (chapter)/live session ID"),
+    *             @OA\Property(property="item_name", type="string", enum={"webinar","bundle","product","chapter","subscribe","live_session"}, description="webinar=full course, chapter=paid course section, subscribe=subscription plan, live_session=booked session"),
      *             @OA\Property(property="ticket_id", type="integer", nullable=true, description="For webinar only"),
      *             @OA\Property(property="specifications", type="object", nullable=true),
      *             @OA\Property(property="quantity", type="integer", nullable=true)
@@ -260,7 +295,7 @@ class AddCartController extends Controller
         
         validateParam($request->all(), [
             'item_id' => 'required',
-            'item_name' => 'required|in:webinar,bundle,product,chapter,subscribe',
+            'item_name' => 'required|in:webinar,bundle,product,chapter,subscribe,live_session',
             'ticket_id' => 'nullable',
             'specifications' => 'nullable',
             'quantity' => 'nullable'
@@ -286,6 +321,8 @@ class AddCartController extends Controller
             $result = $this->storeUserChapterCart($user, $data);
         } elseif ($item_name == 'subscribe') {
             $result = $this->storeUserSubscribeCart($user, $data);
+        } elseif ($item_name == 'live_session') {
+            $result = $this->storeUserLiveSessionCart($user, $data);
         }
 
         if ($result != 'ok') {

@@ -1,47 +1,41 @@
 @php
-    $canReserve = false;
-    if(!empty($instructor->meeting) and !$instructor->meeting->disabled and !empty($instructor->meeting->meetingTimes) and $instructor->meeting->meeting_times_count > 0) {
-        $canReserve = true;
-    }
+    $cardIdx = $idx ?? ($loop->iteration ?? 1);
+    $colors = ['#C8CD06', '#BDEA42', '#C8CD06', '#BDEA42'];
+    $accent = $colors[($cardIdx - 1) % 4];
+    $rate = $instructor->rates();
+    $webinarsCount = $instructor->webinars()->where('status', 'active')->count();
+    $bioText = !empty($instructor->bio) ? trim(strip_tags($instructor->bio)) : '';
 @endphp
 
-<div class="instructor-card position-relative bg-[#072923] rounded-32 p-16 h-100">
-    <div class="position-relative z-index-2 d-flex align-items-start h-100">
-        <a href="{{ $instructor->getProfileUrl() }}" class="flex-1 h-100 text-decoration-none">
-            <div class="d-flex align-items-center bg-[#FAFFE0] p-24 rounded-24 w-100 h-100">
-                <div class="position-relative size-64 rounded-circle bg-gray-100 flex-shrink-0">
-                    <img src="{{ $instructor->getAvatar(64) }}" alt="{{ $instructor->full_name }}" class="img-cover rounded-circle">
+<a href="{{ $instructor->getProfileUrl() }}" class="ez-instructor-card">
+    <div class="ez-instructor-card__media" style="background: {{ $accent }};">
+        <img src="{{ $instructor->getAvatar(240) }}" alt="{{ $instructor->full_name }}" class="ez-instructor-card__avatar">
 
-                    {{-- Rate --}}
-                    <div class="instructor-card__rate d-flex-center gap-4 text-center bg-[#FAFFE0] p-4 pr-8 rounded-32 position-absolute" style="bottom: -10px; right: -10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-                        <x-iconsax-bol-star-1 class="icons text-warning" width="14px" height="14px"/>
-                        <span class="font-12 font-weight-bold text-[#072923]" style="color: #072923 !important;">{{ $instructor->rates() }}</span>
-                    </div>
+        <span class="ez-instructor-card__num">Nº {{ str_pad($cardIdx, 2, '0', STR_PAD_LEFT) }}</span>
 
-                    @if($instructor->verified)
-                        <div class="instructor-card__verified-badge d-flex-center rounded-circle size-16 p-2 bg-primary position-absolute" style="top: 0; right: 0; z-index: 3;" data-tippy-content="{{ trans('public.verified') }}">
-                            <x-tick-icon class="icons text-white"/>
-                        </div>
-                    @endif
-                </div>
+        <span class="ez-instructor-card__rate">
+            <x-iconsax-bol-star-1 width="11px" height="11px"/>
+            <span>{{ (!empty($rate) and $rate > 0) ? $rate : '—' }}</span>
+        </span>
 
-                <div class="ml-12 d-flex flex-column justify-content-center">
-                    <h6 class="font-16 text-[#072923] font-weight-bold" style="color: #072923 !important;">{{ truncate($instructor->full_name, 25) }}</h6>
-                    <div class="font-14 mt-4 text-[#072923]" style="color: #072923 !important; opacity: 0.8;">{{ (!empty($instructor->bio)) ? truncate($instructor->bio, 29) : "" }}</div>
-                </div>
-            </div>
-        </a>
-
-        <div class="d-flex flex-column gap-24 py-20 pl-24 pr-8">
-            @if($canReserve)
-                <a href="/users/{{ $instructor->username }}/meetings" target="_blank" class="" data-tippy-content="{{ trans('public.reserve_a_meeting') }}">
-                    <x-iconsax-bul-video class="icons text-[#FAFFE0]" style="color: #FAFFE0 !important;" width="24px" height="24px"/>
-                </a>
-            @endif
-
-            <a href="{{ $instructor->getProfileUrl() }}" target="_blank" class="" data-tippy-content="{{ trans('public.view_profile') }}">
-                <x-iconsax-bul-profile class="icons text-[#FAFFE0]" style="color: #FAFFE0 !important;" width="24px" height="24px"/>
-            </a>
-        </div>
+        @if($instructor->verified)
+            <span class="ez-instructor-card__verified" data-tippy-content="{{ trans('public.verified') }}">
+                <x-tick-icon class="icons" width="12px" height="12px"/>
+            </span>
+        @endif
     </div>
-</div>
+
+    <h3 class="ez-instructor-card__name">{{ truncate($instructor->full_name, 28) }}</h3>
+    <div class="ez-instructor-card__sub">
+        {{ !empty($bioText) ? truncate($bioText, 70) : trans('public.instructor') }}
+    </div>
+
+    <div class="ez-instructor-card__footer">
+        @if($webinarsCount > 0)
+            <span class="ez-instructor-card__footer-courses">{{ trans('update.count_courses', ['count' => $webinarsCount]) }}</span>
+        @else
+            <span class="ez-instructor-card__footer-new">{{ trans('public.instructor') }}</span>
+        @endif
+        <span class="ez-instructor-card__footer-link">{{ trans('public.view_profile') }} →</span>
+    </div>
+</a>

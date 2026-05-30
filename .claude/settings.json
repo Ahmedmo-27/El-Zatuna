@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr \"8000 8080 3000\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\" http://127.0.0.1:8000/instructors)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\" http://127.0.0.1:8000/classes)",
+      "Bash(curl -s http://127.0.0.1:8000/instructors)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://127.0.0.1:8000/classes > /tmp/classes.html 2>&1; grep -c \"ez-list-hero\\\\|ez-course-card\\\\|ez-toolbar\\\\|ez-sidebar\\\\|ez-card-grid\" /tmp/classes.html)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

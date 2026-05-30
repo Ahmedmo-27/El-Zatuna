@@ -1,162 +1,190 @@
-<div class="position-relative courses-lists-filters">
-    <div class="courses-lists-filters__mask"></div>
+@php
+    $authUser = auth()->user();
+    $showAllChecked = request()->has('show_all') ? request()->boolean('show_all') : true;
+@endphp
 
-    <div id="leftFiltersAccordion" class="position-relative bg-[#072923] py-16 rounded-24 z-index-2">
+<div class="ez-sidebar__head">
+    <h3 class="ez-sidebar__title">Filter.</h3>
+    <a href="{{ $pageBasePath }}" class="ez-sidebar__reset">Reset all</a>
+</div>
+<div class="ez-sidebar__count">{{ trans('update.courses') }}</div>
 
-        @php
-            $authUser = auth()->user();
-            $showAllChecked = request()->has('show_all') ? request()->boolean('show_all') : true;
-        @endphp
-
-        @if(!empty($authUser) and $authUser->isUser())
-            <div class="accordion card-before-line card-before-line__4-12 pb-16 px-16 border-bottom-gray-100">
-                <div class="accordion__title d-flex align-items-center justify-content-between">
-                    <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersVisibility" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                        {{ trans('webinars.all_courses') }}
-                    </div>
-
-                    <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersVisibility" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                        <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                    </span>
-                </div>
-
-                <div id="leftFiltersVisibility" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                    <div class="custom-control custom-checkbox mt-16">
-                        <input type="hidden" name="show_all" value="0">
-                        <input type="checkbox" name="show_all" value="1" id="filter_show_all" class="custom-control-input" {{ $showAllChecked ? 'checked' : '' }}>
-                        <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_show_all">{{ trans('webinars.all_courses') }}</label>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- Category Filters And Options --}}
-        @if(!empty($category) and !empty($category->filters))
-            @foreach($category->filters as $filter)
-                <div class="accordion card-before-line card-before-line__4-12 p-16 border-bottom-gray-100">
-                    <div class="accordion__title d-flex align-items-center justify-content-between">
-                        <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#filters_id_{{ $filter->id }}" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                            {{ $filter->title }}
-                        </div>
-
-                        <span class="collapse-arrow-icon d-flex cursor-pointer" href="#filters_id_{{ $filter->id }}" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                            <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                        </span>
-                    </div>
-
-                    <div id="filters_id_{{ $filter->id }}" class="accordion__collapse pt-0 mt-0 border-0" role="tabpanel">
-                        @foreach($filter->options as $option)
-                            <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                                <input type="checkbox" name="filter_option[]" value="{{ $option->id }}" id="filter_option_id_{{ $option->id }}" class="custom-control-input">
-                                <label class="custom-control__label cursor-pointer text-[#FAFFE0]" for="filter_option_id_{{ $option->id }}">{{ $option->title }}</label>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
-        @endif
-
-        {{-- Prices Filters --}}
-        <div class="accordion card-before-line card-before-line__4-12 p-16 border-bottom-gray-100">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersPrices" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    {{ trans('public.price') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersPrices" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersPrices" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-
-                <div class="d-flex align-items-center mt-16">
-                    <div class="form-group mb-0">
-                        <input type="tel" readonly value="{{ trans('update.free') }}" class="js-filters-min-price form-control input-xs bg-white text-center text-gray-500">
-                    </div>
-                    <div class="mx-4"></div>
-                    <div class="form-group mb-0">
-                        <input type="tel" readonly value="{{ handlePrice($filterMaxPrice) }}" class="js-filters-max-price form-control input-xs bg-white text-center text-gray-500">
-                    </div>
-                </div>
-
-                <div
-                    class="course-list-price-range range wrunner-value-bottom no-bottom-value-note mt-8"
-                    id="priceRange"
-                    data-minLimit="{{ 0 }}"
-                    data-maxLimit="{{ $filterMaxPrice }}"
-                    data-step="100"
-                >
-                    <input type="hidden" name="min_price" value="" class="js-range-input-view-data">
-                    <input type="hidden" name="max_price" value="" class="js-range-input-view-data">
-                </div>
-
-            </div>
+{{-- All Courses (auth user toggle) --}}
+@if(!empty($authUser) and $authUser->isUser())
+    <div class="ez-filter-group" aria-expanded="true">
+        <button type="button" class="ez-filter-group__head js-ez-toggle">
+            <span class="ez-filter-group__title">{{ trans('webinars.all_courses') }}</span>
+            <span class="ez-filter-group__chev">
+                <x-iconsax-lin-add class="icons" width="11" height="11"/>
+            </span>
+        </button>
+        <div class="ez-filter-group__body">
+            <label class="d-flex align-items-center cursor-pointer" for="filter_show_all" style="gap: 10px;">
+                <input type="hidden" name="show_all" value="0">
+                <input type="checkbox" name="show_all" value="1" id="filter_show_all" {{ $showAllChecked ? 'checked' : '' }}
+                       style="accent-color: var(--ink); width: 16px; height: 16px;">
+                <span style="font-size: 14px; color: var(--ink);">{{ trans('webinars.all_courses') }}</span>
+            </label>
         </div>
+    </div>
+@endif
 
-        {{-- Instructor --}}
-        <div class="accordion card-before-line card-before-line__4-12 p-16 border-bottom-gray-100">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersInstructor" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    {{ trans('public.instructor') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersInstructor" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
+{{-- Category Filters And Options --}}
+@if(!empty($category) and !empty($category->filters))
+    @foreach($category->filters as $filter)
+        <div class="ez-filter-group" aria-expanded="true">
+            <button type="button" class="ez-filter-group__head js-ez-toggle">
+                <span class="ez-filter-group__title">{{ $filter->title }}</span>
+                <span class="ez-filter-group__chev">
+                    <x-iconsax-lin-add class="icons" width="11" height="11"/>
                 </span>
-            </div>
-
-            <div id="leftFiltersInstructor" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                <div class="form-group mb-0  mt-24">
-                    <label class="form-group-label text-[#FAFFE0]">{{ trans('update.course_instructor') }}</label>
-                    <select name="instructor" class="form-control searchable-select bg-white" data-allow-clear="true" data-placeholder="{{ trans('update.search_and_select_instructor') }}"
-                            data-api-path="/users/search"
-                            data-item-column-name="full_name"
-                            data-option="just_teachers"
-                    >
-
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        {{-- Rating --}}
-        <div class="accordion card-before-line card-before-line__4-12 pt-16 px-16 pb-4">
-            <div class="accordion__title d-flex align-items-center justify-content-between">
-                <div class="font-14 font-weight-bold text-[#FAFFE0] cursor-pointer" href="#leftFiltersRatings" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    {{ trans('update.rating') }}
-                </div>
-
-                <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFiltersRatings" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
-                    <x-iconsax-lin-arrow-up-1 class="icons text-[#FAFFE0]" width="16"/>
-                </span>
-            </div>
-
-            <div id="leftFiltersRatings" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
-                @foreach([5,4,3,2,1] as $rateNum)
-                    <div class="{{ $loop->first ? 'mt-16' : 'mt-12' }}">
-                        <input type="radio" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}" class="courses-rating-filter__input" {{ (request()->get('rating') == $rateNum) ? 'checked' : '' }}>
-
-                        <label class="courses-rating-filter d-flex align-items-center justify-content-between cursor-pointer" for="rating_{{ $rateNum }}">
-                            <span class="courses-rating-filter__left d-flex align-items-center">
-                                <span class="courses-rating-filter__checkbox"></span>
-
-                                <span class="courses-rating-filter__stars ml-12">
-                                    @include('design_1.web.components.rate', [
-                                         'rate' => $rateNum,
-                                         'rateCount' => false,
-                                         'rateClassName' => ''
-                                     ])
-                                </span>
-                            </span>
-
-                            <span class="courses-rating-filter__count font-12">{{ !empty($coursesRatingsCount[$rateNum]) ? $coursesRatingsCount[$rateNum] : 0 }}</span>
-                        </label>
-                    </div>
+            </button>
+            <div class="ez-filter-group__body">
+                @foreach($filter->options as $option)
+                    <label class="d-flex align-items-center cursor-pointer" for="filter_option_id_{{ $option->id }}" style="gap: 10px;">
+                        <input type="checkbox" name="filter_option[]" value="{{ $option->id }}" id="filter_option_id_{{ $option->id }}"
+                               style="accent-color: var(--ink); width: 16px; height: 16px;">
+                        <span style="font-size: 14px; color: var(--ink);">{{ $option->title }}</span>
+                    </label>
                 @endforeach
             </div>
         </div>
+    @endforeach
+@endif
 
+{{-- Price --}}
+<div class="ez-filter-group" aria-expanded="true">
+    <button type="button" class="ez-filter-group__head js-ez-toggle">
+        <span class="ez-filter-group__title">{{ trans('public.price') }}</span>
+        <span class="ez-filter-group__chev">
+            <x-iconsax-lin-add class="icons" width="11" height="11"/>
+        </span>
+    </button>
+    <div class="ez-filter-group__body">
+        <div class="d-flex align-items-center" style="gap: 8px;">
+            <div class="form-group mb-0" style="flex: 1;">
+                <input type="tel" readonly value="{{ trans('update.free') }}" class="js-filters-min-price form-control input-xs text-center"
+                       style="background: var(--cream); color: var(--ink); border: 1px solid var(--line); font-size: 12px;">
+            </div>
+            <div class="form-group mb-0" style="flex: 1;">
+                <input type="tel" readonly value="{{ handlePrice($filterMaxPrice) }}" class="js-filters-max-price form-control input-xs text-center"
+                       style="background: var(--cream); color: var(--ink); border: 1px solid var(--line); font-size: 12px;">
+            </div>
+        </div>
 
+        <div class="course-list-price-range range wrunner-value-bottom no-bottom-value-note mt-8"
+             id="priceRange"
+             data-minLimit="0"
+             data-maxLimit="{{ $filterMaxPrice }}"
+             data-step="100">
+            <input type="hidden" name="min_price" value="" class="js-range-input-view-data">
+            <input type="hidden" name="max_price" value="" class="js-range-input-view-data">
+        </div>
     </div>
 </div>
+
+{{-- Instructor --}}
+<div class="ez-filter-group" aria-expanded="true">
+    <button type="button" class="ez-filter-group__head js-ez-toggle">
+        <span class="ez-filter-group__title">{{ trans('public.instructor') }}</span>
+        <span class="ez-filter-group__chev">
+            <x-iconsax-lin-add class="icons" width="11" height="11"/>
+        </span>
+    </button>
+    <div class="ez-filter-group__body">
+        <select name="instructor" class="form-control searchable-select"
+                data-allow-clear="true"
+                data-placeholder="{{ trans('update.search_and_select_instructor') }}"
+                data-api-path="/users/search"
+                data-item-column-name="full_name"
+                data-option="just_teachers"
+                style="background: var(--cream); color: var(--ink); border: 1px solid var(--line);">
+        </select>
+    </div>
+</div>
+
+{{-- Rating --}}
+<div class="ez-filter-group" aria-expanded="true">
+    <button type="button" class="ez-filter-group__head js-ez-toggle">
+        <span class="ez-filter-group__title">{{ trans('update.rating') }}</span>
+        <span class="ez-filter-group__chev">
+            <x-iconsax-lin-add class="icons" width="11" height="11"/>
+        </span>
+    </button>
+    <div class="ez-filter-group__body">
+        @foreach([5, 4, 3, 2, 1] as $rateNum)
+            <label class="d-flex align-items-center justify-content-between cursor-pointer" for="rating_{{ $rateNum }}" style="gap: 10px;">
+                <span class="d-flex align-items-center" style="gap: 10px;">
+                    <input type="radio" name="rating" id="rating_{{ $rateNum }}" value="{{ $rateNum }}"
+                           {{ (request()->get('rating') == $rateNum) ? 'checked' : '' }}
+                           style="accent-color: var(--ink); width: 16px; height: 16px;">
+                    @include('design_1.web.components.rate', [
+                         'rate' => $rateNum,
+                         'rateCount' => false,
+                         'rateClassName' => ''
+                     ])
+                </span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);">
+                    {{ !empty($coursesRatingsCount[$rateNum]) ? $coursesRatingsCount[$rateNum] : 0 }}
+                </span>
+            </label>
+        @endforeach
+    </div>
+</div>
+
+{{-- CTA: request a course --}}
+<div class="ez-sidebar__cta">
+    <div class="ez-sidebar__cta-title">Can't find your course?</div>
+    <div class="ez-sidebar__cta-body">Tell us your syllabus. We launch ~3 new courses every month based on requests.</div>
+    <a href="/contact?type=request_course" class="ez-sidebar__cta-link">Request a course →</a>
+</div>
+
+@push('scripts_bottom')
+<script>
+(function(){
+    // Filter group collapse toggle
+    document.addEventListener('click', function(e){
+        var btn = e.target.closest('.js-ez-toggle');
+        if (!btn) return;
+        e.preventDefault();
+        var group = btn.closest('.ez-filter-group');
+        if (!group) return;
+        var open = group.getAttribute('aria-expanded') !== 'false';
+        group.setAttribute('aria-expanded', open ? 'false' : 'true');
+        var body = group.querySelector('.ez-filter-group__body');
+        if (body) body.style.display = open ? 'none' : 'grid';
+    });
+
+    // Sidebar show/hide toggle on mobile/tablet
+    function initSidebarToggle() {
+        var toggleBtn = document.querySelector('.js-ez-sidebar-toggle');
+        var sidebar   = document.querySelector('.js-ez-sidebar');
+        if (!toggleBtn || !sidebar) return;
+
+        function checkBreakpoint() {
+            if (window.innerWidth <= 991) {
+                toggleBtn.style.display = 'flex';
+            } else {
+                toggleBtn.style.display = 'none';
+                sidebar.classList.add('is-open');
+            }
+        }
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('is-open');
+            var isOpen = sidebar.classList.contains('is-open');
+            toggleBtn.querySelector('span').textContent = isOpen ? 'Hide filters' : 'Filters';
+        });
+
+        window.addEventListener('resize', checkBreakpoint);
+        checkBreakpoint();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebarToggle);
+    } else {
+        initSidebarToggle();
+    }
+})();
+</script>
+@endpush

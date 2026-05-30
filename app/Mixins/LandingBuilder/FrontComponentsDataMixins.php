@@ -44,7 +44,9 @@ class FrontComponentsDataMixins
                 },
                 'reviews' => function ($query) {
                     $query->where('status', 'active');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -77,7 +79,9 @@ class FrontComponentsDataMixins
                 },
                 'reviews' => function ($query) {
                     $query->where('status', 'active');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->inRandomOrder()
@@ -107,7 +111,9 @@ class FrontComponentsDataMixins
             ->with([
                 'teacher' => function ($qu) {
                     $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
-                }
+                },
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -162,7 +168,9 @@ class FrontComponentsDataMixins
                 },
                 'sales',
                 'tickets',
-                'feature'
+                'feature',
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -192,7 +200,9 @@ class FrontComponentsDataMixins
                     $query->where('status', 'active');
                 },
                 'tickets',
-                'feature'
+                'feature',
+                'university',
+                'faculty'
             ])
             ->limit($count)
             ->get();
@@ -201,24 +211,41 @@ class FrontComponentsDataMixins
     public function getUpcomingCoursesData($count = 4)
     {
         $user = auth()->user();
-        // Upcoming courses = webinars with status pending
+        $relations = [
+            'teacher' => function ($qu) {
+                $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
+            },
+            'university',
+            'faculty',
+        ];
+
+        // Try upcoming (pending) courses first
         $query = Webinar::query()->visibleInUpcomingList($user)
             ->where('private', false);
 
         if (!auth()->check()) {
-            $query->whereNull('university_id')
-                ->whereNull('faculty_id');
+            $query->whereNull('university_id')->whereNull('faculty_id');
         }
 
-        return $query
-            ->orderBy('created_at', 'desc')
-            ->with([
-                'teacher' => function ($qu) {
-                    $qu->select('id', 'username', 'full_name', 'role_id', 'role_name', 'avatar', 'avatar_settings');
-                }
-            ])
+        $results = $query->orderBy('created_at', 'desc')
+            ->with($relations)
             ->limit($count)
             ->get();
+
+        // Fall back to published (active) courses when no upcoming ones exist
+        if ($results->isEmpty()) {
+            $fallback = Webinar::query()
+                ->where('status', Webinar::$active)
+                ->where('private', false)
+                ->orderBy('created_at', 'desc')
+                ->with($relations)
+                ->limit($count)
+                ->get();
+
+            return $fallback;
+        }
+
+        return $results;
     }
 
     public function getCourseBundlesData($count = 4)

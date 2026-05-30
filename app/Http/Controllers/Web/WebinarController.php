@@ -457,7 +457,7 @@ class WebinarController extends Controller
                 ->where('id', $file_id)
                 ->first();
 
-            if (!empty($file) and $file->downloadable) {
+            if (!empty($file) and ($file->downloadable || strtolower((string)$file->file_type) === 'pdf')) {
                 $canAccess = true;
 
                 if ($file->accessibility == 'paid') {
@@ -467,6 +467,10 @@ class WebinarController extends Controller
                 if ($canAccess) {
                     if (in_array($file->storage, ['s3', 'external_link'])) {
                         return redirect($file->file);
+                    }
+
+                    if ($file->storage === 'r2') {
+                        return $this->downloadR2File($file);
                     }
 
                     $filePath = public_path($file->file);
@@ -493,6 +497,70 @@ class WebinarController extends Controller
                     return back()->with(['toast' => $toastData]);
                 }
             }
+        }
+
+        return back();
+    }
+
+    /**
+     * Stream downloadable files from private R2 storage.
+     */
+    private function downloadR2File(File $file)
+    {
+        try {
+            $r2Path = $this->extractR2Path($file->file);
+
+            if (empty($r2Path)) {
+                \Log::warning('R2 download: invalid file path', [
+                    'file_id' => $file->id,
+                    'file_field' => $file->file,
+                ]);
+
+                return back();
+            }
+
+            $r2Disk = Storage::disk('r2');
+
+            if (!$r2Disk->exists($r2Path)) {
+                \Log::warning('R2 download: file not found', [
+                    'file_id' => $file->id,
+                    'r2_path' => $r2Path,
+                ]);
+
+                return back();
+            }
+
+            $stream = $r2Disk->readStream($r2Path);
+
+            if ($stream === false) {
+                \Log::warning('R2 download: failed to open stream', [
+                    'file_id' => $file->id,
+                    'r2_path' => $r2Path,
+                ]);
+
+                return back();
+            }
+
+            $extension = pathinfo($r2Path, PATHINFO_EXTENSION) ?: $file->file_type;
+            $fileName = str_replace(' ', '-', $file->title);
+            $fileName = str_replace('.', '-', $fileName);
+            $fileName .= '.' . $extension;
+            $mimeType = $r2Disk->mimeType($r2Path) ?: 'application/octet-stream';
+
+            return response()->streamDownload(function () use ($stream) {
+                fpassthru($stream);
+
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }, $fileName, [
+                'Content-Type' => $mimeType,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('R2 download error', [
+                'file_id' => $file->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         return back();
@@ -870,7 +938,9 @@ class WebinarController extends Controller
             throw new \RuntimeException('Stream token secret not configured');
         }
 
-        $ttl = $ttlSeconds ?? config('services.stream.token_ttl', 120);
+        // Keep token valid long enough for typical lessons even if env is misconfigured too low.
+        $configuredTtl = (int) config('services.stream.token_ttl', 120);
+        $ttl = $ttlSeconds ?? max(1800, $configuredTtl);
         
         $payload = [
             'key' => $key,
@@ -1146,7 +1216,9 @@ class WebinarController extends Controller
         $itemId  = $data['item_id'] ?? null;
         $status  = $data['status'] ?? null;
 
-        if (empty($itemKey) || empty($itemId)) {
+        $allowedItems = ['file_id', 'session_id', 'text_lesson_id'];
+
+        if (empty($itemKey) || empty($itemId) || !in_array($itemKey, $allowedItems, true)) {
             abort(403);
         }
 
@@ -1208,11 +1280,42 @@ class WebinarController extends Controller
 
             $course = Webinar::where('slug', $slug)->first();
 
-            if (!empty($course) and $course->checkUserHasBought($user)) {
+            if (!empty($course)) {
                 $data = $request->all();
 
-                $item = $data['item'];
-                $item_id = $data['item_id'];
+                $item = $data['item'] ?? null;
+                $item_id = $data['item_id'] ?? null;
+                $allowedItems = ['file_id', 'session_id', 'text_lesson_id'];
+
+                if (empty($item) || empty($item_id) || !in_array($item, $allowedItems, true)) {
+                    abort(403);
+                }
+
+                // Detect the item's chapter so section-access users can auto-complete accessible content
+                $chapter = null;
+                switch ($item) {
+                    case 'file_id':
+                        $file = \App\Models\File::with('chapter')->find($item_id);
+                        $chapter = $file->chapter ?? null;
+                        break;
+
+                    case 'session_id':
+                        $session = \App\Models\Session::with('chapter')->find($item_id);
+                        $chapter = $session->chapter ?? null;
+                        break;
+
+                    case 'text_lesson_id':
+                        $textLesson = \App\Models\TextLesson::with('chapter')->find($item_id);
+                        $chapter = $textLesson->chapter ?? null;
+                        break;
+                }
+
+                $hasFullCourse = $course->checkUserHasBought($user);
+                $hasSectionAccess = !empty($chapter) && canUserAccessCourseContent($course, $user, $chapter);
+
+                if (!$hasFullCourse && !$hasSectionAccess) {
+                    abort(403);
+                }
 
                 // Check if already marked as complete
                 $exists = CourseLearning::where('user_id', $user->id)
@@ -1220,7 +1323,6 @@ class WebinarController extends Controller
                     ->first();
 
                 if (empty($exists)) {
-                    // Mark as complete
                     CourseLearning::create([
                         'user_id' => $user->id,
                         $item => $item_id,

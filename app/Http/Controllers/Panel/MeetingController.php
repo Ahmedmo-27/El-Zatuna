@@ -27,7 +27,8 @@ class MeetingController extends Controller
         if (empty($meeting)) {
             $meeting = Meeting::create([
                 'creator_id' => $user->id,
-                'created_at' => time()
+                'teacher_id' => $user->id,
+                'created_at' => time(),
             ]);
         }
 

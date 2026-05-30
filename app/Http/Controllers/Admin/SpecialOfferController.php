@@ -101,6 +101,10 @@ class SpecialOfferController extends Controller
             $query->whereNotNull($type);
         }
 
+        if ($type === 'all') {
+            $query->where('target', SpecialOffer::$targetAll);
+        }
+
         return $query;
     }
 
@@ -125,24 +129,33 @@ class SpecialOfferController extends Controller
         $this->authorize('admin_product_discount_create');
 
         $this->validate($request, [
+            'type' => 'required|in:all,courses,bundles,subscription_packages,registration_packages',
             'percent' => 'required',
             'status' => 'nullable|in:active,inactive',
             'from_date' => 'required',
             'to_date' => 'required',
+            'webinar_id' => 'required_if:type,courses',
+            'bundle_id' => 'required_if:type,bundles',
+            'subscribe_id' => 'required_if:type,subscription_packages',
+            'registration_package_id' => 'required_if:type,registration_packages',
         ]);
 
         $data = $request->all();
 
-        $item = $this->getItem($data);
-        $activeSpecialOfferForWebinar = $item->activeSpecialOffer();
+        $type = $data['type'];
 
-        if ($activeSpecialOfferForWebinar) {
-            $toastData = [
-                'title' => trans('public.request_failed'),
-                'msg' => trans('update.this_course_has_active_special_offer'),
-                'status' => 'error'
-            ];
-            return back()->with(['toast' => $toastData]);
+        if ($type !== SpecialOffer::$targetAll) {
+            $item = $this->getItem($data);
+            $activeSpecialOfferForItem = $item->activeSpecialOffer();
+
+            if ($activeSpecialOfferForItem) {
+                $toastData = [
+                    'title' => trans('public.request_failed'),
+                    'msg' => trans('update.this_course_has_active_special_offer'),
+                    'status' => 'error'
+                ];
+                return back()->with(['toast' => $toastData]);
+            }
         }
 
         $fromDate = convertTimeToUTCzone($data['from_date'], getTimezone());
@@ -151,10 +164,11 @@ class SpecialOfferController extends Controller
         SpecialOffer::create([
             'creator_id' => auth()->user()->id,
             'name' => $data["name"],
-            'webinar_id' => $data["webinar_id"] ?? null,
-            'bundle_id' => $data["bundle_id"] ?? null,
-            'subscribe_id' => $data["subscribe_id"] ?? null,
-            'registration_package_id' => $data["registration_package_id"] ?? null,
+            'target' => $type,
+            'webinar_id' => ($type === SpecialOffer::$targetCourses) ? ($data["webinar_id"] ?? null) : null,
+            'bundle_id' => ($type === SpecialOffer::$targetBundles) ? ($data["bundle_id"] ?? null) : null,
+            'subscribe_id' => ($type === SpecialOffer::$targetSubscriptionPackages) ? ($data["subscribe_id"] ?? null) : null,
+            'registration_package_id' => ($type === SpecialOffer::$targetRegistrationPackages) ? ($data["registration_package_id"] ?? null) : null,
             'percent' => $data["percent"],
             'status' => $data["status"],
             'created_at' => time(),
@@ -176,6 +190,8 @@ class SpecialOfferController extends Controller
         } elseif (!empty($data['registration_package_id'])) {
             return RegistrationPackage::query()->findOrFail($data['registration_package_id']);
         }
+
+        return null;
     }
 
     public function edit($id)
@@ -202,14 +218,20 @@ class SpecialOfferController extends Controller
         $this->authorize('admin_product_discount_edit');
 
         $this->validate($request, [
+            'type' => 'required|in:all,courses,bundles,subscription_packages,registration_packages',
             'percent' => 'required',
             'status' => 'nullable|in:active,inactive',
             'from_date' => 'required',
             'to_date' => 'required',
+            'webinar_id' => 'required_if:type,courses',
+            'bundle_id' => 'required_if:type,bundles',
+            'subscribe_id' => 'required_if:type,subscription_packages',
+            'registration_package_id' => 'required_if:type,registration_packages',
         ]);
 
         $specialOffer = SpecialOffer::findOrfail($id);
         $data = $request->all();
+        $type = $data['type'];
 
         $fromDate = convertTimeToUTCzone($data['from_date'], getTimezone());
         $toDate = convertTimeToUTCzone($data['to_date'], getTimezone());
@@ -217,10 +239,11 @@ class SpecialOfferController extends Controller
         $specialOffer->update([
             'creator_id' => auth()->user()->id,
             'name' => $data["name"],
-            'webinar_id' => $data["webinar_id"] ?? null,
-            'bundle_id' => $data["bundle_id"] ?? null,
-            'subscribe_id' => $data["subscribe_id"] ?? null,
-            'registration_package_id' => $data["registration_package_id"] ?? null,
+            'target' => $type,
+            'webinar_id' => ($type === SpecialOffer::$targetCourses) ? ($data["webinar_id"] ?? null) : null,
+            'bundle_id' => ($type === SpecialOffer::$targetBundles) ? ($data["bundle_id"] ?? null) : null,
+            'subscribe_id' => ($type === SpecialOffer::$targetSubscriptionPackages) ? ($data["subscribe_id"] ?? null) : null,
+            'registration_package_id' => ($type === SpecialOffer::$targetRegistrationPackages) ? ($data["registration_package_id"] ?? null) : null,
             'percent' => $data["percent"],
             'status' => $data["status"],
             'created_at' => time(),

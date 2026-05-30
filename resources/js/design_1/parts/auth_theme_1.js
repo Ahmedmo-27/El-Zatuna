@@ -42,6 +42,21 @@
         })
 
         handleResendTimer()
+
+        // After validation errors, university stays from old() but change() never ran — repopulate faculties.
+        const $uniSelect = $('.js-university-select');
+        const $facultySelect = $('.js-faculty-select');
+        if ($uniSelect.length && $facultySelect.length) {
+            const uniVal = $uniSelect.val();
+            if (uniVal) {
+                const fromData = $facultySelect.data('selected-faculty');
+                fillFacultySelectForUniversity(uniVal, {
+                    preserveFacultyId: fromData !== undefined && fromData !== null && String(fromData) !== ''
+                        ? fromData
+                        : ''
+                });
+            }
+        }
     })
 
     $('body').on('change', 'input[name="type"]', function () {
@@ -161,35 +176,72 @@
         })
     })
 
-    $('body').on('change', '.js-university-select', function () {
-        const universityId = $(this).val();
-        const $facultySelect = $('.js-faculty-select');
-        const defaultOptionText = $facultySelect.find('option').first().text() || 'Select';
+    function getFacultiesListForUniversity(universityId) {
+        if (!universityId) {
+            return null;
+        }
+        if (!window.facultiesByUniversity) {
+            return null;
+        }
+        const map = window.facultiesByUniversity;
+        if (map[universityId]) {
+            return map[universityId];
+        }
+        if (map[String(universityId)]) {
+            return map[String(universityId)];
+        }
+        return null;
+    }
 
-        $facultySelect.html(`<option value="" disabled selected>${defaultOptionText}</option>`);
+    /**
+     * @param {string|null|undefined} universityId
+     * @param {{ preserveFacultyId?: string|number|null }} options If preserveFacultyId is set, re-select that option after rebuild (validation redirect).
+     */
+    function fillFacultySelectForUniversity(universityId, options) {
+        options = options || {};
+        const preserveRaw = options.preserveFacultyId;
+        const preserveFacultyId = (preserveRaw !== undefined && preserveRaw !== null && String(preserveRaw) !== '')
+            ? String(preserveRaw)
+            : '';
+
+        const $facultySelect = $('.js-faculty-select');
+        if (!$facultySelect.length) {
+            return;
+        }
+
+        const defaultOptionText = $facultySelect.find('option').first().text() || 'Select';
+        const selectPlaceholder = !preserveFacultyId ? ' selected' : '';
+
+        $facultySelect.html(`<option value="" disabled${selectPlaceholder}>${defaultOptionText}</option>`);
 
         if (!universityId) {
             return;
         }
 
-        // Use preloaded data if available (much faster - no network delay!)
-        if (window.facultiesByUniversity && window.facultiesByUniversity[universityId]) {
-            const faculties = window.facultiesByUniversity[universityId];
+        const applyFaculties = function (faculties) {
             faculties.forEach(function (faculty) {
                 $facultySelect.append(`<option value="${faculty.id}">${faculty.name}</option>`);
             });
-        } else {
-            // Fallback to AJAX if preloaded data is not available
-            $.get(`/universities/${universityId}/faculties`, function (result) {
-                if (result && result.code === 200) {
-                    const faculties = result.faculties || [];
+            if (preserveFacultyId) {
+                $facultySelect.val(preserveFacultyId);
+            }
+        };
 
-                    faculties.forEach(function (faculty) {
-                        $facultySelect.append(`<option value="${faculty.id}">${faculty.name}</option>`);
-                    })
-                }
-            })
+        const preloaded = getFacultiesListForUniversity(universityId);
+        if (preloaded) {
+            applyFaculties(preloaded);
+            return;
         }
+
+        $.get(`/universities/${universityId}/faculties`, function (result) {
+            if (result && result.code === 200) {
+                applyFaculties(result.faculties || []);
+            }
+        });
+    }
+
+    $('body').on('change', '.js-university-select', function () {
+        fillFacultySelectForUniversity($(this).val(), { preserveFacultyId: '' });
     })
 
 })(jQuery)

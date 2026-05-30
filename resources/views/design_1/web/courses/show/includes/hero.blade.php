@@ -41,6 +41,16 @@
             </div>
         </div>
 
+        @if(!empty($course) && (is_null($course->university_id) || !empty($course->university) || !empty($course->faculty)))
+            <div class="d-flex align-items-center gap-12 mt-8">
+                <div class="px-8 py-4 rounded-12 bg-[#E5EDB0]/10 text-[#E5EDB0] font-12">{{ trans('update.university') }}: {{ !empty($course->university) ? $course->university->name : trans('update.all_universities') }}</div>
+
+                @if(!empty($course->faculty))
+                    <div class="px-8 py-4 rounded-12 bg-[#FAFFE0]/06 text-[#FAFFE0] font-12">{{ trans('update.faculty') }}: {{ $course->faculty->name }}</div>
+                @endif
+            </div>
+        @endif
+
         @if(!empty($course->summary))
             <div class="mt-8 text-[#FAFFE0]/70">{!! nl2br($course->summary) !!}</div>
         @endif

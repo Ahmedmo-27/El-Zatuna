@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendNotifications;
 use App\Models\Newsletter;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -19,7 +21,8 @@ class UserController extends Controller
         $validator = Validator::make($data, [
             'newsletter_email' => 'required|email|max:255|unique:newsletters,email'
         ], [
-            'newsletter_email.required' => [trans('update.entering_the_email_for_the_newsletter_is_required')],
+            'newsletter_email.required' => trans('update.entering_the_email_for_the_newsletter_is_required'),
+            'newsletter_email.unique' => trans('update.newsletter_email_already_subscribed'),
         ]);
 
         if ($validator->fails()) {
@@ -78,11 +81,45 @@ class UserController extends Controller
             RewardAccounting::makeRewardAccounting($user_id, $newsletterReward, Reward::NEWSLETTERS, $user_id, true);
         }
 
+        $this->notifySupportAboutNewsletter($email);
+
         return response()->json([
             'code' => 200,
             'title' => trans('public.request_success'),
             'msg' => trans('site.create_newsletter_success'),
         ]);
+    }
+
+    private function notifySupportAboutNewsletter(string $newsletterEmail): void
+    {
+        $supportEmail = config('mail.support.address');
+        $queue = trim((string) config('mail.support.queue', ''));
+
+        if (empty($supportEmail)) {
+            return;
+        }
+
+        $notification = [
+            'title' => "New newsletter subscriber: {$newsletterEmail}",
+            'message' => "New footer newsletter subscription: {$newsletterEmail}",
+        ];
+
+        try {
+            $mailable = new SendNotifications($notification);
+
+            if ($queue !== '') {
+                $mailable->onQueue($queue);
+            }
+
+            Mail::to($supportEmail)->queue($mailable);
+        } catch (\Throwable $exception) {
+            \Log::warning('Newsletter support notification failed', [
+                'email' => $newsletterEmail,
+                'support_email' => $supportEmail,
+                'queue' => $queue,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     public function search(Request $request)

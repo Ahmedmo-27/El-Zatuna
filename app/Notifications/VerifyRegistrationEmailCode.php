@@ -2,22 +2,20 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class VerifyRegistrationEmailCode extends Notification implements ShouldQueue
+class VerifyRegistrationEmailCode extends Notification
 {
-    use Queueable;
-
     private $verificationCode;
     private $expiresAt;
+    private $verificationToken;
 
-    public function __construct($verificationCode, $expiresAt)
+    public function __construct($verificationCode, $expiresAt, $verificationToken = null)
     {
         $this->verificationCode = $verificationCode;
         $this->expiresAt = $expiresAt;
+        $this->verificationToken = $verificationToken;
     }
 
     public function via($notifiable)
@@ -31,18 +29,26 @@ class VerifyRegistrationEmailCode extends Notification implements ShouldQueue
         $fromName = config('mail.from.name');
         $fullName = $notifiable->full_name ?? $notifiable->username ?? 'Student';
 
-        return (new MailMessage)
+        $mailMessage = (new MailMessage)
             ->subject('🎓 ' . trans('auth.email_verification') . ' - ' . $fromName)
             ->from($fromAddress, $fromName)
             ->greeting('Hello ' . $fullName . '! 👋')
             ->line('**Thank you for registering with ' . $fromName . '!**')
-            ->line('We\'re excited to have you join our learning community. To complete your registration and start your educational journey, please verify your email address.')
-            ->line('**Your 6-digit verification code is:**')
-            ->line('# **' . $this->verificationCode . '**')
+            ->line('We\'re excited to have you join our learning community. To complete your registration and start your educational journey, please verify your email address.');
+
+        if ($this->verificationToken) {
+            $verifyUrl = url('/register/verify/' . $this->verificationToken);
+            $mailMessage->line('**Option 1: Click the verification link**')
+                ->action('Verify Email Address', $verifyUrl)
+                ->line('**Option 2: Enter the 6-digit code**');
+        } else {
+            $mailMessage->line('**Your 6-digit verification code is:**');
+        }
+
+        return $mailMessage->line('# **' . $this->verificationCode . '**')
             ->line('Enter this code on the registration page to verify your email address.')
-            ->line('This verification code will expire in **' . $this->expiresAt->diffInMinutes(now()) . ' minutes**.')
-            ->line('After you enter this code and verify your email, you can return later to complete Step 3 (profile details) using the button below, as long as you use the same browser/device.')
-            ->action('Continue registration (Step 3)', url('/register/step/3'))
+            ->line('This verification link and code will expire in **' . $this->expiresAt->diffInMinutes(now()) . ' minutes**.')
+            ->line('After verification, you will complete Step 3 (profile details).')
             ->line('If you did not create an account, no further action is required.')
             ->salutation("Best regards,  \n**The " . $fromName . " Team** 🌟");
     }

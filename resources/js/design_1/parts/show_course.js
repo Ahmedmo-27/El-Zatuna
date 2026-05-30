@@ -56,8 +56,28 @@
     $('body').on('click', '.js-bottom-fixed-enroll-on-course-btn', function (e) {
         e.preventDefault();
 
+        const $enrollCard = $('.js-enroll-actions-card').first();
+
+        if (!$enrollCard.length) {
+            return;
+        }
+
+        const $addToCartBtn = $enrollCard.find('.js-course-add-to-cart-btn:not(.disabled):not([disabled])').first();
+
+        if ($addToCartBtn.length && !$addToCartBtn.hasClass('loadingbar')) {
+            $addToCartBtn.trigger('click');
+            return;
+        }
+
+        const $freeEnrollLink = $enrollCard.find('a.btn-primary[href*="/free"]:not(.disabled)').first();
+
+        if ($freeEnrollLink.length) {
+            window.location.href = $freeEnrollLink.attr('href');
+            return;
+        }
+
         $('html, body').animate({
-            scrollTop: $('.js-enroll-actions-card').offset().top - 150
+            scrollTop: $enrollCard.offset().top - 150
         }, 1000);
     })
     /**
@@ -132,17 +152,52 @@
         const $this = $(this);
         const $icons = $this.find('.icons');
         const href = $this.attr('href');
+        const wasFavorite = $this.hasClass('text-danger');
 
-        if ($this.hasClass('text-danger')) {
-            $this.removeClass('text-danger').addClass('text-gray-500');
-            $icons.removeClass('text-danger').addClass('text-gray-500');
-        } else {
-            $this.removeClass('text-gray-500').addClass('text-danger');
-            $icons.removeClass('text-gray-500').addClass('text-danger');
+        if (!href || href === '/login') {
+            window.location.href = '/login';
+            return;
         }
 
-        $.get(href, function (result) {
+        const setFavoriteState = function (isFavorite) {
+            if (isFavorite) {
+                $this.removeClass('text-gray-500').addClass('text-danger');
+                $icons.removeClass('text-gray-500').addClass('text-danger');
+            } else {
+                $this.removeClass('text-danger').addClass('text-gray-500');
+                $icons.removeClass('text-danger').addClass('text-gray-500');
+            }
+        };
 
+        // Optimistic UI update and rollback on request failure.
+        setFavoriteState(!wasFavorite);
+
+        $.get(href, function (result) {
+            const isFavorite = (result && typeof result.is_favorite !== 'undefined')
+                ? !!result.is_favorite
+                : !wasFavorite;
+
+            setFavoriteState(isFavorite);
+
+            const title = (result && result.title)
+                ? result.title
+                : (typeof requestSuccessLang !== 'undefined' ? requestSuccessLang : 'Success');
+
+            const msg = (result && result.msg)
+                ? result.msg
+                : (isFavorite ? 'Course added to your favorites.' : 'Course removed from your favorites.');
+
+            if (typeof showToast === 'function') {
+                showToast('success', title, msg);
+            }
+        }).fail(function () {
+            setFavoriteState(wasFavorite);
+
+            if (typeof showToast === 'function') {
+                const title = (typeof oopsLang !== 'undefined') ? oopsLang : 'Error';
+                const msg = (typeof somethingWentWrongLang !== 'undefined') ? somethingWentWrongLang : 'Something went wrong.';
+                showToast('error', title, msg);
+            }
         });
     });
 
@@ -169,8 +224,8 @@
         const path = $(this).attr("data-path");
 
         handleBasicModal(path, reportCourseLang, function (result, $body, $footer) {
-            const footerHtml = `<div class="d-flex align-items-center justify-content-end">
-                <button type="button" class="js-submit-course-report btn btn-primary">${reportLang}</button>
+            const footerHtml = `<div class="course-report-modal-footer d-flex align-items-center justify-content-end">
+                <button type="button" class="js-submit-course-report course-report-submit-btn btn btn-primary">${reportLang}</button>
             </div>`;
             $footer.html(footerHtml);
         }, '', '40rem')

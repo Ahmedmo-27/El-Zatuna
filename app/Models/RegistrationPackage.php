@@ -36,10 +36,14 @@ class RegistrationPackage extends Model implements TranslatableContract
 
     public function activeSpecialOffer()
     {
-        $activeSpecialOffer = SpecialOffer::where('registration_package_id', $this->id)
-            ->where('status', SpecialOffer::$active)
+        $activeSpecialOffer = SpecialOffer::where('status', SpecialOffer::$active)
             ->where('from_date', '<', time())
             ->where('to_date', '>', time())
+            ->where(function ($query) {
+                $query->where('registration_package_id', $this->id)
+                    ->orWhereIn('target', [SpecialOffer::$targetAll, SpecialOffer::$targetRegistrationPackages]);
+            })
+            ->orderByRaw('CASE WHEN registration_package_id IS NULL THEN 1 ELSE 0 END ASC')
             ->first();
 
         return $activeSpecialOffer ?? false;

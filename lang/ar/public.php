@@ -227,6 +227,7 @@ return [
     'cancel' => 'الغاء',
     'canceled' => 'تم الالغاء',
     'success' => 'النجاح',
+    'error' => 'خطأ',
     'fail' => 'فشل',
     'unavailable' => 'غير متوفره',
     'unavailable_description' => 'رسالة عدم التوفر',

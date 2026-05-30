@@ -37,11 +37,32 @@
 
                                 @php
                                     $types = [
+                                        'all' => 'all',
                                         'courses' => 'webinar_id',
                                         'bundles' => 'bundle_id',
                                         'subscription_packages' => 'subscribe_id',
                                         'registration_packages' => 'registration_package_id',
                                     ];
+
+                                    $selectedType = old('type');
+
+                                    if (empty($selectedType) and !empty($specialOffer)) {
+                                        if (($specialOffer->target ?? null) == 'all') {
+                                            $selectedType = 'all';
+                                        } elseif (!empty($specialOffer->webinar_id)) {
+                                            $selectedType = 'courses';
+                                        } elseif (!empty($specialOffer->bundle_id)) {
+                                            $selectedType = 'bundles';
+                                        } elseif (!empty($specialOffer->subscribe_id)) {
+                                            $selectedType = 'subscription_packages';
+                                        } elseif (!empty($specialOffer->registration_package_id)) {
+                                            $selectedType = 'registration_packages';
+                                        }
+                                    }
+
+                                    if (empty($selectedType)) {
+                                        $selectedType = 'courses';
+                                    }
                                 @endphp
 
                                 <div class="form-group">
@@ -50,7 +71,9 @@
                                     <select name="type" class="js-offer-type form-control @error('type')  is-invalid @enderror">
 
                                         @foreach($types as $type => $typeItem)
-                                            <option value="{{ $type }}" {{ (!empty($specialOffer) and !empty($specialOffer->{$typeItem})) ? 'selected' : '' }}>{{ trans('update.'.$type) }}</option>
+                                            <option value="{{ $type }}" {{ ($selectedType == $type) ? 'selected' : '' }}>
+                                                {{ $type == 'all' ? trans('admin/main.all') : trans('update.'.$type) }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     @error('type')
@@ -60,7 +83,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="js-course-field form-group {{ (empty($specialOffer) or !empty($specialOffer->webinar_id)) ? '' : 'd-none' }}">
+                                <div class="js-course-field form-group {{ ($selectedType == 'courses') ? '' : 'd-none' }}">
                                     <label>{{ trans('admin/main.class') }}</label>
 
                                     <select name="webinar_id" class="form-control search-webinar-select2 @error('webinar_id')  is-invalid @enderror" data-placeholder="{{ trans('update.search_and_select_class') }}">
@@ -76,7 +99,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="js-bundle-field form-group {{ (!empty($specialOffer) and !empty($specialOffer->bundle_id)) ? '' : 'd-none' }}">
+                                <div class="js-bundle-field form-group {{ ($selectedType == 'bundles') ? '' : 'd-none' }}">
                                     <label>{{ trans('update.bundle') }}</label>
 
                                     <select name="bundle_id" class="form-control search-bundle-select2 @error('bundle_id')  is-invalid @enderror" data-placeholder="{{ trans('update.search_and_select_bundle') }}">
@@ -92,7 +115,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="js-subscribe-field form-group {{ (!empty($specialOffer) and !empty($specialOffer->subscribe_id)) ? '' : 'd-none' }}">
+                                <div class="js-subscribe-field form-group {{ ($selectedType == 'subscription_packages') ? '' : 'd-none' }}">
                                     <label>{{ trans('public.subscribe') }}</label>
 
                                     <select name="subscribe_id" class="form-control @error('subscribe_id')  is-invalid @enderror">
@@ -108,7 +131,7 @@
                                     @enderror
                                 </div>
 
-                                <div class="js-registration_package-field form-group {{ (!empty($specialOffer) and !empty($specialOffer->registration_package_id)) ? '' : 'd-none' }}">
+                                <div class="js-registration_package-field form-group {{ ($selectedType == 'registration_packages') ? '' : 'd-none' }}">
                                     <label>{{ trans('update.registration_package') }}</label>
 
                                     <select name="registration_package_id" class="form-control @error('registration_package_id')  is-invalid @enderror">
@@ -210,4 +233,40 @@
 
 @push('scripts_bottom')
     <script src="/assets/admin/js/parts/special_offers.min.js"></script>
+    <script>
+        (function () {
+            var typeSelect = document.querySelector('.js-offer-type');
+
+            if (!typeSelect) {
+                return;
+            }
+
+            var blocks = {
+                courses: document.querySelector('.js-course-field'),
+                bundles: document.querySelector('.js-bundle-field'),
+                subscription_packages: document.querySelector('.js-subscribe-field'),
+                registration_packages: document.querySelector('.js-registration_package-field')
+            };
+
+            var toggleBlocks = function (value) {
+                Object.keys(blocks).forEach(function (key) {
+                    if (!blocks[key]) {
+                        return;
+                    }
+
+                    if (key === value) {
+                        blocks[key].classList.remove('d-none');
+                    } else {
+                        blocks[key].classList.add('d-none');
+                    }
+                });
+            };
+
+            typeSelect.addEventListener('change', function (event) {
+                toggleBlocks(event.target.value);
+            });
+
+            toggleBlocks(typeSelect.value);
+        })();
+    </script>
 @endpush

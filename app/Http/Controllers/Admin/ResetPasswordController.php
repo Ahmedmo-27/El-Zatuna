@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeleteAccountRequest;
 use App\Providers\RouteServiceProvider;
 use App\User;
 use Illuminate\Foundation\Auth\ResetsPasswords;
@@ -76,6 +77,9 @@ class ResetPasswordController extends Controller
                 ]);
 
             DB::table('password_resets')->where(['email' => $data['email']])->delete();
+
+            $userId = User::where('email', $data['email'])->value('id');
+            DeleteAccountRequest::cancelPendingForUserId($userId ? (int) $userId : null);
 
             $toastData = [
                 'title' => trans('public.request_success'),

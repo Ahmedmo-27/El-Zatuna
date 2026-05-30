@@ -79,7 +79,7 @@ class LoginController extends Controller
             ];
         } else {
             $rules = [
-                'email' => 'required|email|exists:users,email',
+                'email' => 'required|email',
                 'password' => 'required|min:6',
             ];
         }
@@ -170,11 +170,7 @@ class LoginController extends Controller
             $this->getUsername($request) => $this->getUsernameValue($request),
             'password' => $request->get('password')
         ];
-        $remember = true;
-
-        /*if (!empty($request->get('remember')) and $request->get('remember') == true) {
-            $remember = true;
-        }*/
+        $remember = in_array($request->get('remember'), [true, 1, '1', 'on'], true);
 
         return $this->guard()->attempt($credentials, $remember);
     }
@@ -369,15 +365,20 @@ class LoginController extends Controller
         // Fallback to global security settings if needed
         $securitySettings = getGeneralSecuritySettings();
         if (!empty($securitySettings) and !empty($securitySettings['login_device_limit'])) {
-            // If user's allowed_devices is not set or is 1 (default), use global setting
             if (empty($user->allowed_devices) || $user->allowed_devices == 1) {
                 $limitCount = !empty($securitySettings['number_of_allowed_devices']) ? $securitySettings['number_of_allowed_devices'] : 1;
             }
         }
 
-        $count = $user->logged_count;
+        // Clear this user's expired sessions first, then sync the count.
+        // Without this, stale records from browser-close/timeout logouts
+        // keep logged_count high and permanently lock the user out.
+        $sessionManager = new SessionManager();
+        $sessionManager->cleanupUserInactiveSessions($user->id, config('session.lifetime', 120));
+        $sessionManager->syncLoggedCount($user);
+        $user->refresh();
 
-        if ($count >= $limitCount) {
+        if ($user->logged_count >= $limitCount) {
             return "no";
         }
 

@@ -5,12 +5,14 @@
     <span class="ml-4">{{ trans('public.basic_information') }}</span>
 </a>
 
+{{-- Additional Information tab is intentionally hidden.
 <a href="/panel/setting/step/extra_information" class="navbar-item navbar-item-h-52 d-inline-flex-center cursor-pointer {{ ($currentStep == "extra_information") ? 'active' : '' }}">
     <div class="size-20">
         <x-iconsax-lin-note-add class="icons" width="20px" height="20px"/>
     </div>
     <span class="ml-4">{{ trans('public.extra_information') }}</span>
 </a>
+--}}
 
 <a href="/panel/setting/step/financial" class="navbar-item navbar-item-h-52 d-inline-flex-center cursor-pointer {{ ($currentStep == "financial") ? 'active' : '' }}">
     <div class="size-20">

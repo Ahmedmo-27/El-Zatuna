@@ -102,6 +102,11 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    'support' => [
+        'address' => env('MAIL_SUPPORT_ADDRESS', 'support@elzatuna.com'),
+        'queue' => env('MAIL_SUPPORT_QUEUE'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Markdown Mail Settings

@@ -1,4 +1,4 @@
-<form action="/panel/courses/my-comments" method="get" class="px-16">
+<form action="/panel/courses/my-comments" method="get" class="px-16 js-validate-date-range">
     <div class="row mt-24">
 
         <div class="col-6 col-md-3">

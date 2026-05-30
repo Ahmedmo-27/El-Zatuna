@@ -205,7 +205,7 @@ return [
 
         App\Providers\MinioStorageServiceProvider::class,
         App\Providers\R2StorageServiceProvider::class,
-        Ssheduardo\Redsys\RedsysServiceProvider::class,
+        // Ssheduardo\Redsys\RedsysServiceProvider::class,
         Jubaer\Zoom\ZoomServiceProvider::class,
         \Torann\GeoIP\GeoIPServiceProvider::class,
         niklasravnsborg\LaravelPdf\PdfServiceProvider::class,
@@ -213,9 +213,9 @@ return [
         MoemenGaballah\Msegat\MsegatServiceProvider::class,
         Craftsys\Msg91\Msg91LaravelServiceProvider::class,
         Kreait\Laravel\Firebase\ServiceProvider::class,
-        Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
-        PayMob\PayMobServiceProvider::class,
-        Clickpaysa\Laravel_package\PaypageServiceProvider::class,
+        // Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
+        // PayMob\PayMobServiceProvider::class,
+        // Clickpaysa\Laravel_package\PaypageServiceProvider::class,
         \App\Providers\LandingBuilderProvider::class
     ],
 
@@ -236,14 +236,14 @@ return [
         'Captcha' => Mews\Captcha\Facades\Captcha::class,
         'Share' => Jorenvh\Share\ShareFacade::class,
         //'Rave' => KingFlamez\Rave\Facades\Rave::class,
-        'Redsys'    => Ssheduardo\Redsys\Facades\Redsys::class,
+        // 'Redsys'    => Ssheduardo\Redsys\Facades\Redsys::class,
         'Zoom' => Jubaer\Zoom\Facades\Zoom::class,
         'GeoIP' => \Torann\GeoIP\Facades\GeoIP::class,
         'PDF' => niklasravnsborg\LaravelPdf\Facades\Pdf::class,
         'Kavenegar' => Kavenegar\Laravel\Facade::class,
         'Msegat' => MoemenGaballah\Msegat\Msegat::class,
         'Msg91' => Craftsys\Msg91\Facade\Msg91::class,
-        'PayMob' => PayMob\Facades\PayMob::class,
+        // 'PayMob' => PayMob\Facades\PayMob::class,
     ])->toArray(),
 
 ];

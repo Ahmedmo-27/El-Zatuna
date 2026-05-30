@@ -63,6 +63,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
 
             Route::group(['prefix' => '{webinar_id}/statistics'], function () {
                 Route::get('/', 'WebinarStatisticController@index');
+                Route::get('/reset-visits', 'WebinarStatisticController@resetVisits');
             });
         });
 
@@ -271,6 +272,16 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
     });
 
     Route::group(['prefix' => 'meetings'], function () {
+        Route::get('/', function () {
+            $user = auth()->user();
+
+            if ($user && ($user->isTeacher() || $user->isOrganization())) {
+                return redirect('/panel/meetings/requests');
+            }
+
+            return redirect('/panel/meetings/reservation');
+        });
+
         Route::get('/reservation', 'ReserveMeetingController@reservation');
         Route::get('/requests', 'ReserveMeetingController@requests');
 
@@ -292,6 +303,24 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::post('/{id}/create-session', 'ReserveMeetingController@createSession');
 
         Route::get('/{id}/contact-info', 'ReserveMeetingController@getContactInfoModal');
+    });
+
+    Route::group(['prefix' => 'meetings/live-sessions'], function () {
+        Route::get('/', [\App\Http\Controllers\LiveSessionController::class, 'index'])->name('panel.meetings.live_sessions.index');
+        Route::get('/me', [\App\Http\Controllers\LiveSessionController::class, 'mySessions'])->name('panel.meetings.live_sessions.me');
+        Route::get('/{id}', [\App\Http\Controllers\LiveSessionController::class, 'show'])->whereNumber('id')->name('panel.meetings.live_sessions.show');
+        Route::get('/{id}/join', [\App\Http\Controllers\LiveSessionController::class, 'join'])->whereNumber('id')->name('panel.meetings.live_sessions.join');
+    });
+
+    Route::group(['prefix' => 'meetings/live-sessions/manage', 'middleware' => ['role:teacher,organization']], function () {
+        Route::get('/', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'index'])->name('panel.meetings.live_sessions.manage.index');
+        Route::get('/create', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'create'])->name('panel.meetings.live_sessions.manage.create');
+        Route::post('/', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'store'])->name('panel.meetings.live_sessions.manage.store');
+        Route::get('/{id}', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'show'])->whereNumber('id')->name('panel.meetings.live_sessions.manage.show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'edit'])->whereNumber('id')->name('panel.meetings.live_sessions.manage.edit');
+        Route::put('/{id}', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'update'])->whereNumber('id')->name('panel.meetings.live_sessions.manage.update');
+        Route::post('/{id}/publish', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'publish'])->whereNumber('id')->name('panel.meetings.live_sessions.manage.publish');
+        Route::post('/{id}/cancel', [\App\Http\Controllers\Teacher\LiveSessionController::class, 'cancel'])->whereNumber('id')->name('panel.meetings.live_sessions.manage.cancel');
     });
 
     Route::group(['prefix' => 'financial'], function () {
@@ -347,7 +376,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::post('metas/{meta_id}/update', 'UserController@updateMeta');
         Route::get('metas/{meta_id}/delete', 'UserController@deleteMeta');
         Route::get('/deleteAccount', 'UserController@deleteAccount');
-        Route::get('/media/{type}/delete', 'UserController@deleteUserMedia');
+        Route::get('/media/{type}/delete', 'UserController@deleteUserMedia')->where('type', 'avatar|cover_img|profile_secondary_image|profile_video|signature_img');
 
         Route::group(['prefix' => '/attachments'], function () {
             Route::get('/get-form', 'UserProfileAttachmentsController@getForm');
@@ -548,6 +577,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/bookmarks', 'ForumsBookmarksController@index');
     });
 
+    /*
     Route::group(['prefix' => 'blog'], function () {
         Route::get('/', 'BlogPostsController@index');
         Route::get('/new', 'BlogPostsController@create');
@@ -566,6 +596,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/delete', 'BlogRelatedPostsController@destroy');
         });
     });
+    */
 
     Route::group(['prefix' => 'ai-contents'], function () {
         Route::get('/', 'AiContentController@index');

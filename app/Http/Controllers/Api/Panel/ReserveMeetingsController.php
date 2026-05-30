@@ -8,9 +8,27 @@ use App\Models\Api\ReserveMeeting;
 use App\Models\Session;
 use \Illuminate\Http\Request;
 
+/**
+ * @OA\Tag(
+ *     name="Reserved Meetings",
+ *     description="Booked and hosted meeting APIs"
+ * )
+ */
+
 
 class ReserveMeetingsController extends Controller
 {
+    /**
+     * List meeting reservations and instructor requests.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/meetings",
+     *     summary="List reservations and requests",
+     *     tags={"Reserved Meetings"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Reservations and requests")
+     * )
+     */
     public function index(Request $request)
     {
 
@@ -28,6 +46,18 @@ class ReserveMeetingsController extends Controller
 
     }
 
+    /**
+     * Show one reserved meeting.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/meetings/{id}",
+     *     summary="Show reserved meeting",
+     *     tags={"Reserved Meetings"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Reserved meeting")
+     * )
+     */
     public function show(Request $request, $id)
     {
         $user = apiAuth();
@@ -59,6 +89,17 @@ class ReserveMeetingsController extends Controller
 
     }
 
+    /**
+     * List student reservations.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/meetings/reservations",
+     *     summary="List my reservations",
+     *     tags={"Reserved Meetings"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Reservations list")
+     * )
+     */
     public function reservation(Request $request)
     {
 
@@ -69,6 +110,17 @@ class ReserveMeetingsController extends Controller
 
     }
 
+    /**
+     * List instructor requests.
+     *
+     * @OA\Get(
+     *     path="/v1/panel/meetings/requests",
+     *     summary="List my meeting requests",
+     *     tags={"Reserved Meetings"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Requests list")
+     * )
+     */
     public function requests(Request $request)
     {
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),
@@ -106,6 +158,18 @@ class ReserveMeetingsController extends Controller
         return $reservedMeetings;
     }
 
+    /**
+     * Finish a reserved meeting.
+     *
+     * @OA\Post(
+     *     path="/v1/panel/meetings/{id}/finish",
+     *     summary="Finish reserved meeting",
+     *     tags={"Reserved Meetings"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Meeting finished")
+     * )
+     */
     public function finish($id)
     {
         $user = apiAuth();

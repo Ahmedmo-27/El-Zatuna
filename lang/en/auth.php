@@ -201,6 +201,7 @@ return [
     'verification_link_invalid_or_expired' => 'The verification link is invalid or has expired. Please request a new one.',
     'verification_link_invalid_step' => 'This verification link is not valid for this step.',
     'user_not_found' => 'User not found.',
+    'email_not_registered' => 'This email address is not registered. Please sign up first.',
     'please_complete_verification_first' => 'Please complete email verification first.',
 
 ];

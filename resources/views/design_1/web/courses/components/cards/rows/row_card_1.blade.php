@@ -1,5 +1,5 @@
 <div class="course-row-card-1 position-relative pl-lg-16">
-    <div class="d-flex flex-column flex-lg-row bg-[#072923] rounded-32">
+    <div class="course-row-card-1__layout d-flex flex-column flex-lg-row bg-[#072923] rounded-32">
         {{-- Image --}}
         <div class="py-0 py-lg-16">
             <a href="{{ $course->getUrl() }}">
@@ -10,20 +10,30 @@
                         <span class="ml-4 text-white font-14">{{ $course->bestTicket(true)['percent'] }}% {{ trans('public.off') }}</span>
                     </div>
                 @endif
-                    <img src="{{ $course->getImage() }}" class="img-cover" alt="{{ $course->title }}">
+                    <img src="{{ $course->getImage() }}" class="img-cover course-row-card-1__image-media" alt="{{ $course->title }}">
                 </div>
             </a>
         </div>
 
-        <div class="p-16 d-flex flex-column flex-1">
+        <div class="course-row-card-1__content p-16 d-flex flex-column flex-1">
             <a href="{{ $course->getUrl() }}" class="mb-8">
-                <h3 class="course-title font-16 font-weight-bold text-[#000000]" style="color: #000000 !important;">{{ clean($course->title,'title') }}</h3>
+                <h3 class="course-title font-16 font-weight-bold text-[#FAFFE0]">{{ clean($course->title,'title') }}</h3>
             </a>
+
+            @if(!empty($course) && (is_null($course->university_id) || !empty($course->university) || !empty($course->faculty)))
+                <div class="d-flex align-items-center gap-8 mb-12">
+                    <div class="px-8 py-4 rounded-12 bg-[#E5EDB0]/10 text-[#E5EDB0] font-12">{{ !empty($course->university) ? $course->university->name : trans('update.all_universities') }}</div>
+
+                    @if(!empty($course->faculty))
+                        <div class="px-8 py-4 rounded-12 bg-[#FAFFE0]/06 text-[#FAFFE0] font-12">{{ $course->faculty->name }}</div>
+                    @endif
+                </div>
+            @endif
 
             @include('design_1.web.components.rate', ['rate' => $course->getRate(), 'rateClassName' => 'mb-12'])
 
             @if(!empty($course->summary))
-                <div class="mb-12 font-14 text-[#000000]" style="color: #000000 !important;">{!! nl2br($course->summary) !!}</div>
+                <div class="course-row-card-1__summary mb-12 font-14 text-[#FAFFE0]/80">{!! nl2br($course->summary) !!}</div>
             @endif
 
             <div class="mt-auto">
@@ -33,20 +43,20 @@
                     </div>
 
                     <div class="ml-4">
-                        <a href="{{ $course->teacher->getProfileUrl() }}" target="_blank" class="font-14 font-weight-bold text-[#000000]" style="color: #000000 !important;">{{ $course->teacher->full_name }}</a>
-                        <p class="mt-2 font-14 text-[#000000] text-ellipsis" style="color: #000000 !important;">{{ $course->teacher->bio }}</p>
+                        <a href="{{ $course->teacher->getProfileUrl() }}" target="_blank" class="font-14 font-weight-bold text-[#FAFFE0]">{{ $course->teacher->full_name }}</a>
+                        <p class="mt-2 font-14 text-[#FAFFE0]/70 text-ellipsis">{{ $course->teacher->bio }}</p>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-24 mt-24">
-                    <div class="d-flex align-items-center font-14 text-[#000000]">
-                        <x-iconsax-lin-clock-1 class="icons text-[#000000]" style="color: #000000 !important;" width="16px" height="16px"/>
+                    <div class="d-flex align-items-center font-14 text-[#FAFFE0]/80">
+                        <x-iconsax-lin-clock-1 class="icons text-[#FAFFE0]/80" width="16px" height="16px"/>
                         <span class="ml-4">{{ convertMinutesToHourAndMinute($course->duration) }}</span>
                         <span class="ml-4">{{ trans('home.hours') }}</span>
                     </div>
 
-                    <div class="d-flex align-items-center font-14 text-[#000000]">
-                        <x-iconsax-lin-note-2 class="icons text-[#000000]" style="color: #000000 !important;" width="16px" height="16px"/>
+                    <div class="d-flex align-items-center font-14 text-[#FAFFE0]/80">
+                        <x-iconsax-lin-note-2 class="icons text-[#FAFFE0]/80" width="16px" height="16px"/>
                         <span class="ml-4">{{ $course->getAllLessonsCount() }}</span>
                         <span class="ml-4">{{ trans('update.lessons') }}</span>
                     </div>
@@ -54,8 +64,8 @@
             </div>
         </div>
 
-        <div class="d-flex align-items-center justify-content-between flex-lg-column px-16 pb-16 pt-lg-40 pb-lg-12 px-lg-12 border-left-gray-200">
-            <div class="d-flex-center flex-column font-24 font-weight-bold text-[#FAFFE0]">
+        <div class="course-row-card-1__aside d-flex align-items-center justify-content-between flex-lg-column px-16 pb-16 pt-lg-40 pb-lg-12 px-lg-12 border-left-gray-200">
+            <div class="course-row-card-1__price d-flex-center flex-column font-24 font-weight-bold text-[#FAFFE0]">
                 @if(!empty($showCoursePoints))
                     <span>{{ trans('update.n_points', ['count' => $course->points]) }}</span>
                 @else
@@ -63,12 +73,8 @@
                 @endif
             </div>
 
-            <div class="d-flex align-items-center gap-12 mt-auto">
+            <div class="course-row-card-1__actions d-flex align-items-center gap-12 mt-auto">
                 <a href="{{ $course->getUrl() }}" class="course-row-card-1__add-to-cart-btn btn btn-primary btn-lg rounded-12">{{ trans('public.add_to_cart') }}</a>
-
-                <a @if(auth()->guest()) href="/login" @else href="/favorites/{{ $course->slug }}/toggle" id="favoriteToggle" @endif class="d-flex-center size-48 rounded-12 border-gray-200 {{ ($course->isFavoriteAuthUser()) ? 'text-danger' : 'text-gray-500' }}">
-                    <x-iconsax-bol-heart class="icons " width="24px" height="24px"/>
-                </a>
             </div>
         </div>
     </div>

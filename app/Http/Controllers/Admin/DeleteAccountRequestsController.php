@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\DeleteAccountRequest;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class DeleteAccountRequestsController extends Controller
 {
@@ -53,16 +55,44 @@ class DeleteAccountRequestsController extends Controller
     {
         $this->authorize('admin_delete_account_requests_confirm');
 
-        $request = DeleteAccountRequest::findOrFail($id);
+        $deleteRequest = DeleteAccountRequest::findOrFail($id);
+        $user = User::find($deleteRequest->user_id);
 
-        $user = User::where('id', $request->user_id)->first();
+        if (empty($user)) {
+            $deleteRequest->delete();
 
-        if (!empty($user)) {
-            $user->delete();
+            $toastData = [
+                'title' => trans('public.request_success'),
+                'msg' => trans('update.user_account_successful_deleted'),
+                'status' => 'success'
+            ];
 
-            Storage::disk('public')->deleteDirectory($user->id);
+            return back()->with(['toast' => $toastData]);
+        }
 
-            $request->delete();
+        $userId = (int) $user->id;
+
+        try {
+            DB::transaction(static function () use ($deleteRequest, $user) {
+                $deleteRequest->delete();
+                $user->delete();
+            });
+        } catch (Throwable $e) {
+            report($e);
+
+            $toastData = [
+                'title' => trans('public.request_failed'),
+                'msg' => trans('update.delete_account_user_failed_try_again'),
+                'status' => 'error'
+            ];
+
+            return back()->with(['toast' => $toastData]);
+        }
+
+        try {
+            Storage::disk('public')->deleteDirectory((string) $userId);
+        } catch (Throwable $e) {
+            report($e);
         }
 
         $toastData = [
@@ -70,6 +100,7 @@ class DeleteAccountRequestsController extends Controller
             'msg' => trans('update.user_account_successful_deleted'),
             'status' => 'success'
         ];
+
         return back()->with(['toast' => $toastData]);
     }
 

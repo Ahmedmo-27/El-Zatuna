@@ -76,7 +76,7 @@
                 <p class="mt-4 font-12 text-gray-500">{{ trans('update.create_a_live_class_with_a_click') }}</p>
             </div>
 
-            <a href="/panel/courses/new" target="_blank" class="d-flex-center size-40 bg-white border-gray-200 rounded-circle bg-hover-gray-100">
+            <a href="{{ route('panel.meetings.live_sessions.manage.index') }}" target="_blank" class="d-flex-center size-40 bg-white border-gray-200 rounded-circle bg-hover-gray-100">
                 <x-iconsax-lin-arrow-right class="icons text-gray-500" width="16px" height="16px"/>
             </a>
         </div>

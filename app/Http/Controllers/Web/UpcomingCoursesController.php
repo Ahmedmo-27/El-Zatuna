@@ -368,32 +368,66 @@ class UpcomingCoursesController extends Controller
     public function favorite(Request $request, $slug)
     {
         $user = auth()->user();
+        $favorited = false;
+        $isAjaxRequest = ($request->ajax() || $request->wantsJson());
+
         $upcomingCourse = UpcomingCourse::query()
             ->where('slug', $slug)
             ->where('status', UpcomingCourse::$active)
             ->first();
 
         if (!empty($user) and !empty($upcomingCourse)) {
-            $isFavorite = Favorite::where('upcoming_course_id', $upcomingCourse->id)
+            $favoriteRow = Favorite::where('upcoming_course_id', $upcomingCourse->id)
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (empty($isFavorite)) {
+            if (empty($favoriteRow)) {
                 Favorite::create([
                     'user_id' => $user->id,
                     'upcoming_course_id' => $upcomingCourse->id,
                     'created_at' => time()
                 ]);
+
+                $favorited = true;
             } else {
-                $isFavorite->delete();
+                $favoriteRow->delete();
+
+                $favorited = false;
             }
 
-            return response()->json([
-                'code' => 200,
-            ]);
+            $toastData = [
+                'title' => trans('public.request_success'),
+                'msg' => $favorited ? 'Course added to your favorites.' : 'Course removed from your favorites.',
+                'status' => 'success',
+            ];
+
+            if ($isAjaxRequest) {
+                return response()->json([
+                    'code' => 200,
+                    'is_favorite' => $favorited,
+                    'title' => $toastData['title'],
+                    'msg' => $toastData['msg'],
+                ], 200);
+            }
+
+            return back()->with(['toast' => $toastData]);
         }
 
-        abort(422);
+        $errorToastData = [
+            'title' => 'Not found',
+            'msg' => 'Course not found.',
+            'status' => 'error',
+        ];
+
+        if ($isAjaxRequest) {
+            return response()->json([
+                'code' => 404,
+                'title' => $errorToastData['title'],
+                'msg' => $errorToastData['msg'],
+            ], 404);
+        }
+
+        return back()->with(['toast' => $errorToastData]);
     }
 
     public function report(Request $request, $id)

@@ -190,6 +190,125 @@
                 </div>
             @endif
 
+            @if($user->isTeacher())
+                @php
+                    $profileLinks = [];
+
+                    if (!empty($user->profile_links)) {
+                        $decodedProfileLinks = json_decode($user->profile_links, true);
+                        $profileLinks = is_array($decodedProfileLinks) ? $decodedProfileLinks : [];
+                    }
+
+                    $customProfileLinks = (!empty($profileLinks['custom']) && is_array($profileLinks['custom'])) ? array_values($profileLinks['custom']) : [];
+
+                    $knownProfileLinks = [
+                        ['key' => 'portfolio', 'title' => trans('update.portfolio'), 'placeholder' => 'https://your-portfolio.com', 'type' => 'portfolio'],
+                        ['key' => 'website', 'title' => trans('update.website'), 'placeholder' => 'https://your-website.com', 'type' => 'website'],
+                        ['key' => 'linkedin', 'title' => trans('update.linkedin'), 'placeholder' => 'https://linkedin.com/in/username', 'type' => 'linkedin'],
+                        ['key' => 'github', 'title' => trans('update.github'), 'placeholder' => 'https://github.com/username', 'type' => 'github'],
+                        ['key' => 'twitter', 'title' => trans('update.twitter'), 'placeholder' => 'https://x.com/username', 'type' => 'twitter'],
+                        ['key' => 'facebook', 'title' => trans('update.facebook'), 'placeholder' => 'https://facebook.com/username', 'type' => 'facebook'],
+                        ['key' => 'youtube', 'title' => trans('update.youtube'), 'placeholder' => 'https://youtube.com/@channel', 'type' => 'youtube'],
+                        ['key' => 'instagram', 'title' => trans('update.instagram'), 'placeholder' => 'https://instagram.com/username', 'type' => 'instagram'],
+                        ['key' => 'behance', 'title' => trans('update.behance'), 'placeholder' => 'https://behance.net/username', 'type' => 'behance'],
+                        ['key' => 'dribbble', 'title' => trans('update.dribbble'), 'placeholder' => 'https://dribbble.com/username', 'type' => 'dribbble'],
+                        ['key' => 'medium', 'title' => trans('update.medium'), 'placeholder' => 'https://medium.com/@username', 'type' => 'medium'],
+                    ];
+                @endphp
+
+                <div class="bg-white p-16 rounded-16 border-gray-200 mt-20">
+                    <h3 class="font-14 font-weight-bold">{{ trans('update.portfolio_and_links') }}</h3>
+                    <p class="font-12 text-gray-500 mt-4">{{ trans('update.portfolio_and_links_hint') }}</p>
+
+                    @foreach($knownProfileLinks as $knownProfileLink)
+                        <div class="d-flex align-items-center gap-12 mt-20">
+                            <div class="d-flex-center size-48 bg-gray-100 border-gray-300 rounded-12">
+                                @include('design_1.web.users.profile.tabs.components.link_icon', [
+                                    'type' => $knownProfileLink['type'],
+                                    'size' => 24,
+                                    'className' => 'icons text-gray-500',
+                                ])
+                            </div>
+
+                            <div class="form-group mb-0 flex-1">
+                                <label class="form-group-label">{{ $knownProfileLink['title'] }}</label>
+                                <input type="text" name="profile_links[{{ $knownProfileLink['key'] }}]" value="{{ $profileLinks[$knownProfileLink['key']] ?? '' }}" class="form-control" placeholder="{{ $knownProfileLink['placeholder'] }}">
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <div class="d-flex align-items-center justify-content-between mt-24 pt-16 border-top-gray-100">
+                        <div>
+                            <h4 class="font-14 font-weight-bold">{{ trans('update.custom_links') }}</h4>
+                            <p class="font-12 text-gray-500 mt-4">{{ trans('update.custom_links_hint') }}</p>
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-outline-primary js-add-profile-link">
+                            <x-iconsax-lin-add class="icons" width="14px" height="14px"/>
+                            <span class="ml-4">{{ trans('update.add_custom_link') }}</span>
+                        </button>
+                    </div>
+
+                    <div class="js-profile-links-repeater mt-12" data-index="{{ count($customProfileLinks) }}">
+                        @if(!empty($customProfileLinks))
+                            @foreach($customProfileLinks as $customIndex => $customLink)
+                                <div class="js-profile-link-row border-gray-200 rounded-12 p-12 mt-12">
+                                    <div class="d-flex align-items-center justify-content-between mb-8">
+                                        <span class="font-12 text-gray-500">{{ trans('update.custom_link') }}</span>
+
+                                        <button type="button" class="btn btn-sm btn-outline-danger js-remove-profile-link">{{ trans('public.delete') }}</button>
+                                    </div>
+
+                                    <div class="form-group mb-8">
+                                        <label class="form-group-label">{{ trans('public.title') }}</label>
+                                        <input type="text" name="profile_links[custom][{{ $customIndex }}][title]" value="{{ $customLink['title'] ?? '' }}" class="form-control" placeholder="{{ trans('update.my_custom_link') }}">
+                                    </div>
+
+                                    <div class="form-group mb-8">
+                                        <label class="form-group-label">{{ trans('public.link') }}</label>
+                                        <input type="text" name="profile_links[custom][{{ $customIndex }}][url]" value="{{ $customLink['url'] ?? '' }}" class="form-control" placeholder="https://example.com">
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="js-profile-links-empty bg-gray-100 border-gray-300 rounded-12 p-12 font-12 text-gray-500">
+                                {{ trans('update.no_custom_links_added_yet') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="d-none js-profile-link-template">
+                        <div class="js-profile-link-row border-gray-200 rounded-12 p-12 mt-12">
+                            <div class="d-flex align-items-center justify-content-between mb-8">
+                                <span class="font-12 text-gray-500">{{ trans('update.custom_link') }}</span>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger js-remove-profile-link">{{ trans('public.delete') }}</button>
+                            </div>
+
+                            <div class="form-group mb-8">
+                                <label class="form-group-label">{{ trans('public.title') }}</label>
+                                <input type="text" name="profile_links[custom][__INDEX__][title]" class="form-control" placeholder="{{ trans('update.my_custom_link') }}">
+                            </div>
+
+                            <div class="form-group mb-8">
+                                <label class="form-group-label">{{ trans('public.link') }}</label>
+                                <input type="text" name="profile_links[custom][__INDEX__][url]" class="form-control" placeholder="https://example.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mt-16 pt-16 border-top-gray-100">
+                        <div class="d-flex-center size-48 rounded-12 bg-gray-300">
+                            <x-iconsax-bol-info-circle class="icon text-gray-500" width="24px" height="24px"/>
+                        </div>
+                        <div class="ml-8">
+                            <h4 class="font-14">{{ trans('update.note') }}</h4>
+                            <p class="font-12 text-gray-500">{{ trans('update.links_will_be_shown_on_public_profile') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Files & Attachments --}}
             <div class="bg-white p-16 rounded-16 border-gray-200 mt-20">
                 <div class="d-flex align-items-center justify-content-between p-12 rounded-16 border-gray-300 border-dashed">
@@ -316,3 +435,52 @@
         </div>
     </div>
 </div>
+
+@push('scripts_bottom')
+    <script>
+        (function ($) {
+            "use strict";
+
+            function updateCustomLinksEmptyState($repeater) {
+                const hasRows = $repeater.find('.js-profile-link-row').length > 0;
+                $repeater.find('.js-profile-links-empty').toggleClass('d-none', hasRows);
+            }
+
+            $('body').on('click', '.js-add-profile-link', function (e) {
+                e.preventDefault();
+
+                const $card = $(this).closest('.bg-white');
+                const $repeater = $card.find('.js-profile-links-repeater');
+                const $template = $card.find('.js-profile-link-template .js-profile-link-row').first();
+
+                if (!$repeater.length || !$template.length) {
+                    return;
+                }
+
+                const currentIndex = Number($repeater.attr('data-index') || 0);
+                const html = $template.prop('outerHTML').replaceAll('__INDEX__', String(currentIndex));
+
+                $repeater.append(html);
+                $repeater.attr('data-index', currentIndex + 1);
+
+                updateCustomLinksEmptyState($repeater);
+            });
+
+            $('body').on('click', '.js-remove-profile-link', function (e) {
+                e.preventDefault();
+
+                const $row = $(this).closest('.js-profile-link-row');
+                const $repeater = $row.closest('.js-profile-links-repeater');
+
+                $row.remove();
+                updateCustomLinksEmptyState($repeater);
+            });
+
+            $(document).ready(function () {
+                $('.js-profile-links-repeater').each(function () {
+                    updateCustomLinksEmptyState($(this));
+                });
+            });
+        })(jQuery);
+    </script>
+@endpush

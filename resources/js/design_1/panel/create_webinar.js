@@ -606,6 +606,10 @@
                                 if ($fileInput.length) {
                                     // Basic click handler
                                     $zone.on('click', function(e) {
+                                        if ($zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked')) {
+                                            e.preventDefault();
+                                            return;
+                                        }
                                         if (e.target === $zone[0] || $(e.target).closest('.js-drag-drop-content').length) {
                                             e.preventDefault();
                                             $fileInput.trigger('click');
@@ -616,6 +620,9 @@
                                     $zone.on('dragover', function(e) {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        if ($zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked')) {
+                                            return;
+                                        }
                                         $zone.addClass('drag-over');
                                         $zone.find('.js-drag-drop-overlay').removeClass('d-none');
                                     });
@@ -634,6 +641,10 @@
                                         e.stopPropagation();
                                         $zone.removeClass('drag-over');
                                         $zone.find('.js-drag-drop-overlay').addClass('d-none');
+
+                                        if ($zone.closest('.js-file-upload-input').hasClass('js-file-upload-locked')) {
+                                            return;
+                                        }
                                         
                                         const files = e.originalEvent.dataTransfer?.files;
                                         if (files && files.length > 0) {
@@ -766,10 +777,163 @@
         }
     });
 
+    function extractSummernotePlainText(html) {
+        if (!html) {
+            return '';
+        }
+
+        return $('<div>').html(html).text().replace(/\u00a0/g, ' ').trim();
+    }
+
+    function syncAndValidateTextLessonContent($form) {
+        if (!$form.hasClass('text_lesson-form')) {
+            return true;
+        }
+
+        const $editor = $form.find('textarea.js-content-summernote, textarea[class*="js-content-summernote-"]').first();
+        const $hiddenContent = $form.find('.js-hidden-content-summernote, textarea[class*="js-hidden-content-summernote-"], textarea[name*="[content]"]').first();
+
+        if (!$hiddenContent.length) {
+            return true;
+        }
+
+        let html = '';
+
+        if ($editor.length && typeof $editor.summernote === 'function' && $editor.next('.note-editor').length) {
+            html = $editor.summernote('code') || '';
+        } else if ($editor.length) {
+            html = $editor.val() || '';
+        } else {
+            html = $hiddenContent.val() || '';
+        }
+
+        $hiddenContent.val(html);
+
+        const hasMedia = /<(img|iframe|video|audio|object|embed)\b/i.test(html);
+        const isEmpty = !hasMedia && extractSummernotePlainText(html).length === 0;
+        const $contentFormGroup = $hiddenContent.closest('.form-group');
+        const $feedback = $contentFormGroup.find('.invalid-feedback').first();
+
+        if (isEmpty) {
+            $editor.addClass('is-invalid');
+            $hiddenContent.addClass('is-invalid');
+
+            if ($feedback.length) {
+                const message = (typeof contentRequiredLang !== 'undefined' && contentRequiredLang) ? contentRequiredLang : 'The content field is required.';
+                $feedback.text(message);
+            }
+
+            return false;
+        }
+
+        $editor.removeClass('is-invalid');
+        $hiddenContent.removeClass('is-invalid');
+
+        if ($feedback.length) {
+            $feedback.text('');
+        }
+
+        return true;
+    }
+
+    function courseFileFormShowsFileTypeField($form) {
+        const $row = $form.find('.js-file-type-volume');
+        const $field = $form.find('.js-file-type-field');
+        if (!$row.length || $row.hasClass('d-none')) {
+            return false;
+        }
+        if ($field.length && $field.hasClass('d-none')) {
+            return false;
+        }
+        return true;
+    }
+
+    function syncFileUploadInteractionLock($form) {
+        const $card = $form.find('.js-file-upload-input').first();
+        if (!$card.length || $card.hasClass('d-none')) {
+            return;
+        }
+        const needsFileTypeFirst = courseFileFormShowsFileTypeField($form);
+        const hasFileType = (($form.find('.js-ajax-file_type').val() || '').trim().length > 0);
+        const locked = needsFileTypeFirst && !hasFileType;
+        const $fileInput = $card.find('.js-ajax-upload-file-input');
+        const $zone = $card.find('.js-file-drag-drop-zone');
+        const lockHint = (typeof webinarFileTypeRequiredLang !== 'undefined' && webinarFileTypeRequiredLang)
+            ? webinarFileTypeRequiredLang
+            : 'Please select a file type first.';
+
+        if (locked) {
+            $card.addClass('js-file-upload-locked');
+            if ($fileInput.length) {
+                if ($fileInput[0].files && $fileInput[0].files.length > 0) {
+                    $fileInput.val('');
+                    $card.find('.js-selected-file-display').addClass('d-none');
+                    $card.find('.js-selected-file-name').text('');
+                    $card.find('.js-selected-file-size').text('');
+                    const $customLabel = $fileInput.closest('.custom-file').find('.custom-file-label');
+                    if ($customLabel.length) {
+                        const def = $customLabel.data('default-label');
+                        $customLabel.text(def && String(def).length ? def : 'Browse');
+                    }
+                }
+                $fileInput.prop('disabled', true);
+            }
+            if ($zone.length) {
+                $zone.attr({ tabindex: '-1', 'aria-disabled': 'true', title: lockHint });
+            }
+        } else {
+            $card.removeClass('js-file-upload-locked');
+            if ($fileInput.length) {
+                $fileInput.prop('disabled', false);
+            }
+            if ($zone.length) {
+                $zone.attr('tabindex', '0');
+                $zone.removeAttr('aria-disabled');
+                $zone.removeAttr('title');
+            }
+        }
+    }
+
+    function validateCourseFileTypeSelected($form) {
+        if (!courseFileFormShowsFileTypeField($form)) {
+            return true;
+        }
+        const fileType = ($form.find('.js-ajax-file_type').val() || '').trim();
+        if (fileType) {
+            const $select = $form.find('.js-ajax-file_type');
+            $select.removeClass('is-invalid');
+            $select.closest('.form-group').find('.invalid-feedback').first().text('');
+            return true;
+        }
+        const msg = (typeof webinarFileTypeRequiredLang !== 'undefined' && webinarFileTypeRequiredLang)
+            ? webinarFileTypeRequiredLang
+            : 'Please select a file type before uploading or saving.';
+        const $select = $form.find('.js-ajax-file_type');
+        $select.addClass('is-invalid');
+        const $feedback = $select.closest('.form-group').find('.invalid-feedback').first();
+        if ($feedback.length) {
+            $feedback.text(msg);
+        }
+        if (typeof showToast === 'function') {
+            showToast('error', (typeof webinarFileTypeLabelLang !== 'undefined' && webinarFileTypeLabelLang) ? webinarFileTypeLabelLang : 'File type', msg);
+        } else {
+            alert(msg);
+        }
+        return false;
+    }
+
     $('body').on('click', '.js-save-course-content', function (e) {
         e.preventDefault();
         const $this = $(this);
         const $form = $this.closest('.js-content-form');
+
+        if (!syncAndValidateTextLessonContent($form)) {
+            return;
+        }
+
+        if ($form.hasClass('file-form') && !validateCourseFileTypeSelected($form)) {
+            return;
+        }
 
         // For file forms with R2/upload: require a file to be selected before submit
         if ($form.hasClass('file-form')) {
@@ -826,6 +990,10 @@
 
             if (!file) {
                 showUploadErrorForForm($form, 'File required', 'Please choose a file to upload before saving.');
+                return;
+            }
+
+            if (!validateCourseFileTypeSelected($form)) {
                 return;
             }
 
@@ -1138,6 +1306,7 @@
             $fileUrlInputCard.find('input').attr('placeholder', filePathPlaceHolderBySource[source]);
         }
 
+        syncFileUploadInteractionLock($form);
     }
 
     function handleSecureHostUploadType($form, value, isOnChangeByUser = false) {
@@ -1168,6 +1337,8 @@
             $fileUrlInputCard.addClass('d-none')
             $fileUploadInputCard.removeClass('d-none')
         }
+
+        syncFileUploadInteractionLock($form);
     }
 
     $('body').on('change', '.js-file-storage', function (e) {

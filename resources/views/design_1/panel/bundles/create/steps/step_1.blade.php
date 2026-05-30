@@ -37,7 +37,7 @@
     <div class="form-group">
         <label class="form-group-label is-required">{{ trans('public.title') }}</label>
         <span class="has-translation bg-gray-300 rounded-8 p-8"><x-iconsax-lin-translate class="icons text-gray-500"/></span>
-        <input type="text" name="title" class="form-control @error('title')  is-invalid @enderror" value="{{ (!empty($bundle) and !empty($bundle->translate($locale))) ? $bundle->translate($locale)->title : old('title') }}" placeholder=""/>
+        <input type="text" name="title" class="form-control @error('title')  is-invalid @enderror" value="{{ (!empty($bundle) and !empty($bundle->translate($locale))) ? $bundle->translate($locale)->title : old('title') }}" placeholder="" required/>
         @error('title')
         <div class="invalid-feedback">
             {{ $message }}
@@ -155,7 +155,7 @@
 
     <div class="form-group bg-white-editor">
         <label class="form-group-label is-required">{{ trans('public.description') }}</label>
-        <textarea name="description" class="main-summernote form-control @error('description')  is-invalid @enderror" data-height="400" placeholder="{{ trans('forms.webinar_description_placeholder') }}">{!! (!empty($bundle) and !empty($bundle->translate($locale))) ? $bundle->translate($locale)->description : old('description')  !!}</textarea>
+        <textarea name="description" class="main-summernote form-control @error('description')  is-invalid @enderror" data-height="400" placeholder="{{ trans('forms.webinar_description_placeholder') }}" required>{!! (!empty($bundle) and !empty($bundle->translate($locale))) ? $bundle->translate($locale)->description : old('description')  !!}</textarea>
         @error('description')
         <div class="invalid-feedback">
             {{ $message }}
