@@ -205,7 +205,7 @@ return [
 
         App\Providers\MinioStorageServiceProvider::class,
         App\Providers\R2StorageServiceProvider::class,
-        Ssheduardo\Redsys\RedsysServiceProvider::class,
+        // Ssheduardo\Redsys\RedsysServiceProvider::class,
         Jubaer\Zoom\ZoomServiceProvider::class,
         \Torann\GeoIP\GeoIPServiceProvider::class,
         niklasravnsborg\LaravelPdf\PdfServiceProvider::class,
@@ -236,7 +236,7 @@ return [
         'Captcha' => Mews\Captcha\Facades\Captcha::class,
         'Share' => Jorenvh\Share\ShareFacade::class,
         //'Rave' => KingFlamez\Rave\Facades\Rave::class,
-        'Redsys'    => Ssheduardo\Redsys\Facades\Redsys::class,
+        // 'Redsys'    => Ssheduardo\Redsys\Facades\Redsys::class,
         'Zoom' => Jubaer\Zoom\Facades\Zoom::class,
         'GeoIP' => \Torann\GeoIP\Facades\GeoIP::class,
         'PDF' => niklasravnsborg\LaravelPdf\Facades\Pdf::class,
