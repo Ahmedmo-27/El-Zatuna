@@ -213,9 +213,9 @@ return [
         MoemenGaballah\Msegat\MsegatServiceProvider::class,
         Craftsys\Msg91\Msg91LaravelServiceProvider::class,
         Kreait\Laravel\Firebase\ServiceProvider::class,
-        Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
-        PayMob\PayMobServiceProvider::class,
-        Clickpaysa\Laravel_package\PaypageServiceProvider::class,
+        // Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
+        // PayMob\PayMobServiceProvider::class,
+        // Clickpaysa\Laravel_package\PaypageServiceProvider::class,
         \App\Providers\LandingBuilderProvider::class
     ],
 
@@ -243,7 +243,7 @@ return [
         'Kavenegar' => Kavenegar\Laravel\Facade::class,
         'Msegat' => MoemenGaballah\Msegat\Msegat::class,
         'Msg91' => Craftsys\Msg91\Facade\Msg91::class,
-        'PayMob' => PayMob\Facades\PayMob::class,
+        // 'PayMob' => PayMob\Facades\PayMob::class,
     ])->toArray(),
 
 ];
