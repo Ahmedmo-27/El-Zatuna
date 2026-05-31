@@ -13,6 +13,39 @@
         </div>
 
         <div class="section-body">
+            <div class="row mb-4">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="card card-statistic-1 mb-0">
+                        <div class="card-icon bg-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Paid Attendees</h4>
+                            </div>
+                            <div class="card-body">
+                                {{ $session->bookings->where('status', 'paid')->count() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-12">
+                    <div class="card card-statistic-1 mb-0">
+                        <div class="card-icon bg-success">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Total Revenue</h4>
+                            </div>
+                            <div class="card-body">
+                                {{ number_format($session->bookings->where('status', 'paid')->count() * $session->price, 2) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white p-4 rounded shadow-sm mb-4">
                 <p>{{ $session->description }}</p>
                 <ul class="list-unstyled mb-0">

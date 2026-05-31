@@ -128,6 +128,9 @@ Route::group(['prefix' => 'v1', 'middleware' => 'api.version:v1'], function () {
         ]);
     });
 
+    // Brevo webhook endpoint to capture transactional events (delivered, deferred, bounce, etc.)
+    Route::post('/webhooks/brevo', [\App\Http\Controllers\Api\WebhookController::class, 'brevo']);
+
 });
 
 /*

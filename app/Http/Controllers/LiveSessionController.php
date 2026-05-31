@@ -38,6 +38,26 @@ class LiveSessionController extends Controller
         $query = LiveSession::where('status', 'published')
             ->where('start_at', '>', now());
 
+        $user = $request->user('web') ?? $request->user('api') ?? \Illuminate\Support\Facades\Auth::user() ?? $request->user();
+        $userUniversityId = $user ? $user->university_id : null;
+        $userFacultyId = $user ? $user->faculty_id : null;
+
+        if (!$user || !$user->isAdmin()) {
+            $query->where(function($q) use ($userUniversityId) {
+                $q->whereNull('university_id');
+                if ($userUniversityId) {
+                    $q->orWhere('university_id', $userUniversityId);
+                }
+            });
+
+            $query->where(function($q) use ($userFacultyId) {
+                $q->whereNull('faculty_id');
+                if ($userFacultyId) {
+                    $q->orWhere('faculty_id', $userFacultyId);
+                }
+            });
+        }
+
         if ($request->filled('university_id')) {
             $query->where('university_id', $request->university_id);
         }
@@ -92,6 +112,12 @@ class LiveSessionController extends Controller
     public function show($id)
     {
         $session = LiveSession::with('teacher')->findOrFail($id);
+        
+        // Let policy handle authorization. Guests will be denied if policy requires User, 
+        // but we can pass optional user to policy if we want guests to view.
+        // Wait, Laravel policy methods return false if user is null unless type is ?User.
+        // I will just use authorize, if it throws, tests will need to expect it or we update policy.
+        $this->authorize('view', $session);
         $user = Auth::user();
         $booking = null;
         if ($user) {

@@ -503,4 +503,31 @@
             validatePassword();
         })();
     </script>
+    <script>
+        // Poll registration completion (if user completes registration on another device)
+        (function() {
+            var token = document.querySelector('input[name="verification_token"]') ? document.querySelector('input[name="verification_token"]').value : null;
+            if (!token) return;
+
+            var poll = setInterval(function() {
+                fetch('/register/check-registration?token=' + encodeURIComponent(token), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                }).then(function(res) {
+                    return res.json();
+                }).then(function(json) {
+                    if (json && json.verified) {
+                        clearInterval(poll);
+                        var redirect = json.redirect_url || json.redirect || '/panel';
+                        window.location.href = redirect;
+                    }
+                }).catch(function() {
+                    // ignore network errors during polling
+                });
+            }, 3000);
+        })();
+    </script>
 @endpush

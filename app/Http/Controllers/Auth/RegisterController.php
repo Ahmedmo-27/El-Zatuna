@@ -20,6 +20,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -243,10 +244,14 @@ class RegisterController extends Controller
                     'step' => 2,
                 ];
 
-                $expiresAt = now()->addMinutes(60);
-                $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
+                    Cache::forget($this->step3TokenCacheKey($userCase->email));
 
-                $userCase->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+                $expiresAt = now()->addMinutes(60);
+                $tokenAndCode = $this->createRegistrationTokenAndCode($tokenData, 60);
+                $verificationCode = $tokenAndCode['code'];
+                $verificationToken = $tokenAndCode['token'];
+
+                $userCase->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt, $verificationToken));
 
                 if ($request->wantsJson()) {
                     return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
@@ -335,13 +340,17 @@ class RegisterController extends Controller
             'step' => 2,
         ];
 
+        Cache::forget($this->step3TokenCacheKey($data['email']));
+
         $expiresAt = now()->addMinutes(60);
-        $verificationCode = RegistrationVerificationToken::generateVerificationCode($tokenData, 60);
+        $tokenAndCode = $this->createRegistrationTokenAndCode($tokenData, 60);
+        $verificationCode = $tokenAndCode['code'];
+        $verificationToken = $tokenAndCode['token'];
 
         $notifiable = new User();
         $notifiable->email = $data['email'];
         $notifiable->full_name = $data['full_name'];
-        $notifiable->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt));
+        $notifiable->notify(new \App\Notifications\VerifyRegistrationEmailCode($verificationCode, $expiresAt, $verificationToken));
 
         if ($request->wantsJson()) {
             return apiResponse2(1, 'verification_sent', trans('api.auth.verification_sent'), [
@@ -410,6 +419,7 @@ class RegisterController extends Controller
             $newTokenData['user_id'] = $user->id;
         }
         $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
+        $this->storeStep3TokenForEmail($data['email'], $verificationToken, 60);
 
         session([
             'registration_step_3_token' => $verificationToken,
@@ -590,6 +600,15 @@ class RegisterController extends Controller
         // Mark token as used
         RegistrationVerificationToken::markAsUsed($data['verification_token']);
 
+        // Clear cached step-3 token for this email to avoid stale handoffs
+        try {
+            if (!empty($user) && !empty($user->email)) {
+                Cache::forget($this->step3TokenCacheKey($user->email));
+            }
+        } catch (\Throwable $e) {
+            // ignore cache failures
+        }
+
         // Handle referral code
         $referralCode = $data['referral_code'] ?? null;
         if (!empty($referralCode)) {
@@ -666,6 +685,179 @@ class RegisterController extends Controller
         $authTemplate = getThemeAuthenticationPagesStyleName();
         return view("design_1.web.auth.{$authTemplate}.register.welcome", $data);
     }
+
+    public function checkVerificationStatus(Request $request)
+    {
+        $email = $request->query('email');
+        if (empty($email)) {
+            return response()->json(['verified' => false]);
+        }
+
+        $verificationToken = $this->getStep3TokenForEmail($email);
+
+        if (!empty($verificationToken)) {
+            $tokenData = RegistrationVerificationToken::verifyToken($verificationToken);
+
+            if (!empty($tokenData) && (int) ($tokenData['step'] ?? 0) === 3) {
+                $redirectUrl = '/register/step/3?token=' . urlencode($verificationToken) . '&verified=true';
+
+                return response()->json([
+                    'verified' => true,
+                    'redirect_url' => $redirectUrl,
+                    'redirect' => $redirectUrl,
+                ]);
+            }
+
+            Cache::forget($this->step3TokenCacheKey($email));
+        }
+
+        // If no step-3 token found, check whether the user already completed registration
+        try {
+            $user = \App\User::where('email', $email)->first();
+            if (!empty($user) && $user->status === \App\User::$active) {
+                return response()->json([
+                    'verified' => true,
+                    'redirect_url' => url('/panel'),
+                    'redirect' => url('/panel'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // ignore lookup errors and fall through to not-verified
+        }
+
+        return response()->json(['verified' => false]);
+    }
+
+    /**
+     * Pollable endpoint for step3 pages to detect registration completion by token.
+     * Accepts `token` query param (plain token as sent in URLs).
+     */
+    public function checkRegistrationByToken(Request $request)
+    {
+        $token = $request->query('token');
+        if (empty($token)) {
+            return response()->json(['verified' => false]);
+        }
+
+        $hashed = hash('sha256', $token);
+        $record = RegistrationVerificationToken::where('token', $hashed)->first();
+
+        if ($record) {
+            // If token has been marked used, registration completed elsewhere
+            if (!empty($record->used)) {
+                return response()->json([
+                    'verified' => true,
+                    'redirect_url' => url('/panel'),
+                    'redirect' => url('/panel'),
+                ]);
+            }
+
+            // Otherwise, check if associated email already has an active user
+            $email = data_get($record->data, 'email');
+            if (!empty($email)) {
+                try {
+                    $user = \App\User::where('email', $email)->first();
+                    if (!empty($user) && $user->status === \App\User::$active) {
+                        return response()->json([
+                            'verified' => true,
+                            'redirect_url' => url('/panel'),
+                            'redirect' => url('/panel'),
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
+        }
+
+        return response()->json(['verified' => false]);
+    }
+    
+    public function verifyTokenLink(Request $request, $token)
+    {
+        $tokenData = RegistrationVerificationToken::verifyToken($token);
+        
+        if (!$tokenData) {
+            return redirect('/register/step/1')->withErrors(['email' => trans('auth.invalid_verification_code')]);
+        }
+
+        $step = (int) ($tokenData['step'] ?? 0);
+
+        if ($step === 3) {
+            return redirect('/register/step/3?token=' . urlencode($token) . '&verified=true');
+        }
+
+        if ($step === 2) {
+            $email = $tokenData['email'];
+            
+            RegistrationVerificationToken::markAsUsed($token);
+
+            $user = User::where('email', $email)->first();
+            if (!empty($user) && empty($user->email_verified_at)) {
+                $user->update(['email_verified_at' => time()]);
+            }
+
+            $newTokenData = $tokenData;
+            $newTokenData['step'] = 3;
+            $newTokenData['email_verified'] = true;
+
+            if (!empty($user) && empty($newTokenData['user_id'])) {
+                $newTokenData['user_id'] = $user->id;
+            }
+            $verificationToken = RegistrationVerificationToken::generateToken($newTokenData, 60);
+            $this->storeStep3TokenForEmail($email, $verificationToken, 60);
+
+            session([
+                'registration_step_3_token' => $verificationToken,
+                'registration_verified' => true,
+            ]);
+            if (!empty($user)) {
+                session(['registration_user_id' => $user->id]);
+            }
+
+            return redirect('/register/step/3?token=' . $verificationToken . '&verified=true')
+                ->with('success', trans('auth.email_verified_successfully'));
+        }
+        
+        return redirect('/register/step/1');
+    }
+
+    private function step3TokenCacheKey(string $email): string
+    {
+        return 'registration_step_3_token:' . sha1(strtolower(trim($email)));
+    }
+
+    private function storeStep3TokenForEmail(string $email, string $token, int $expiryMinutes = 60): void
+    {
+        Cache::put($this->step3TokenCacheKey($email), $token, now()->addMinutes($expiryMinutes));
+    }
+
+    private function getStep3TokenForEmail(string $email): ?string
+    {
+        $token = Cache::get($this->step3TokenCacheKey($email));
+
+        return is_string($token) && !empty($token) ? $token : null;
+    }
+
+    private function createRegistrationTokenAndCode(array $data, int $expiryMinutes = 60): array
+    {
+        $token = Str::random(64);
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        RegistrationVerificationToken::create([
+            'token' => hash('sha256', $token),
+            'verification_code' => $verificationCode,
+            'data' => $data,
+            'expires_at' => now()->addMinutes($expiryMinutes),
+            'used' => false,
+        ]);
+
+        return [
+            'token' => $token,
+            'code' => $verificationCode,
+        ];
+    }
+
 
     /**
      * DEPRECATED - Old single-step registration (kept for backward compatibility)
