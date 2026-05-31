@@ -658,6 +658,12 @@ class SectionsTableSeeder extends Seeder
         Section::updateOrCreate(['id' => 3175], ['name' => 'admin_landing_builder_all_pages', 'section_group_id' => 3170, 'caption' => 'All Pages']);
         Section::updateOrCreate(['id' => 3176], ['name' => 'admin_landing_builder_settings', 'section_group_id' => 3170, 'caption' => 'Settings']);
 
+        // Logs 3180 - 3189
+        Section::updateOrCreate(['id' => 3180], ['name' => 'admin_logs', 'caption' => 'Logs']);
+        Section::updateOrCreate(['id' => 3181], ['name' => 'admin_logs_activity', 'section_group_id' => 3180, 'caption' => 'Activity Logs (audit trail)']);
+        Section::updateOrCreate(['id' => 3182], ['name' => 'admin_logs_activity_delete', 'section_group_id' => 3180, 'caption' => 'Activity Logs delete']);
+        Section::updateOrCreate(['id' => 3183], ['name' => 'admin_logs_system', 'section_group_id' => 3180, 'caption' => 'System Logs (application log files)']);
+
 
         /* Run Panel Sections */
         $this->runPanelSections();

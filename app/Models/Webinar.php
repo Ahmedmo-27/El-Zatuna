@@ -13,6 +13,8 @@ use Google\Service\Classroom\Student;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Jorenvh\Share\ShareFacade;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\CalendarLinks\Link;
 
 class Webinar extends Model implements TranslatableContract
@@ -20,6 +22,7 @@ class Webinar extends Model implements TranslatableContract
     use Translatable;
     use Sluggable;
     use CascadeDeletes;
+    use LogsActivity;
 
     protected $table = 'webinars';
     public $timestamps = false;
@@ -113,6 +116,29 @@ class Webinar extends Model implements TranslatableContract
 
         // By default, always enforce the university/faculty scope for students.
         return false;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'slug',
+                'type',
+                'status',
+                'price',
+                'capacity',
+                'category_id',
+                'creator_id',
+                'teacher_id',
+                'university_id',
+                'faculty_id',
+                'start_date',
+                'private',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('webinar')
+            ->setDescriptionForEvent(fn (string $eventName) => "Course has been {$eventName}");
     }
 
     public function getTitleAttribute()

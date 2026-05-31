@@ -22,6 +22,9 @@
         </div>
 
         <ul class="sidebar-menu">
+            {{-- Logs --}}
+            @include('admin.includes.sidebar.logs')
+
             @can('admin_general_dashboard_show')
                 <li class="{{ (request()->is(getAdminPanelUrl('/'))) ? 'active' : '' }}">
                     <a href="{{ getAdminPanelUrl('') }}" class="nav-link">

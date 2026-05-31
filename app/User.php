@@ -32,10 +32,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, LogsActivity;
 
     static $active = 'active';
     static $pending = 'pending';
@@ -86,6 +88,26 @@ class User extends Authenticatable
                 $model->username = $username;
             }
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'full_name',
+                'email',
+                'username',
+                'role_name',
+                'status',
+                'ban',
+                'mobile',
+                'university_id',
+                'faculty_id',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('user')
+            ->setDescriptionForEvent(fn (string $eventName) => "User has been {$eventName}");
     }
 
     public static function makeUsernameString($user, $rand = 5)

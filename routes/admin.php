@@ -166,6 +166,17 @@ Route::group(['namespace' => 'Admin', 'middleware' => ['admin.auth', 'admin.loca
 
     /*
     |--------------------------------------------------------------------------
+    | Logs Dashboard
+    |--------------------------------------------------------------------------
+    */
+    Route::group(['prefix' => 'logs'], function () {
+        Route::get('/activity', 'ActivityLogController@index')->name('admin.logs.activity');
+        Route::match(['get', 'delete'], '/activity/clear-old', 'ActivityLogController@clearOld')->name('admin.logs.activity.clear-old');
+        Route::match(['get', 'delete'], '/activity/{id}/delete', 'ActivityLogController@destroy')->name('admin.logs.activity.delete');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Webinars/Courses
     |--------------------------------------------------------------------------
     */

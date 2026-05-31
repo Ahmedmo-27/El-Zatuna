@@ -96,6 +96,15 @@ class AuthServiceProvider extends ServiceProvider
             return null;
         });
 
+        // opcodesio/log-viewer access (system/application log files).
+        Gate::define('viewLogViewer', function ($user) {
+            if (!$user) {
+                return false;
+            }
+
+            return $user->isAdmin() || $user->hasPermission('admin_logs_system');
+        });
+
         try {
             if (Schema::hasTable('sections')) {
                 $minutes = 60 * 60; // 1 hour
