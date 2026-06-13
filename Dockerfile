@@ -45,10 +45,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # Copy Frontend Build from Stage 1
-COPY --from=frontend /app/public/css ./public/css
-COPY --from=frontend /app/public/js ./public/js
-COPY --from=frontend /app/public/fonts ./public/fonts
-# Note: we don't overwrite the whole public folder to keep index.php and other files intact.
+# Since the frontend stage copied the entire project before building, 
+# its public folder contains the original index.php plus the compiled assets.
+COPY --from=frontend /app/public/ ./public/
 
 # Install PHP Dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
