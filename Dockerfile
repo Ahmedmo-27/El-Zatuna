@@ -7,7 +7,7 @@ COPY . .
 RUN npm run production
 
 # Stage 2: Build Backend and Setup Web Server
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # Install System Dependencies
 RUN apt-get update && apt-get install -y \
