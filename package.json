@@ -5,12 +5,14 @@
     },
     "scripts": {
         "dev": "npm run development",
-        "development": "mix",
+        "development": "npm run tailwind && mix",
         "watch": "mix watch",
         "watch-poll": "mix watch -- --watch-options-poll=1000",
         "hot": "mix watch --hot",
         "prod": "npm run production",
-        "production": "mix --production"
+        "production": "npm run tailwind && mix --production",
+        "tailwind": "tailwindcss -i resources/css/tailwind.css -o public/assets/design_1/css/tailwind-built.css --minify",
+        "tailwind:watch": "tailwindcss -i resources/css/tailwind.css -o public/assets/design_1/css/tailwind-built.css --watch"
     },
     "devDependencies": {
         "axios": "^1.16.1",
@@ -20,7 +22,8 @@
         "laravel-vite-plugin": "^2.1.0",
         "resolve-url-loader": "^5.0.0",
         "sass": "^1.15.2",
-        "sass-loader": "^8.0.0"
+        "sass-loader": "^8.0.0",
+        "tailwindcss": "^3.4.19"
     },
     "dependencies": {
         "agora-rtc-sdk": "^3.6.11",

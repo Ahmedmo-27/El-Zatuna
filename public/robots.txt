@@ -1,5 +1,6 @@
 User-agent: *
-Disallow:
+Disallow: /panel/
+Disallow: /admin/
 Allow: /
 
-Sitemap: /sitemap.xml
+Sitemap: https://www.elzatuna.com/sitemap.xml

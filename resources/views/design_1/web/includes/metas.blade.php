@@ -12,12 +12,15 @@
 </script>
 
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 @php
     $siteName = !empty($generalSettings['site_name']) ? $generalSettings['site_name'] : config('app.name');
     $pageTitleValue = $pageTitle ?? $siteName;
-    $metaDescription = !empty($pageDescription) ? $pageDescription : $siteName;
+    $rawMetaDescription = !empty($pageDescription) ? $pageDescription : $siteName;
+    // Strip HTML, collapse whitespace and cap length so the meta description
+    // is always clean and within the ~160 char range search engines display.
+    $metaDescription = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($rawMetaDescription))), 160);
     $canonicalUrl = $pageCanonicalUrl ?? request()->url();
     $isSensitiveRoute = request()->is('panel*')
         || request()->is('admin*')
@@ -30,7 +33,10 @@
     $pageRobotValue = $pageRobot ?? $defaultRobotValue;
 
     if (empty($pageMetaImage)) {
-        $pageMetaImage = !empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '/favicon.ico';
+        // Social cards need a real image; never fall back to the tiny favicon.
+        $pageMetaImage = !empty($generalSettings['logo'])
+            ? $generalSettings['logo']
+            : '/assets/design_1/img/logozatuna.png';
     }
 
     $metaImageUrl = url($pageMetaImage);
@@ -143,12 +149,14 @@
 <meta property='og:site_name' content='{{ $siteName }}'>
 <meta property='og:url' content='{{ $canonicalUrl }}'>
 <meta property='og:image' content='{{ $metaImageUrl }}'>
+<meta property='og:image:alt' content='{{ $pageTitleValue }}'>
 <meta property='og:locale' content='{{ $localeValue }}'>
 <meta property='og:type' content='{{ $pageOgType }}'>
 
 <meta name='twitter:card' content='{{ $twitterCard }}'>
 <meta name='twitter:title' content='{{ $pageTitleValue }}'>
 <meta name='twitter:image' content='{{ $metaImageUrl }}'>
+<meta name='twitter:image:alt' content='{{ $pageTitleValue }}'>
 
 {!! getSeoMetas('extra_meta_tags') !!}
 

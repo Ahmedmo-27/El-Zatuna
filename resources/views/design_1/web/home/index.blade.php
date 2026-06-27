@@ -24,6 +24,7 @@
             <div>
                 <h1 class="serif" style="font-size:clamp(40px,7vw,96px);line-height:0.96;
                     letter-spacing:-0.035em;margin:0;font-weight:400;">
+                    <span style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">El-Zatuna — course-specific tutoring for university students in Egypt</span>
                     Got it.<br>
                     You're <em style="font-style:italic;">already</em><br>
                     <span style="display:inline-block;position:relative;white-space:nowrap;">
@@ -57,7 +58,7 @@
                 <div id="hero-3d-container" class="relative h-[280px] sm:h-[340px] md:h-[500px] w-full max-w-[560px] mx-auto overflow-visible border-2 sm:border-4 border-[#C8CD06] rounded-[32px] sm:rounded-[48px] bg-[#072923]/5 shadow-2xl">
                     <model-viewer
                         src="/3dmodels/robotzatuna.glb"
-                        alt="Laptop 3D model"
+                        alt="El-Zatuna 3D robot mascot"
                         camera-controls
                         auto-rotate
                         rotation-per-second="20deg"
@@ -252,6 +253,7 @@
                     <div style="height:220px;position:relative;overflow:hidden;background:{{ $accent }};">
                         @if($course->getImageCover())
                             <img src="{{ $course->getImageCover() }}" alt="{{ $course->title }}"
+                                loading="lazy" decoding="async"
                                 style="width:100%;height:100%;object-fit:cover;"/>
                         @else
                             <div aria-hidden="true" style="position:absolute;inset:0;
@@ -465,6 +467,7 @@
                     border-radius:16px;margin-bottom:20px;position:relative;overflow:hidden;">
                     @if($instructor->getAvatar(200) ?? null)
                         <img src="{{ $instructor->getAvatar(200) }}" alt="{{ $instructor->full_name }}"
+                            loading="lazy" decoding="async"
                             style="width:100%;height:100%;object-fit:cover;"/>
                     @else
                         <div aria-hidden="true" style="position:absolute;inset:0;
@@ -641,6 +644,7 @@
                         <div style="width:64px;height:64px;border-radius:50%;background:var(--leaf);overflow:hidden;flex-shrink:0;">
                             @if($spotlightTutor && $spotlightTutor->getAvatar())
                                 <img src="{{ $spotlightTutor->getAvatar(64) }}" alt="{{ $spotlightTutor->full_name }}"
+                                    loading="lazy" decoding="async"
                                     style="width:100%;height:100%;object-fit:cover;"/>
                             @endif
                         </div>

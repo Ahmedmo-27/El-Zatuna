@@ -298,26 +298,62 @@ class WebinarController extends Controller
         $commentController = new CommentController();
         $courseComments = $commentController->getComments($request, 'webinar', $course->id);
 
+        // SEO: clean description with sensible fallbacks (seo_description -> summary -> description).
+        $courseSeoDescription = $course->seo_description ?: ($course->summary ?: $course->description);
+        $courseUrl = url('/course/' . $course->slug);
+        $courseSellPrice = $course->bestTicket();
+        $courseRate = $course->getRate();
+        $courseRateCount = $course->getRateCount();
+
+        $courseSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Course',
+            'name' => $course->title,
+            'description' => \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string)$courseSeoDescription))), 300),
+            'url' => $courseUrl,
+            'image' => url($course->getImage()),
+            'provider' => [
+                '@type' => 'Organization',
+                'name' => getGeneralSettings('site_name') ?? config('app.name'),
+                'sameAs' => url('/'),
+            ],
+            'hasCourseInstance' => [
+                '@type' => 'CourseInstance',
+                'courseMode' => 'Online',
+                'name' => $course->title,
+            ],
+        ];
+
+        // Price offer (Google shows price in Course rich results).
+        if (is_numeric($courseSellPrice)) {
+            $courseSchema['offers'] = [
+                '@type' => 'Offer',
+                'price' => number_format((float)$courseSellPrice, 2, '.', ''),
+                'priceCurrency' => currency(),
+                'availability' => 'https://schema.org/InStock',
+                'url' => $courseUrl,
+            ];
+        }
+
+        // Aggregate rating from real reviews (renders star ratings in search results).
+        if (!empty($courseRateCount) && (float)$courseRate > 0) {
+            $courseSchema['aggregateRating'] = [
+                '@type' => 'AggregateRating',
+                'ratingValue' => (string)$courseRate,
+                'reviewCount' => (int)$courseRateCount,
+                'bestRating' => '5',
+                'worstRating' => '1',
+            ];
+        }
+
         $data = [
             'pageTitle' => $course->title,
-            'pageDescription' => $course->seo_description,
+            'pageDescription' => $courseSeoDescription,
             'pageRobot' => $pageRobot,
             'pageMetaImage' => $course->getImage(),
-            'pageCanonicalUrl' => url('/course/' . $course->slug),
+            'pageCanonicalUrl' => $courseUrl,
             'pageOgType' => 'course',
-            'pageSchema' => [
-                '@context' => 'https://schema.org',
-                '@type' => 'Course',
-                'name' => $course->title,
-                'description' => $course->seo_description,
-                'provider' => [
-                    '@type' => 'Organization',
-                    'name' => getGeneralSettings('site_name') ?? config('app.name'),
-                    'sameAs' => url('/'),
-                ],
-                'image' => url($course->getImage()),
-                'url' => url('/course/' . $course->slug),
-            ],
+            'pageSchema' => $courseSchema,
             'course' => $course,
             'isFavorite' => $isFavorite,
             'hasBought' => $hasBought,

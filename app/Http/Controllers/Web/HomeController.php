@@ -39,7 +39,8 @@ class HomeController extends Controller
 
         $seoSettings = getSeoMetas('home');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('home.home_title');
-        $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('home.home_title');
+        $defaultHomeDescription = 'El-Zatuna connects university students in Egypt with course-specific tutors. Browse professional courses, book a session, and learn from tutors who already passed your course.';
+        $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : $defaultHomeDescription;
         $pageRobot = getPageRobot('home');
 
         $discountedCourses = $frontComponentsDataMixins->getDiscountedCoursesData(6)

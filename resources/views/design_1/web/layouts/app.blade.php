@@ -10,7 +10,11 @@
 
 <head>
     @include('design_1.web.includes.metas')
-    <title>{{ $pageTitle ?? '' }}{{ !empty($generalSettings['site_name']) ? (' | '.$generalSettings['site_name']) : '' }}</title>
+    @php
+        $resolvedSiteName = !empty($generalSettings['site_name']) ? $generalSettings['site_name'] : config('app.name');
+        $resolvedTitle = !empty($pageTitle) ? ($pageTitle . ' | ' . $resolvedSiteName) : $resolvedSiteName;
+    @endphp
+    <title>{{ $resolvedTitle }}</title>
 
     @if($showPageLoader)
         <script>
@@ -27,10 +31,7 @@
     <link rel="stylesheet" href="/assets/design_1/css/web-layout-extras.css?v={{ @filemtime(public_path('assets/design_1/css/web-layout-extras.css')) }}">
     <link rel="stylesheet" href="/assets/design_1/css/cart-drawer-elzatuna.css">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <link rel="stylesheet" href="/assets/design_1/css/tailwind-built.css?v={{ @filemtime(public_path('assets/design_1/css/tailwind-built.css')) }}">
 
     @if($isRtl)
         <link rel="stylesheet" href="/assets/design_1/css/rtl-app.min.css">
