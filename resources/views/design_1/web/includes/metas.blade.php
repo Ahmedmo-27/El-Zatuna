@@ -49,18 +49,43 @@
 
     $jsonLdSchemas = [];
 
+    // Brand disambiguation: collect official profile URLs for schema "sameAs".
+    // This is the strongest signal that tells Google "Elzatuna the tutoring
+    // brand" is a distinct entity from the mosque/restaurant/other "Zaytuna".
+    $brandSameAs = [];
+    $appSocials = getSocials();
+    if (!empty($appSocials) && is_array($appSocials)) {
+        foreach ($appSocials as $social) {
+            if (!empty($social['link']) && filter_var($social['link'], FILTER_VALIDATE_URL)) {
+                $brandSameAs[] = $social['link'];
+            }
+        }
+    }
+    // Official profiles (kept in sync with the footer) so the brand's verified
+    // sameAs links are always emitted even if admin socials aren't configured.
+    $brandSameAs = array_merge($brandSameAs, [
+        'https://www.instagram.com/el.zatuna/',
+        'https://www.tiktok.com/@el.zatuna',
+        'https://www.linkedin.com/company/el-zatuna/',
+    ]);
+    $brandSameAs = array_values(array_unique($brandSameAs));
+
     $organizationSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
         'name' => $siteName,
+        'alternateName' => ['El Zatuna', 'El-Zatuna', 'Elzatuna', 'الزيتونة'],
         'url' => url('/'),
         'logo' => url($logoPath),
+        'description' => 'El-Zatuna is an online tutoring platform connecting university students in Egypt with course-specific tutors, study materials and one-on-one mentorship built around their syllabus.',
+        'sameAs' => $brandSameAs,
     ];
 
     $websiteSchema = [
         '@context' => 'https://schema.org',
         '@type' => 'WebSite',
         'name' => $siteName,
+        'alternateName' => ['El Zatuna', 'Elzatuna'],
         'url' => url('/'),
         'potentialAction' => [
             '@type' => 'SearchAction',

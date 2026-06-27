@@ -25,10 +25,9 @@
                 <div style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;">
                     @php
                         $socials = [
-                            ['https://instagram.com/elzatuna', 'Instagram', '<path d="M16 2H8a6 6 0 0 0-6 6v8a6 6 0 0 0 6 6h8a6 6 0 0 0 6-6V8a6 6 0 0 0-6-6z"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>'],
-                            ['#', 'TikTok', '<path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.7a8.16 8.16 0 0 0 4.77 1.52V6.76a4.85 4.85 0 0 1-1-.07z"/>'],
-                            ['#', 'LinkedIn', '<rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 10v7"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M11 10v7"/><path d="M11 13a3 3 0 0 1 6 0v4"/>'],
-                            ['#', 'YouTube', '<path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75,15.02 15.5,12 9.75,8.98 9.75,15.02" fill="currentColor" stroke="none"/>'],
+                            ['https://www.instagram.com/el.zatuna/', 'Instagram', '<path d="M16 2H8a6 6 0 0 0-6 6v8a6 6 0 0 0 6 6h8a6 6 0 0 0 6-6V8a6 6 0 0 0-6-6z"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>'],
+                            ['https://www.tiktok.com/@el.zatuna', 'TikTok', '<path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.7a8.16 8.16 0 0 0 4.77 1.52V6.76a4.85 4.85 0 0 1-1-.07z"/>'],
+                            ['https://www.linkedin.com/company/el-zatuna/', 'LinkedIn', '<rect x="2" y="2" width="20" height="20" rx="4"/><path d="M7 10v7"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/><path d="M11 10v7"/><path d="M11 13a3 3 0 0 1 6 0v4"/>'],
                         ];
                     @endphp
                     @foreach($socials as $soc)
