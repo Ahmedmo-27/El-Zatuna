@@ -2,9 +2,8 @@
     <div class="ez-container">
 
         {{-- Main grid --}}
-        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:60px;
-            padding-bottom:60px;border-bottom:1px solid rgba(250,255,224,0.12);"
-            class="md:!grid-cols-2 sm:!grid-cols-1">
+        <div class="ez-footer-grid"
+            style="padding-bottom:60px;border-bottom:1px solid rgba(250,255,224,0.12);">
 
             {{-- Brand column --}}
             <div>
@@ -132,7 +131,7 @@
         {{-- Big logotype --}}
         <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:32px;">
             <div style="font-family:'Instrument Serif','Playfair Display',serif;
-                font-size:clamp(80px,14vw,200px);line-height:0.8;letter-spacing:-0.04em;
+                font-size:clamp(44px,14vw,200px);line-height:0.8;letter-spacing:-0.04em;
                 color:var(--citron);">
                 <em style="font-style:italic;">el</em>zatuna<span style="color:var(--leaf);">.</span>
             </div>

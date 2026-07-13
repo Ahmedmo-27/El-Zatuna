@@ -40,6 +40,16 @@
     .cmode-btn.active .cmode-icon {
         background: var(--citron); border-color: var(--citron); color: var(--ink);
     }
+    /* Stack the two contact-mode buttons on phones (they overflow side by side) */
+    @media (max-width: 640px) {
+        #contact-mode-switcher { grid-template-columns: 1fr !important; }
+        .cmode-btn { padding: 22px 18px; gap: 16px; }
+        #contact-mode-switcher .cmode-btn:first-child {
+            border-right: 0 !important;
+            border-bottom: 1px solid var(--line);
+        }
+        .cmode-icon { width: 40px; height: 40px; }
+    }
 
     /* Form panels */
     .cform-panel { display: none; }

@@ -389,6 +389,20 @@ select.ez-input:focus { border-color: var(--citron); }
     .ez-image-strip { display: none; }
 }
 
+/* ── Footer grid (brand + 3 link columns) ───────────────── */
+/* Desktop-first to match the other ez-* helpers: 4 cols → 2 → 1 */
+.ez-footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 60px;
+}
+@media (max-width: 991px) {
+    .ez-footer-grid { grid-template-columns: 1fr 1fr; gap: 48px 40px; }
+}
+@media (max-width: 575px) {
+    .ez-footer-grid { grid-template-columns: 1fr; gap: 40px; }
+}
+
 /* ── FAQ accordion ──────────────────────────────────────── */
 .faq-answer {
     max-height: 0;
