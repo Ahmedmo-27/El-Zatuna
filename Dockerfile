@@ -50,7 +50,11 @@ COPY . .
 COPY --from=frontend /app/public/ ./public/
 
 # Install PHP Dependencies
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+# --no-scripts: do NOT run post-autoload-dump (artisan package:discover) here.
+# That script boots the full app, which fails at build time (no .env/APP_KEY,
+# no runtime env) and makes composer exit 100. Discovery runs at container
+# start instead (see docker-entrypoint.sh), where the real env is available.
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
 
 # Set Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache database \

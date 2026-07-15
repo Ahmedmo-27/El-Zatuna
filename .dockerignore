@@ -1,0 +1,34 @@
+# Keep the build context clean so `COPY . .` doesn't drag host-only,
+# stale, or secret files into the image.
+
+# Dependencies (installed fresh inside the image)
+/vendor
+/node_modules
+
+# Local env & secrets — Render injects real env vars at runtime
+.env
+.env.*
+!.env.example
+
+# Stale compiled/cached artifacts (regenerated at container start)
+/bootstrap/cache/*.php
+
+# Runtime storage (logs, sessions, compiled views, uploads)
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/debugbar
+
+# VCS / tooling / editor
+# NOTE: do NOT ignore .gitignore files — Laravel uses the ones inside
+# storage/ and bootstrap/cache/ to keep those runtime dirs present in the image.
+.git
+.github
+.idea
+.vscode
+*.log
+
+# Tests & CI (not needed in the production image)
+/tests
+phpunit.xml
