@@ -386,7 +386,12 @@ select.ez-input:focus { border-color: var(--citron); }
 }
 @media (max-width: 768px) {
     .ez-three-col { grid-template-columns: 1fr; }
-    .ez-image-strip { display: none; }
+}
+
+/* Large feature cards: dial back the generous desktop padding on phones
+   so text isn't crushed into a too-narrow column. */
+@media (max-width: 640px) {
+    .ez-pad-lg { padding: 40px 24px !important; }
 }
 
 /* ── Footer grid (brand + 3 link columns) ───────────────── */

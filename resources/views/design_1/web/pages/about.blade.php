@@ -6,6 +6,9 @@
         .ag2 { grid-template-columns: 1fr !important; gap: 48px !important; }
         .ag4 { grid-template-columns: repeat(2,1fr) !important; }
         .ag3 { grid-template-columns: 1fr !important; gap: 24px !important; }
+        /* Release the sticky "Origin" heading once the grid stacks, or it
+           stays pinned and overlaps the story paragraphs below it. */
+        .origin-aside { position: static !important; }
     }
     @media (max-width: 640px) {
         .ag4 { grid-template-columns: 1fr !important; }
@@ -70,7 +73,7 @@
         </div>
 
         {{-- Olive name strip --}}
-        <div style="margin-top:80px;background:var(--ink);color:var(--cream);border-radius:24px;
+        <div class="ez-pad-lg" style="margin-top:80px;background:var(--ink);color:var(--cream);border-radius:24px;
             padding:40px 48px;position:relative;overflow:hidden;
             display:flex;align-items:center;justify-content:space-between;">
             <div style="position:absolute;left:-20px;top:10px;opacity:0.18;">
@@ -102,7 +105,7 @@
 <section style="padding:100px 0;">
     <div class="ez-container">
         <div class="ag2" style="display:grid;grid-template-columns:0.85fr 1.4fr;gap:80px;align-items:flex-start;">
-            <div style="position:sticky;top:100px;">
+            <div class="origin-aside" style="position:sticky;top:100px;">
                 <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;
                     text-transform:uppercase;color:var(--muted);margin-bottom:24px;">—— 01 / Origin</div>
                 <h2 class="serif" style="font-size:clamp(40px,5.5vw,72px);line-height:0.98;
@@ -383,7 +386,7 @@
 ══════════════════════════════════════════════════════ --}}
 <section style="padding:40px 0 80px;">
     <div class="ez-container">
-        <div style="background:var(--ink);color:var(--cream);border-radius:32px;
+        <div class="ez-pad-lg" style="background:var(--ink);color:var(--cream);border-radius:32px;
             padding:88px 64px;position:relative;overflow:hidden;text-align:center;">
             <div style="position:absolute;left:-40px;top:-20px;opacity:0.15;">
                 <svg width="360" height="220" viewBox="0 0 120 72" fill="none" aria-hidden="true">

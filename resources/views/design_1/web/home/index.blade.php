@@ -343,7 +343,7 @@
 @if($spotlightCourses->isNotEmpty())
 <section style="padding:40px 0 120px;">
     <div class="ez-container">
-        <div style="background:var(--ink);color:var(--cream);border-radius:32px;
+        <div class="ez-pad-lg" style="background:var(--ink);color:var(--cream);border-radius:32px;
             padding:72px 64px;position:relative;overflow:hidden;">
             <svg width="420" height="252" viewBox="0 0 120 72" fill="none" aria-hidden="true"
                 style="position:absolute;top:40px;right:40px;opacity:0.12;">
@@ -596,7 +596,7 @@
 ══════════════════════════════════════════════════════════════ --}}
 <section style="padding:40px 0 120px;">
     <div class="ez-container">
-        <div style="background:var(--citron);border-radius:32px;padding:72px 48px;
+        <div class="ez-pad-lg" style="background:var(--citron);border-radius:32px;padding:72px 48px;
             position:relative;overflow:hidden;">
             <svg width="560" height="336" viewBox="0 0 120 72" fill="none" aria-hidden="true"
                 style="position:absolute;right:-60px;bottom:-80px;opacity:0.3;">
@@ -675,7 +675,7 @@
 <section style="padding:40px 0 80px;">
     <div class="ez-container">
         <div class="hg2" style="display:grid;grid-template-columns:0.9fr 1.4fr;gap:80px;align-items:flex-start;">
-            <div style="position:sticky;top:100px;min-width:0;overflow:hidden;">
+            <div class="faq-aside" style="position:sticky;top:100px;min-width:0;overflow:hidden;">
                 <div style="font-family:'JetBrains Mono',monospace;font-size:11px;
                     letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:24px;">
                     —— 07 / FAQ
@@ -752,10 +752,23 @@
         }
         .hg3 > .pillar-col:last-child { border-bottom: none; }
         .hg2.hero-g { align-items: start !important; }
+
+        /* Sticky FAQ heading must release once the grid stacks, otherwise it
+           stays pinned and overlaps the questions below it. */
+        .faq-aside { position: static !important; overflow: visible !important; }
+
+        /* Image strip: drop the fixed 280px height and go 2-up so the serif
+           card text stops overflowing. */
+        .ez-image-strip { grid-template-columns: 1fr 1fr !important; height: auto !important; }
+        .ez-image-strip > div { min-height: 200px; }
     }
     @media (max-width: 768px) {
         .ez-four-col { grid-template-columns: 1fr 1fr !important; }
         .ez-three-col { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 640px) {
+        .ez-image-strip { grid-template-columns: 1fr !important; }
+        .ez-image-strip > div { min-height: 170px; }
     }
     @media (max-width: 480px) {
         .ez-four-col { grid-template-columns: 1fr !important; }
