@@ -32,7 +32,18 @@ class Controller extends BaseController
 
         $path = $path . '/' . $name;
 
-        $storage->put($path, file_get_contents($file));
+        // Stream to disk — avoid loading the full upload into memory (512M limit)
+        $stream = fopen($file->getRealPath(), 'r');
+        if ($stream === false) {
+            throw new \RuntimeException('Failed to open uploaded file for streaming');
+        }
+        try {
+            $storage->writeStream($path, $stream);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
 
         return $storage->url($path);
     }

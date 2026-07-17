@@ -12,6 +12,12 @@ use Aws\Exception\AwsException;
 class R2StorageService
 {
     /**
+     * Files larger than this use multipart upload (never loaded into PHP memory).
+     * Kept low so uploads stay safe under a 512M PHP memory_limit.
+     */
+    private const MULTIPART_THRESHOLD_BYTES = 32 * 1024 * 1024;
+
+    /**
      * Upload a file to Cloudflare R2
      * 
      * Path structure: Courses/{course_id}/{section_id}/{timestamp}_{filename}
@@ -56,82 +62,8 @@ class R2StorageService
                 
                 $fileSize = $file->getSize();
                 $filePath = $file->getRealPath();
-                
-                // For large files (>100MB), use multipart upload
-                // For smaller files, use regular put() for better performance
-                if ($fileSize > 100 * 1024 * 1024) { // 100MB threshold
-                    \Log::info('R2 Upload: Using multipart upload for large file', [
-                        'file_size' => $fileSize,
-                        'file_size_mb' => round($fileSize / 1024 / 1024, 2),
-                    ]);
-                    
-                    $sslVerify = $this->getSslCertificatePath();
-                    $s3Client = new S3Client([
-                        'credentials' => [
-                            'key' => config('filesystems.disks.r2.key'),
-                            'secret' => config('filesystems.disks.r2.secret'),
-                        ],
-                        'region' => config('filesystems.disks.r2.region', 'auto'),
-                        'version' => 'latest',
-                        'bucket_endpoint' => false,
-                        'use_path_style_endpoint' => true,
-                        'endpoint' => config('filesystems.disks.r2.endpoint'),
-                        'verify' => $sslVerify,
-                        'http' => [
-                            'verify' => $sslVerify,
-                            'timeout' => 0,
-                            'connect_timeout' => 60,
-                        ],
-                    ]);
-                    
-                    // Use multipart uploader
-                    $uploader = new MultipartUploader($s3Client, $filePath, [
-                        'bucket' => config('filesystems.disks.r2.bucket'),
-                        'key' => $fullPath,
-                        'acl' => 'public-read',
-                    ]);
-                    
-                    $result = $uploader->upload();
-                    $uploaded = true;
-                    
-                    \Log::info('R2 Upload: Multipart upload successful', [
-                        'etag' => $result['ETag'] ?? 'N/A',
-                    ]);
-                } else {
-                    // For smaller files, use regular put()
-                    \Log::info('R2 Upload: Reading file contents', [
-                        'file_path' => $filePath,
-                        'file_size' => $fileSize,
-                    ]);
-                    
-                    $fileContents = file_get_contents($filePath);
-                    if ($fileContents === false) {
-                        throw new Exception('Failed to read file contents');
-                    }
-                    
-                    \Log::info('R2 Upload: File contents read, size: ' . strlen($fileContents) . ' bytes');
-                    
-                    // Try put with visibility
-                    \Log::info('R2 Upload: Attempting put() to R2', ['full_path' => $fullPath]);
-                    $uploaded = $storage->put($fullPath, $fileContents, 'public');
-                    
-                    \Log::info('R2 Upload: put() result', ['uploaded' => $uploaded ? 'true' : 'false']);
-                    
-                    if (!$uploaded) {
-                        \Log::warning('R2 Upload: put() failed, trying writeStream');
-                        // Method 2: Try writeStream as fallback
-                        $stream = fopen($filePath, 'r');
-                        if ($stream) {
-                            $uploaded = $storage->writeStream($fullPath, $stream);
-                            \Log::info('R2 Upload: writeStream() result', ['uploaded' => $uploaded ? 'true' : 'false']);
-                            if (is_resource($stream)) {
-                                fclose($stream);
-                            }
-                        } else {
-                            \Log::error('R2 Upload: Failed to open file stream');
-                        }
-                    }
-                }
+
+                $uploaded = $this->putLocalFileToR2($storage, $filePath, $fullPath, $fileSize);
                 
                 // Restore original throw setting
                 config(['filesystems.disks.r2.throw' => $originalThrow]);
@@ -523,7 +455,7 @@ class R2StorageService
             $fileName = time() . '_' . $file->getClientOriginalName();
             $fullPath = $customPath . '/' . $fileName;
             
-            $uploaded = $storage->put($fullPath, file_get_contents($file->getRealPath()), 'public');
+            $uploaded = $this->putLocalFileToR2($storage, $file->getRealPath(), $fullPath, (int) $file->getSize());
             
             if ($uploaded) {
                 $url = $storage->url($fullPath);
@@ -593,22 +525,7 @@ class R2StorageService
                 'asset_type' => $assetType,
             ]);
 
-            $fileContents = file_get_contents($file->getRealPath());
-            if ($fileContents === false) {
-                throw new Exception('Failed to read file contents');
-            }
-
-            $uploaded = $storage->put($fullPath, $fileContents, 'public');
-
-            if (!$uploaded) {
-                $stream = fopen($file->getRealPath(), 'r');
-                if ($stream) {
-                    $uploaded = $storage->writeStream($fullPath, $stream);
-                    if (is_resource($stream)) {
-                        fclose($stream);
-                    }
-                }
-            }
+            $uploaded = $this->putLocalFileToR2($storage, $file->getRealPath(), $fullPath, (int) $file->getSize());
 
             if ($uploaded) {
                 sleep(1);
@@ -703,46 +620,7 @@ class R2StorageService
 
             $fileSize = $file->getSize();
             $filePath = $file->getRealPath();
-            $uploaded = false;
-
-            if ($assetType === 'profile_video' && $fileSize > 100 * 1024 * 1024) {
-                $sslVerify = $this->getSslCertificatePath();
-                $s3Client = new S3Client([
-                    'credentials' => [
-                        'key' => config('filesystems.disks.r2.key'),
-                        'secret' => config('filesystems.disks.r2.secret'),
-                    ],
-                    'region' => config('filesystems.disks.r2.region', 'auto'),
-                    'version' => 'latest',
-                    'bucket_endpoint' => false,
-                    'use_path_style_endpoint' => true,
-                    'endpoint' => config('filesystems.disks.r2.endpoint'),
-                    'verify' => $sslVerify,
-                    'http' => ['verify' => $sslVerify, 'timeout' => 0, 'connect_timeout' => 60],
-                ]);
-                $uploader = new MultipartUploader($s3Client, $filePath, [
-                    'bucket' => config('filesystems.disks.r2.bucket'),
-                    'key' => $fullPath,
-                    'acl' => 'public-read',
-                ]);
-                $uploader->upload();
-                $uploaded = true;
-            } else {
-                $fileContents = file_get_contents($filePath);
-                if ($fileContents === false) {
-                    throw new Exception('Failed to read file contents');
-                }
-                $uploaded = $storage->put($fullPath, $fileContents, 'public');
-                if (!$uploaded) {
-                    $stream = fopen($filePath, 'r');
-                    if ($stream) {
-                        $uploaded = $storage->writeStream($fullPath, $stream);
-                        if (is_resource($stream)) {
-                            fclose($stream);
-                        }
-                    }
-                }
-            }
+            $uploaded = $this->putLocalFileToR2($storage, $filePath, $fullPath, (int) $fileSize);
 
             if ($uploaded) {
                 sleep(1);
@@ -820,51 +698,8 @@ class R2StorageService
 
             $fileSize = $file->getSize();
             $filePath = $file->getRealPath();
-            $uploaded = false;
             $uploadError = null;
-
-            if ($fileSize > 100 * 1024 * 1024) {
-                $sslVerify = $this->getSslCertificatePath();
-                $s3Client = new S3Client([
-                    'credentials' => [
-                        'key' => config('filesystems.disks.r2.key'),
-                        'secret' => config('filesystems.disks.r2.secret'),
-                    ],
-                    'region' => config('filesystems.disks.r2.region', 'auto'),
-                    'version' => 'latest',
-                    'bucket_endpoint' => false,
-                    'use_path_style_endpoint' => true,
-                    'endpoint' => config('filesystems.disks.r2.endpoint'),
-                    'verify' => $sslVerify,
-                    'http' => [
-                        'verify' => $sslVerify,
-                        'timeout' => 0,
-                        'connect_timeout' => 60,
-                    ],
-                ]);
-                $uploader = new MultipartUploader($s3Client, $filePath, [
-                    'bucket' => config('filesystems.disks.r2.bucket'),
-                    'key' => $fullPath,
-                    'acl' => 'public-read',
-                ]);
-                $uploader->upload();
-                $uploaded = true;
-            } else {
-                $fileContents = file_get_contents($filePath);
-                if ($fileContents === false) {
-                    throw new Exception('Failed to read file contents');
-                }
-                $uploaded = $storage->put($fullPath, $fileContents, 'public');
-                if (!$uploaded) {
-                    $stream = fopen($filePath, 'r');
-                    if ($stream) {
-                        $uploaded = $storage->writeStream($fullPath, $stream);
-                        if (is_resource($stream)) {
-                            fclose($stream);
-                        }
-                    }
-                }
-            }
+            $uploaded = $this->putLocalFileToR2($storage, $filePath, $fullPath, (int) $fileSize);
 
             if ($uploaded) {
                 sleep(1);
@@ -951,137 +786,7 @@ class R2StorageService
             
             $fileSize = $file->getSize();
             $filePath = $file->getRealPath();
-            
-            // For large files (>100MB), use multipart upload
-            if ($fileSize > 100 * 1024 * 1024) {
-                \Log::info('R2 Instructor Application: Using multipart upload for large file', [
-                    'file_size' => $fileSize,
-                    'file_size_mb' => round($fileSize / 1024 / 1024, 2),
-                ]);
-                
-                $sslVerify = $this->getSslCertificatePath();
-                $s3Client = new S3Client([
-                    'credentials' => [
-                        'key' => config('filesystems.disks.r2.key'),
-                        'secret' => config('filesystems.disks.r2.secret'),
-                    ],
-                    'region' => config('filesystems.disks.r2.region', 'auto'),
-                    'version' => 'latest',
-                    'bucket_endpoint' => false,
-                    'use_path_style_endpoint' => true,
-                    'endpoint' => config('filesystems.disks.r2.endpoint'),
-                    'verify' => $sslVerify,
-                    'http' => [
-                        'verify' => $sslVerify,
-                        'timeout' => 0,
-                        'connect_timeout' => 60,
-                    ],
-                ]);
-                
-                $uploader = new MultipartUploader($s3Client, $filePath, [
-                    'bucket' => config('filesystems.disks.r2.bucket'),
-                    'key' => $fullPath,
-                    'acl' => 'public-read', // Use public-read like the working course upload
-                ]);
-                
-                $result = $uploader->upload();
-                
-                \Log::info('R2 Instructor Application: Multipart upload successful', [
-                    'etag' => $result['ETag'] ?? 'N/A',
-                ]);
-                
-                return [
-                    'status' => true,
-                    'path' => $fullPath,
-                    'url' => null, // Private files don't have public URLs
-                ];
-            } else {
-                // For smaller files, use regular put()
-                \Log::info('R2 Instructor Application: Reading file contents', [
-                    'file_path' => $filePath,
-                    'file_size' => $fileSize,
-                ]);
-                
-                $fileContents = file_get_contents($filePath);
-                if ($fileContents === false) {
-                    throw new Exception('Failed to read file contents');
-                }
-                
-                \Log::info('R2 Instructor Application: File contents read, size: ' . strlen($fileContents) . ' bytes');
-                \Log::info('R2 Instructor Application: Attempting put() to R2', ['full_path' => $fullPath]);
-                
-                // Use 'public' visibility like the working course upload
-                $uploaded = $storage->put($fullPath, $fileContents, 'public');
-                
-                \Log::info('R2 Instructor Application: put() result', ['uploaded' => $uploaded ? 'true' : 'false']);
-                
-                if (!$uploaded) {
-                    \Log::warning('R2 Instructor Application: put() failed, trying S3Client directly');
-                    // Try using S3Client directly to get better error messages
-                    try {
-                        $sslVerify = $this->getSslCertificatePath();
-                        $s3Client = new S3Client([
-                            'credentials' => [
-                                'key' => config('filesystems.disks.r2.key'),
-                                'secret' => config('filesystems.disks.r2.secret'),
-                            ],
-                            'region' => config('filesystems.disks.r2.region', 'auto'),
-                            'version' => 'latest',
-                            'bucket_endpoint' => false,
-                            'use_path_style_endpoint' => true,
-                            'endpoint' => config('filesystems.disks.r2.endpoint'),
-                            'verify' => $sslVerify,
-                            'http' => [
-                                'verify' => $sslVerify,
-                                'timeout' => 0,
-                                'connect_timeout' => 60,
-                            ],
-                        ]);
-                        
-                        $result = $s3Client->putObject([
-                            'Bucket' => config('filesystems.disks.r2.bucket'),
-                            'Key' => $fullPath,
-                            'Body' => $fileContents,
-                            'ACL' => 'public-read',
-                        ]);
-                        
-                        $uploaded = !empty($result['ETag']);
-                        \Log::info('R2 Instructor Application: S3Client putObject() result', [
-                            'uploaded' => $uploaded ? 'true' : 'false',
-                            'etag' => $result['ETag'] ?? 'N/A',
-                        ]);
-                    } catch (\Aws\Exception\AwsException $e) {
-                        $uploadError = $e->getAwsErrorMessage() ?: $e->getMessage();
-                        \Log::error('R2 Instructor Application: S3Client AWS Exception', [
-                            'error' => $uploadError,
-                            'error_code' => $e->getAwsErrorCode(),
-                            'http_status' => $e->getStatusCode(),
-                        ]);
-                        $uploaded = false;
-                    } catch (Exception $e) {
-                        $uploadError = $e->getMessage();
-                        \Log::error('R2 Instructor Application: S3Client Exception', [
-                            'error' => $uploadError,
-                        ]);
-                        $uploaded = false;
-                    }
-                    
-                    if (!$uploaded) {
-                        \Log::warning('R2 Instructor Application: S3Client failed, trying writeStream');
-                        // Try writeStream as final fallback
-                        $stream = fopen($filePath, 'r');
-                        if ($stream) {
-                            $uploaded = $storage->writeStream($fullPath, $stream);
-                            \Log::info('R2 Instructor Application: writeStream() result', ['uploaded' => $uploaded ? 'true' : 'false']);
-                            if (is_resource($stream)) {
-                                fclose($stream);
-                            }
-                        } else {
-                            \Log::error('R2 Instructor Application: Failed to open file stream');
-                        }
-                    }
-                }
-            }
+            $uploaded = $this->putLocalFileToR2($storage, $filePath, $fullPath, (int) $fileSize);
             
             if ($uploaded) {
                 // Wait a moment for R2 to process
@@ -1177,6 +882,81 @@ class R2StorageService
         }
     }
     
+    /**
+     * Upload a local file to R2 without loading the full contents into PHP memory.
+     * Uses multipart for large files; otherwise streams via writeStream.
+     * Safe under a 512M PHP memory_limit.
+     *
+     * @param mixed $storage Laravel filesystem disk (r2)
+     */
+    protected function putLocalFileToR2($storage, string $filePath, string $fullPath, int $fileSize): bool
+    {
+        if ($fileSize > self::MULTIPART_THRESHOLD_BYTES) {
+            \Log::info('R2 Upload: Using multipart upload', [
+                'full_path' => $fullPath,
+                'file_size' => $fileSize,
+                'file_size_mb' => round($fileSize / 1024 / 1024, 2),
+            ]);
+
+            $sslVerify = $this->getSslCertificatePath();
+            $s3Client = new S3Client([
+                'credentials' => [
+                    'key' => config('filesystems.disks.r2.key'),
+                    'secret' => config('filesystems.disks.r2.secret'),
+                ],
+                'region' => config('filesystems.disks.r2.region', 'auto'),
+                'version' => 'latest',
+                'bucket_endpoint' => false,
+                'use_path_style_endpoint' => true,
+                'endpoint' => config('filesystems.disks.r2.endpoint'),
+                'verify' => $sslVerify,
+                'http' => [
+                    'verify' => $sslVerify,
+                    'timeout' => 0,
+                    'connect_timeout' => 60,
+                ],
+            ]);
+
+            $uploader = new MultipartUploader($s3Client, $filePath, [
+                'bucket' => config('filesystems.disks.r2.bucket'),
+                'key' => $fullPath,
+                'acl' => 'public-read',
+            ]);
+
+            $result = $uploader->upload();
+            \Log::info('R2 Upload: Multipart upload successful', [
+                'full_path' => $fullPath,
+                'etag' => $result['ETag'] ?? 'N/A',
+            ]);
+
+            return true;
+        }
+
+        \Log::info('R2 Upload: Streaming file to R2', [
+            'full_path' => $fullPath,
+            'file_size' => $fileSize,
+        ]);
+
+        $stream = fopen($filePath, 'r');
+        if ($stream === false) {
+            throw new Exception('Failed to open file stream for R2 upload');
+        }
+
+        try {
+            $uploaded = (bool) $storage->writeStream($fullPath, $stream);
+            \Log::info('R2 Upload: writeStream() result', [
+                'full_path' => $fullPath,
+                'uploaded' => $uploaded ? 'true' : 'false',
+            ]);
+
+            return $uploaded;
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+    }
+
     /**
      * Get the SSL certificate path for R2 connections
      * 

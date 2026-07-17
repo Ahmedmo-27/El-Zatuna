@@ -26,6 +26,15 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install PHP Extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# Cap PHP memory at 512M so the app stays within the production limit
+RUN printf '%s\n' \
+    'memory_limit=512M' \
+    'max_execution_time=300' \
+    'max_input_time=300' \
+    'upload_max_filesize=2048M' \
+    'post_max_size=2048M' \
+    > /usr/local/etc/php/conf.d/elzatuna-limits.ini
+
 # Enable Apache mod_rewrite for Laravel
 RUN a2enmod rewrite
 

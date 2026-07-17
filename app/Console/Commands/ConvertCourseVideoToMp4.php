@@ -103,8 +103,17 @@ class ConvertCourseVideoToMp4 extends Command
             }
 
             $this->info('Uploading MP4 to R2: ' . $mp4Path);
-            $mp4Contents = file_get_contents($tempOutput);
-            Storage::disk('r2')->put($mp4Path, $mp4Contents, 'private');
+            $stream = fopen($tempOutput, 'r');
+            if ($stream === false) {
+                throw new \RuntimeException('Failed to open converted MP4 for upload');
+            }
+            try {
+                Storage::disk('r2')->writeStream($mp4Path, $stream);
+            } finally {
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }
 
             $this->info('Done. Playback will now use the MP4 (no more black screen).');
         } catch (\Throwable $e) {
