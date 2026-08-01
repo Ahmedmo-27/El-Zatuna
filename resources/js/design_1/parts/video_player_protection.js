@@ -2,13 +2,11 @@
     "use strict";
 
     const DEFAULT_CONFIG = {
-        blackScreenDuration: 12000,
-        captureBlackScreenDuration: 20000,
+        blackScreenDuration: 6000,
     };
 
     let config = {...DEFAULT_CONFIG};
     let globalListenersAttached = false;
-    let captureLockUntil = 0;
     const protectedContainers = new WeakSet();
     const containerPlayers = new WeakMap();
 
@@ -18,7 +16,7 @@
                 <div class="video-player-black-shield__message">
                     <span class="video-player-black-shield__icon">⛔</span>
                     <span class="video-player-black-shield__title">Content hidden</span>
-                    <span class="video-player-black-shield__hint">Screenshots and screen recording are not allowed</span>
+                    <span class="video-player-black-shield__hint">Tap to continue watching</span>
                 </div>
             </div>
         `;
@@ -89,7 +87,6 @@
         const winKey = event.metaKey || event.getModifierState('Meta') || event.getModifierState('OS');
         const shiftKey = event.shiftKey || event.getModifierState('Shift');
         const altKey = event.altKey || event.getModifierState('Alt');
-        const ctrlKey = event.ctrlKey || event.getModifierState('Control');
 
         if (key === 'PrintScreen' || keyCode === 44) {
             return true;
@@ -133,30 +130,38 @@
 
         const key = String(event.key || '');
 
-        if (/^s$/i.test(key) && event.shiftKey && !event.ctrlKey && !event.altKey) {
-            return true;
-        }
-
-        return false;
+        return /^s$/i.test(key) && event.shiftKey && !event.ctrlKey && !event.altKey;
     }
 
-    function activateBlackShield(container, reason, options) {
-        const opts = options || {};
-        const duration = opts.duration || (
-            reason && String(reason).indexOf('capture') === 0
-                ? config.captureBlackScreenDuration
-                : config.blackScreenDuration
-        );
+    function deactivateBlackShield(container) {
+        const $container = $(container);
+        const timer = $container.data('blackShieldTimer');
 
-        if (opts.lockCapture) {
-            captureLockUntil = Date.now() + duration;
+        if (timer) {
+            clearTimeout(timer);
+            $container.removeData('blackShieldTimer');
         }
+
+        $container.removeClass('video-player-protected--blocked');
+        $container.find('.video-player-black-shield')
+            .removeClass('video-player-black-shield--active')
+            .removeAttr('data-reason');
+    }
+
+    function dismissAllShields() {
+        $('.learning-page__file-player-card.video-player-protected').each(function () {
+            deactivateBlackShield(this);
+        });
+    }
+
+    function activateBlackShield(container, reason) {
+        const duration = config.blackScreenDuration;
 
         if (!container) {
             pauseAllProtectedPlayback();
 
             $('.learning-page__file-player-card.video-player-protected').each(function () {
-                activateBlackShield(this, reason, {...opts, duration: duration});
+                activateBlackShield(this, reason);
             });
 
             return;
@@ -177,50 +182,20 @@
         clearTimeout($container.data('blackShieldTimer'));
 
         const timer = setTimeout(function () {
-            if (Date.now() < captureLockUntil) {
-                activateBlackShield(container, reason, {...opts, duration: captureLockUntil - Date.now()});
-                return;
-            }
-
             deactivateBlackShield(container);
         }, duration);
 
         $container.data('blackShieldTimer', timer);
     }
 
-    function deactivateBlackShield(container) {
-        if (Date.now() < captureLockUntil) {
-            return;
-        }
-
-        const $container = $(container);
-        const timer = $container.data('blackShieldTimer');
-
-        if (timer) {
-            clearTimeout(timer);
-            $container.removeData('blackShieldTimer');
-        }
-
-        $container.removeClass('video-player-protected--blocked');
-        $container.find('.video-player-black-shield')
-            .removeClass('video-player-black-shield--active')
-            .removeAttr('data-reason');
-    }
-
     function attachContainerListeners(container) {
         const $container = $(container);
 
         $container.off('click.videoProtectionShield');
-        $container.on('click.videoProtectionShield', '.video-player-black-shield--active', function (e) {
-            if (Date.now() < captureLockUntil) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-
+        $container.on('click.videoProtectionShield', '.video-player-black-shield', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            deactivateBlackShield(container);
+            dismissAllShields();
         });
     }
 
@@ -256,10 +231,7 @@
     }
 
     function handleCaptureAttempt(reason) {
-        activateBlackShield(null, reason || 'capture-shortcut', {
-            lockCapture: true,
-            duration: config.captureBlackScreenDuration,
-        });
+        activateBlackShield(null, reason || 'capture-shortcut');
     }
 
     function hookCaptureApis() {
@@ -307,58 +279,27 @@
         hookCaptureApis();
 
         document.addEventListener('keydown', function (e) {
-            if (isCaptureShortcut(e) || isSnippingToolFallback(e)) {
-                handleCaptureAttempt('capture-shortcut');
-
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText('').catch(function () {
-                    });
-                }
-            }
-        }, true);
-
-        document.addEventListener('keyup', function (e) {
-            if (isCaptureShortcut(e)) {
-                handleCaptureAttempt('capture-shortcut');
-            }
-        }, true);
-
-        window.addEventListener('blur', function () {
-            if (Date.now() < captureLockUntil) {
-                handleCaptureAttempt('capture-blur');
+            if (!isCaptureShortcut(e) && !isSnippingToolFallback(e)) {
                 return;
             }
 
-            if (isAnyProtectedVideoPlaying()) {
-                handleCaptureAttempt('capture-blur');
+            handleCaptureAttempt('capture-shortcut');
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText('').catch(function () {
+                });
             }
-        });
+        }, true);
 
         document.addEventListener('visibilitychange', function () {
             if (!document.hidden) {
-                return;
-            }
-
-            if (Date.now() < captureLockUntil || isAnyProtectedVideoPlaying()) {
-                handleCaptureAttempt('capture-visibility');
+                dismissAllShields();
             }
         });
 
-        setInterval(function () {
-            if (Date.now() >= captureLockUntil) {
-                return;
-            }
-
-            $('.learning-page__file-player-card.video-player-protected').each(function () {
-                const $container = $(this);
-
-                if (!$container.hasClass('video-player-protected--blocked')) {
-                    activateBlackShield(this, 'capture-guard', {
-                        duration: captureLockUntil - Date.now(),
-                    });
-                }
-            });
-        }, 250);
+        window.addEventListener('focus', function () {
+            dismissAllShields();
+        });
     }
 
     window.VideoPlayerProtection = {
@@ -371,6 +312,8 @@
         protectContainer: protectContainer,
 
         refresh: refreshProtection,
+
+        dismissAll: dismissAllShields,
 
         triggerBlackScreen: function (reason) {
             handleCaptureAttempt(reason || 'manual');

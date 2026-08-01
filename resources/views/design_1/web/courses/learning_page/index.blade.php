@@ -141,8 +141,7 @@
         var courseCompletedLang = '{{ trans('update.course_completed') }}';
 
         var videoProtectionConfig = {
-            blackScreenDuration: 12000,
-            captureBlackScreenDuration: 20000,
+            blackScreenDuration: 6000,
         };
     </script>
 

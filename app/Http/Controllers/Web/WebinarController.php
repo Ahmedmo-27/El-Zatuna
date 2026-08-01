@@ -28,6 +28,7 @@ use App\Models\WebinarReview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Aws\S3\S3Client;
@@ -684,24 +685,8 @@ class WebinarController extends Controller
                     } elseif ($file->storage == 'upload_archive') {
                         $path = url("/course/$webinar->slug/file/$file->id/showHtml");
                     } elseif ($file->storage == 'r2' && $file->isVideo()) {
-                        // R2 course videos (Courses/...) use Cloudflare Worker when STREAM_WORKER_BASE is set
-                        $r2Path = $this->extractR2Path($file->file);
-                        if (!empty($r2Path)) {
-                            // Prefer MP4 for playback when it exists (fixes black screen for MKV/AVI/WMV)
-                            $playPath = \App\Helpers\R2Helper::getPreferredPlaybackPath($r2Path);
-                            $token = $this->makeStreamToken($playPath, $file->id);
-                            $workerBase = config('services.stream.worker_base');
-                            if (!empty($workerBase)) {
-                                $path = rtrim($workerBase, '/') . '/v?t=' . urlencode($token);
-                            } else {
-                                // Fallback to Laravel streaming if Worker not configured
-                                \Log::warning('STREAM_WORKER_BASE not configured, falling back to Laravel streaming');
-                                $path = url("/course/$webinar->slug/file/$file->id/play");
-                            }
-                        } else {
-                            // Fallback if path extraction fails
-                            $path = url("/course/$webinar->slug/file/$file->id/play");
-                        }
+                        // Never expose worker/signed URLs to the client — use same-origin play route.
+                        $path = url("/course/$webinar->slug/file/$file->id/play");
                     }
 
                     // Use MIME from actual playback path (may be MP4 when original was MKV)
@@ -750,22 +735,14 @@ class WebinarController extends Controller
                         ];
                         return view('design_1.web.courses.free_contents.interactive_file', $data);
                     } else if ($file->isVideo()) {
-                        // Route R2 videos to streamR2Video method (fallback if Worker not available)
                         if ($file->storage == 'r2') {
-                            // Check if Worker is configured, otherwise fallback to Laravel streaming
                             $workerBase = config('services.stream.worker_base');
-                            if (empty($workerBase)) {
-                                // Fallback to Laravel streaming if Worker not configured
-                                return $this->streamR2Video($file, $webinar);
-                            } else {
-                                // Worker should handle this, but if request reaches here, redirect to Worker
-                                $r2Path = $this->extractR2Path($file->file);
-                                if (!empty($r2Path)) {
-                                    $token = $this->makeStreamToken($r2Path, $file->id);
-                                    $workerUrl = rtrim($workerBase, '/') . '/v?t=' . urlencode($token);
-                                    return redirect($workerUrl);
-                                }
+
+                            if (!empty($workerBase)) {
+                                return $this->streamR2VideoViaWorker($file, $webinar);
                             }
+
+                            return $this->streamR2Video($file, $webinar);
                         }
                         
                         // Local upload videos
@@ -823,6 +800,81 @@ class WebinarController extends Controller
             }
         }
         abort(403);
+    }
+
+    /**
+     * Proxy R2 video stream through Laravel so the browser never sees worker URLs.
+     */
+    private function streamR2VideoViaWorker(File $file, Webinar $webinar)
+    {
+        $r2Path = $this->extractR2Path($file->file);
+
+        if (empty($r2Path)) {
+            return $this->streamR2Video($file, $webinar);
+        }
+
+        $playPath = \App\Helpers\R2Helper::getPreferredPlaybackPath($r2Path);
+        $token = $this->makeStreamToken($playPath, $file->id);
+        $workerBase = config('services.stream.worker_base');
+        $workerUrl = rtrim($workerBase, '/') . '/v?t=' . urlencode($token);
+
+        $forwardHeaders = [];
+
+        if (request()->header('Range')) {
+            $forwardHeaders['Range'] = request()->header('Range');
+        }
+
+        try {
+            $workerResponse = Http::withHeaders($forwardHeaders)
+                ->withOptions(['stream' => true, 'http_errors' => false])
+                ->get($workerUrl);
+
+            $status = $workerResponse->status();
+
+            if (!in_array($status, [200, 206], true)) {
+                \Log::warning('Worker stream proxy failed, falling back to Laravel R2 stream', [
+                    'file_id' => $file->id,
+                    'status' => $status,
+                ]);
+
+                return $this->streamR2Video($file, $webinar);
+            }
+
+            $responseHeaders = [
+                'Content-Type' => $workerResponse->header('Content-Type') ?: 'video/mp4',
+                'Content-Disposition' => 'inline; filename="video.mp4"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, private, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Frame-Options' => 'SAMEORIGIN',
+                'X-Robots-Tag' => 'noindex, nofollow, noarchive, nosnippet',
+                'Accept-Ranges' => 'bytes',
+            ];
+
+            foreach (['Content-Length', 'Content-Range'] as $headerName) {
+                $headerValue = $workerResponse->header($headerName);
+
+                if (!empty($headerValue)) {
+                    $responseHeaders[$headerName] = $headerValue;
+                }
+            }
+
+            return response()->stream(function () use ($workerResponse) {
+                $body = $workerResponse->toPsrResponse()->getBody();
+
+                while (!$body->eof()) {
+                    echo $body->read(8192);
+                }
+            }, $status, $responseHeaders);
+        } catch (\Throwable $e) {
+            \Log::error('Worker stream proxy exception, falling back to Laravel R2 stream', [
+                'file_id' => $file->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->streamR2Video($file, $webinar);
+        }
     }
 
     /**

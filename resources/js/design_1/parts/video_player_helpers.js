@@ -130,6 +130,22 @@
         };
     };
 
+    window.getProtectedFilePlayUrl = function (fileId) {
+        if (typeof courseUrl === 'undefined' || !courseUrl) {
+            return null;
+        }
+
+        return `${courseUrl}/file/${fileId}/play`;
+    };
+
+    window.resolveVideoStreamUrl = function (fileId, storage, fallbackPath) {
+        if (storage === 'r2' || storage === 'upload') {
+            return getProtectedFilePlayUrl(fileId) || fallbackPath;
+        }
+
+        return fallbackPath;
+    };
+
     window.applyPlyrVideoSource = function (player, videoSource) {
         if (!player || !videoSource || !videoSource.src) {
             return;
@@ -164,24 +180,26 @@
                 const storage = result.storage;
 
                 const videoTagId = 'videoPlayer' + fileId;
+                const streamUrl = resolveVideoStreamUrl(fileId, storage, result.path);
 
-                const {html, options, usePlyr, videoSource} = makeVideoPlayerHtml(result.path, storage, '100%', videoTagId, undefined, result.mime_type);
+                const {html, options, usePlyr, videoSource} = makeVideoPlayerHtml(streamUrl, storage, '100%', videoTagId, undefined, result.mime_type);
 
                 if ($contentEl) {
                     $contentEl.html(html);
                 }
 
                 if (usePlyr) {
-                    if (videoSource) {
-                        const videoEl = document.getElementById(videoTagId);
-
-                        if (videoEl) {
-                            videoEl.src = videoSource.src;
-                        }
-                    }
-
                     fileVideoPlayer = new Plyr(`#${videoTagId}`, options);
                     window.activeFileVideoPlayer = fileVideoPlayer;
+
+                    if (videoSource && streamUrl) {
+                        const videoEl = fileVideoPlayer.media || document.getElementById(videoTagId);
+
+                        if (videoEl) {
+                            videoEl.src = streamUrl;
+                            videoEl.load();
+                        }
+                    }
 
                     // Auto-recover R2 stream when signed URL expires or stream stalls.
                     if (storage === 'r2') {
@@ -341,49 +359,46 @@
                 ? window.performance.now()
                 : Date.now();
 
-            $.post('/course/getFilePath', {file_id: fileId}, function (result) {
-                if (!(result && result.code === 200 && result.path)) {
-                    markVideoPerformanceDirty(fileId, storage);
-                    return;
+            const playUrl = getProtectedFilePlayUrl(fileId);
+
+            if (!playUrl || !player.media) {
+                markVideoPerformanceDirty(fileId, storage);
+                fileVideoRefreshInProgress = false;
+                return;
+            }
+
+            player.media.src = playUrl;
+            player.media.load();
+
+            player.once('canplay', function () {
+                const endedAt = (window.performance && typeof window.performance.now === 'function')
+                    ? window.performance.now()
+                    : Date.now();
+                const recoveryMs = Math.max(0, endedAt - recoveryStartedAt);
+                performanceEntry.recoveries += 1;
+                performanceEntry.totalRecoveryMs += recoveryMs;
+                performanceEntry.maxRecoveryMs = Math.max(performanceEntry.maxRecoveryMs, recoveryMs);
+
+                if (resumeTime > 0) {
+                    try {
+                        player.currentTime = Math.max(0, resumeTime - 1);
+                    } catch (e) {
+                        // Ignore resume seek errors.
+                    }
                 }
 
-                const sourceType = result.mime_type || 'video/mp4';
-                player.source = {
-                    type: 'video',
-                    sources: [
-                        {
-                            src: result.path,
-                            type: sourceType,
-                        }
-                    ]
-                };
+                if (shouldResumePlayback) {
+                    player.play().catch(function () {
+                        // Browser autoplay policy may block this; user can click play.
+                    });
+                }
 
-                player.once('canplay', function () {
-                    const endedAt = (window.performance && typeof window.performance.now === 'function')
-                        ? window.performance.now()
-                        : Date.now();
-                    const recoveryMs = Math.max(0, endedAt - recoveryStartedAt);
-                    performanceEntry.recoveries += 1;
-                    performanceEntry.totalRecoveryMs += recoveryMs;
-                    performanceEntry.maxRecoveryMs = Math.max(performanceEntry.maxRecoveryMs, recoveryMs);
+                markVideoPerformanceDirty(fileId, storage);
+                fileVideoRefreshInProgress = false;
+            });
 
-                    if (resumeTime > 0) {
-                        try {
-                            player.currentTime = Math.max(0, resumeTime - 1);
-                        } catch (e) {
-                            // Ignore resume seek errors.
-                        }
-                    }
-
-                    if (shouldResumePlayback) {
-                        player.play().catch(function () {
-                            // Browser autoplay policy may block this; user can click play.
-                        });
-                    }
-
-                    markVideoPerformanceDirty(fileId, storage);
-                });
-            }).always(function () {
+            player.once('error', function () {
+                markVideoPerformanceDirty(fileId, storage);
                 fileVideoRefreshInProgress = false;
             });
         };
