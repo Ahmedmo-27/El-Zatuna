@@ -13,10 +13,14 @@
         let elId = $this.attr('data-id');
         const height = 800;
 
-        const {html, options} = makeVideoPlayerHtml(path, source, height, elId);
+        const {html, options, videoSource} = makeVideoPlayerHtml(path, source, height, elId);
 
         $parent.html(html)
 
-        new Plyr(`#${elId}`, options);
+        const player = new Plyr(`#${elId}`, options);
+
+        if (videoSource) {
+            applyPlyrVideoSource(player, videoSource);
+        }
     })
 })(jQuery)

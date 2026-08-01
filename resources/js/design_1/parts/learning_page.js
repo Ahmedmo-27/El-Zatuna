@@ -214,7 +214,15 @@
                         }
                     });
                 }
+
+                const playerCard = $playerElement.closest('.learning-page__file-player-card')[0];
+
+                if (playerCard && typeof window.VideoPlayerProtection !== 'undefined') {
+                    window.VideoPlayerProtection.protectContainer(playerCard, player);
+                }
             }
+        } else if (typeof window.VideoPlayerProtection !== 'undefined') {
+            window.VideoPlayerProtection.refresh();
         }
     }
 
@@ -283,7 +291,16 @@
         const fileId = $this.attr('data-id');
 
         handleVideoByFileId(fileId, $el, function () {
+            if (typeof window.VideoPlayerProtection !== 'undefined') {
+                const playerCard = $el.closest('.learning-page__file-player-card')[0];
 
+                if (playerCard) {
+                    window.VideoPlayerProtection.protectContainer(
+                        playerCard,
+                        window.activeFileVideoPlayer
+                    );
+                }
+            }
         });
     })
 

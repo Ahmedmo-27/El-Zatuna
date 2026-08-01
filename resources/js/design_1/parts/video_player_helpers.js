@@ -54,6 +54,7 @@
         };
 
         let html = '';
+        let videoSource = null;
         let options = {
             autoplay: false,
             preload: 'auto',
@@ -108,9 +109,8 @@
             if (isDirectVideoSource(path, mimeType)) {
                 const sourceType = mimeType || 'video/mp4';
 
-                html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${resolvedHeight}" data-poster="${thumbnail ?? ''}">
-                    <source src="${path}" type="${sourceType}"/>
-                </video>`;
+                html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${resolvedHeight}" data-poster="${thumbnail ?? ''}"></video>`;
+                videoSource = {src: path, type: sourceType};
             } else {
                 html = '<iframe src="' + path + '" class="img-cover bg-gray-200" frameborder="0" allowfullscreen="true" ></iframe>';
                 usePlyr = false;
@@ -118,15 +118,31 @@
         } else {
             const sourceType = mimeType || 'video/mp4';
 
-            html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${resolvedHeight}" data-poster="${thumbnail ?? ''}">
-                <source src="${path}" type="${sourceType}"/>
-            </video>`;
+            html = `<video id="${tagId}" class="plyr-io-video" controls preload="auto" width="100%" height="${resolvedHeight}" data-poster="${thumbnail ?? ''}"></video>`;
+            videoSource = {src: path, type: sourceType};
         }
 
         return {
             html: html,
             options: options,
             usePlyr,
+            videoSource,
+        };
+    };
+
+    window.applyPlyrVideoSource = function (player, videoSource) {
+        if (!player || !videoSource || !videoSource.src) {
+            return;
+        }
+
+        player.source = {
+            type: 'video',
+            sources: [
+                {
+                    src: videoSource.src,
+                    type: videoSource.type || 'video/mp4',
+                }
+            ]
         };
     };
 
@@ -141,7 +157,7 @@
 
                 const videoTagId = 'videoPlayer' + fileId;
 
-                const {html, options, usePlyr} = makeVideoPlayerHtml(result.path, storage, '100%', videoTagId, undefined, result.mime_type);
+                const {html, options, usePlyr, videoSource} = makeVideoPlayerHtml(result.path, storage, '100%', videoTagId, undefined, result.mime_type);
 
                 if ($contentEl) {
                     $contentEl.html(html);
@@ -149,10 +165,23 @@
 
                 if (usePlyr) {
                     fileVideoPlayer = new Plyr(`#${videoTagId}`, options);
+                    window.activeFileVideoPlayer = fileVideoPlayer;
+
+                    if (videoSource) {
+                        applyPlyrVideoSource(fileVideoPlayer, videoSource);
+                    }
 
                     // Auto-recover R2 stream when signed URL expires or stream stalls.
                     if (storage === 'r2') {
                         attachR2StreamRecovery(fileId, fileVideoPlayer, storage);
+                    }
+
+                    if (typeof window.VideoPlayerProtection !== 'undefined' && $contentEl) {
+                        const playerCard = $contentEl.closest('.learning-page__file-player-card')[0];
+
+                        if (playerCard) {
+                            window.VideoPlayerProtection.protectContainer(playerCard, fileVideoPlayer);
+                        }
                     }
                 }
 

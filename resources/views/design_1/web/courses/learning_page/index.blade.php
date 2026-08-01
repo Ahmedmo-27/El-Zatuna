@@ -139,6 +139,14 @@
         var submitGradeLang = '{{ trans('update.submit_grade') }}';
         var submitQuestionLang = '{{ trans('update.submit_question') }}';
         var courseCompletedLang = '{{ trans('update.course_completed') }}';
+
+        var videoProtectionConfig = {
+            userName: @json($user->full_name ?? ''),
+            userEmail: @json($user->email ?? ''),
+            userId: @json($user->id ?? ''),
+            watermarkEnabled: true,
+            blackScreenDuration: 8000,
+        };
     </script>
 
     <script type="text/javascript" src="/assets/default/vendors/simplebar/simplebar.min.js"></script>
@@ -159,6 +167,16 @@
 
                 return originalMakeVideoPlayerHtml(path, storage, forcedHeight, tagId, thumbnail, mimeType);
             };
+        })();
+    </script>
+    <script src="{{ getDesign1ScriptPath("video_player_protection") }}"></script>
+    <script>
+        (function () {
+            if (typeof window.VideoPlayerProtection === 'undefined') {
+                return;
+            }
+
+            window.VideoPlayerProtection.init(window.videoProtectionConfig || {});
         })();
     </script>
     <script src="{{ getDesign1ScriptPath("learning_page_noticeboards") }}"></script>

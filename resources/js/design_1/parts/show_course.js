@@ -98,7 +98,7 @@
         const height = $(window).width() > 991 ? 480 : 264;
 
         const videoTagId = 'demoVideoPlayer';
-        const {html, options} = makeVideoPlayerHtml(path, source, height, videoTagId, thumbnail);
+        const {html, options, videoSource} = makeVideoPlayerHtml(path, source, height, videoTagId, thumbnail);
 
         /*const footer = `<div class="d-flex align-items-center justify-content-end">
                 <button type="button" class="close-swl btn btn-transparent mr-16">${closeLang}</button>
@@ -114,6 +114,10 @@
             width: '48rem',
             didOpen: function () {
                 courseDemoVideoPlayer = new Plyr(`#${videoTagId}`, options);
+
+                if (videoSource) {
+                    applyPlyrVideoSource(courseDemoVideoPlayer, videoSource);
+                }
             },
         })
     });
