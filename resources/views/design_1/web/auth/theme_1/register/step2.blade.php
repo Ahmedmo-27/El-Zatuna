@@ -232,6 +232,21 @@
                     }
                 });
             });
+
+            // Polling for cross-device verification
+            var checkVerificationInterval = setInterval(function() {
+                $.ajax({
+                    url: '/register/check-verification',
+                    method: 'GET',
+                    data: { email: '{{ $email }}' },
+                    success: function(res) {
+                        if (res.verified && res.redirect) {
+                            clearInterval(checkVerificationInterval);
+                            window.location.href = res.redirect;
+                        }
+                    }
+                });
+            }, 3000);
         });
     </script>
 @endpush

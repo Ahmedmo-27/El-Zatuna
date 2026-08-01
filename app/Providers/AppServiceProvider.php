@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Mail\Transport\BrevoTransport;
+use App\Services\AppLogger;
 use Illuminate\Mail\MailManager;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
@@ -17,7 +18,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(AppLogger::class, function () {
+            return new AppLogger(config('logging.default', 'stack'));
+        });
     }
 
     /**

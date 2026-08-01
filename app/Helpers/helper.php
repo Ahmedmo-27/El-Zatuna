@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cookie;
 require 'assets_helpers.php';
 require 'settings.php';
 require 'theme_helpers.php';
+require 'logger.php';
 
 function getTemplate()
 {

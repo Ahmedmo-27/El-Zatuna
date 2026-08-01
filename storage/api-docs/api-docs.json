@@ -12,6 +12,136 @@
         }
     ],
     "paths": {
+        "/admin/live-sessions": {
+            "get": {
+                "tags": [
+                    "Admin Live Sessions"
+                ],
+                "summary": "List admin live sessions",
+                "description": "List all live sessions for admin overview.",
+                "operationId": "d4e69ad4db7dc21cac388009bc643721",
+                "responses": {
+                    "200": {
+                        "description": "Admin live sessions list"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/live-sessions/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Live Sessions"
+                ],
+                "summary": "Show admin live session",
+                "description": "Show details and analytics for a session.",
+                "operationId": "c1820572c030d3fd9e91f8129b7a665b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Admin live session details"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/live-sessions/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "Admin Live Sessions"
+                ],
+                "summary": "Cancel live session",
+                "description": "Cancel a session (admin).",
+                "operationId": "0d4ba5c294f97481a45d6725015f3a66",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect after cancel"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/live-sessions/{id}/override-capacity": {
+            "post": {
+                "tags": [
+                    "Admin Live Sessions"
+                ],
+                "summary": "Override live session capacity",
+                "description": "Override capacity (admin).",
+                "operationId": "8792b2be1dca7a8c7211f7dffae3d8e5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect after override"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/live-sessions/logs": {
+            "get": {
+                "tags": [
+                    "Admin Live Session Logs"
+                ],
+                "summary": "List live session logs",
+                "description": "List live-session activity logs.",
+                "operationId": "572175ae42ec328a95ccb8161052d76c",
+                "responses": {
+                    "200": {
+                        "description": "Activity logs list"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/auth/forget-password": {
             "post": {
                 "tags": [
@@ -783,7 +913,7 @@
                     "Cart"
                 ],
                 "summary": "Add to cart",
-                "description": "Add item to cart (course, bundle, product, or course section).",
+                "description": "Add item to cart (course, bundle, product, course section, subscription, or live session).",
                 "operationId": "19f73bda72b816c1b0ea5f67c7f0f8b8",
                 "requestBody": {
                     "required": true,
@@ -796,17 +926,19 @@
                                 ],
                                 "properties": {
                                     "item_id": {
-                                        "description": "Course/bundle/product/section (chapter) ID",
+                                        "description": "Course/bundle/product/section (chapter)/live session ID",
                                         "type": "integer"
                                     },
                                     "item_name": {
-                                        "description": "webinar=full course, chapter=paid course section",
+                                        "description": "webinar=full course, chapter=paid course section, subscribe=subscription plan, live_session=booked session",
                                         "type": "string",
                                         "enum": [
                                             "webinar",
                                             "bundle",
                                             "product",
-                                            "chapter"
+                                            "chapter",
+                                            "subscribe",
+                                            "live_session"
                                         ]
                                     },
                                     "ticket_id": {
@@ -923,7 +1055,7 @@
                 "operationId": "20db40216878195599496ad328530684",
                 "responses": {
                     "200": {
-                        "description": "Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, or meeting."
+                        "description": "Cart items and amounts. Each item has type: webinar (full course), chapter (course section), bundle, product, file, meeting, or live session."
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -1526,6 +1658,126 @@
                 ]
             }
         },
+        "/v1/panel/meetings": {
+            "get": {
+                "tags": [
+                    "Reserved Meetings"
+                ],
+                "summary": "List reservations and requests",
+                "description": "List meeting reservations and instructor requests.",
+                "operationId": "361d716c83e316a3a5698a97a53162c3",
+                "responses": {
+                    "200": {
+                        "description": "Reservations and requests"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/meetings/{id}": {
+            "get": {
+                "tags": [
+                    "Reserved Meetings"
+                ],
+                "summary": "Show reserved meeting",
+                "description": "Show one reserved meeting.",
+                "operationId": "d483c266d31f1445c16c8727b00a00fa",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reserved meeting"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/meetings/reservations": {
+            "get": {
+                "tags": [
+                    "Reserved Meetings"
+                ],
+                "summary": "List my reservations",
+                "description": "List student reservations.",
+                "operationId": "b679a4d101e2170b2330cdaa16957ec9",
+                "responses": {
+                    "200": {
+                        "description": "Reservations list"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/meetings/requests": {
+            "get": {
+                "tags": [
+                    "Reserved Meetings"
+                ],
+                "summary": "List my meeting requests",
+                "description": "List instructor requests.",
+                "operationId": "fd4cd8bba2b0182d107d5f7afef1ece7",
+                "responses": {
+                    "200": {
+                        "description": "Requests list"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/panel/meetings/{id}/finish": {
+            "post": {
+                "tags": [
+                    "Reserved Meetings"
+                ],
+                "summary": "Finish reserved meeting",
+                "description": "Finish a reserved meeting.",
+                "operationId": "d7af3578ca1a1dbc14f06b13a393a78f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meeting finished"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/panel/sessions/{session}": {
             "get": {
                 "tags": [
@@ -2038,6 +2290,65 @@
                 }
             }
         },
+        "/v1/meetings/reserve": {
+            "post": {
+                "tags": [
+                    "Meetings"
+                ],
+                "summary": "Reserve a meeting",
+                "description": "Reserve a meeting time.",
+                "operationId": "1bc2ad47fa4fc4a592ea5abf7e27561c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "time_id",
+                                    "date",
+                                    "meeting_type"
+                                ],
+                                "properties": {
+                                    "time_id": {
+                                        "type": "integer"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "meeting_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "in_person",
+                                            "online"
+                                        ]
+                                    },
+                                    "student_count": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meeting reserved or rejected"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1/courses/reports/reasons": {
             "get": {
                 "tags": [
@@ -2343,6 +2654,341 @@
                 ]
             }
         },
+        "/live-sessions": {
+            "get": {
+                "tags": [
+                    "Live Sessions"
+                ],
+                "summary": "List live sessions",
+                "description": "Browse live sessions.",
+                "operationId": "a1e1e9d1df2d5069de98f29e07a91328",
+                "parameters": [
+                    {
+                        "name": "university_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "faculty_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "upcoming",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Live sessions index"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/live-sessions/me": {
+            "get": {
+                "tags": [
+                    "Live Sessions"
+                ],
+                "summary": "My booked live sessions",
+                "description": "Show my booked sessions.",
+                "operationId": "a224c5715c3f6615975505c54b6fccf9",
+                "responses": {
+                    "200": {
+                        "description": "My sessions"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/live-sessions/{id}": {
+            "get": {
+                "tags": [
+                    "Live Sessions"
+                ],
+                "summary": "Show live session",
+                "description": "Show one live session.",
+                "operationId": "fc6820502a9235228fd875d4e1bc7276",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Live session details"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/live-sessions/{id}/join": {
+            "get": {
+                "tags": [
+                    "Live Sessions"
+                ],
+                "summary": "Join live session",
+                "description": "Join a live session.",
+                "operationId": "0f7621ed39a0de56149b2df511d25469",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to provider join URL"
+                    },
+                    "200": {
+                        "description": "Join fallback page"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teacher/live-sessions": {
+            "get": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "List teacher live sessions",
+                "description": "List sessions created by the authenticated teacher.",
+                "operationId": "0a483dacd5e2785c31e8b57e28bb1df3",
+                "responses": {
+                    "200": {
+                        "description": "Teacher live sessions list"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Store live session",
+                "description": "Store a new live session (draft by default).",
+                "operationId": "bd5f75b890c7dbf9196fdb089ce3b27a",
+                "responses": {
+                    "302": {
+                        "description": "Redirect after create"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teacher/live-sessions/create": {
+            "get": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Create live session form",
+                "description": "Show the create form.",
+                "operationId": "35608bc63e56fc8a8cbb950d8db8193b",
+                "responses": {
+                    "200": {
+                        "description": "Create form"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teacher/live-sessions/{id}": {
+            "get": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Show teacher live session",
+                "description": "Show session details for the teacher.",
+                "operationId": "85b002f03aaee0bfc4182abc3843d712",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Teacher live session details"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Update live session",
+                "description": "Update a session.",
+                "operationId": "3ea37482aa49080bb2638b307610f1e9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect after update"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teacher/live-sessions/{id}/edit": {
+            "get": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Edit live session form",
+                "description": "Show edit form – only allowed for draft or when no bookings exist.",
+                "operationId": "0ef3711a143b5675f849c213157b41cb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Edit form"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teacher/live-sessions/{id}/publish": {
+            "post": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Publish live session",
+                "description": "Publish a draft session.",
+                "operationId": "5eb6b55d3ec7a83cfb5618945da8dc30",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect after publish"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teacher/live-sessions/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "Teacher Live Sessions"
+                ],
+                "summary": "Cancel live session",
+                "description": "Cancel a session (teacher).",
+                "operationId": "92336260a0041232577b10d7b78ee97e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect after cancel"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1": {
             "get": {
                 "tags": [
@@ -2399,6 +3045,30 @@
         }
     },
     "tags": [
+        {
+            "name": "Admin Live Sessions",
+            "description": "Admin live-session oversight pages"
+        },
+        {
+            "name": "Admin Live Session Logs",
+            "description": "Admin live-session activity logs"
+        },
+        {
+            "name": "Reserved Meetings",
+            "description": "Booked and hosted meeting APIs"
+        },
+        {
+            "name": "Meetings",
+            "description": "Meeting reservation APIs"
+        },
+        {
+            "name": "Live Sessions",
+            "description": "Public live session pages"
+        },
+        {
+            "name": "Teacher Live Sessions",
+            "description": "Teacher live-session management pages"
+        },
         {
             "name": "Auth",
             "description": "Auth"

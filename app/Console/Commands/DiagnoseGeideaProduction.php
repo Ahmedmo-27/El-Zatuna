@@ -56,7 +56,7 @@ class DiagnoseGeideaProduction extends Command
         $this->info('   APP_DEBUG: ' . (env('APP_DEBUG') ? 'true' : 'false'));
         $this->newLine();
 
-        // 4. Check Geidea configuration
+        // 4. Check  configuration
         $this->info('4. Geidea Configuration');
         $this->info('   Currency (config): ' . (config('geidea.currency') ?: 'NOT SET'));
         $this->info('   Currency (helper): ' . (currency() ?: 'NOT SET'));
@@ -64,8 +64,8 @@ class DiagnoseGeideaProduction extends Command
         $this->info('   Return URL: ' . config('geidea.return_url'));
         $this->newLine();
 
-        // 5. Test API connectivity
-        $this->info('5. API Connectivity Test');
+        // 5. Test API connectivity with a read-only request
+        $this->info('5. API Connectivity Test (read-only)');
         $apiUrls = [
             'EGY' => 'https://api.merchant.geidea.net',
             'KSA' => 'https://api.ksamerchant.geidea.net',
@@ -75,22 +75,36 @@ class DiagnoseGeideaProduction extends Command
         $region = $credentials['region'] ?? 'EGY';
         $apiUrl = $apiUrls[$region] ?? $apiUrls['EGY'];
         
-        $this->info("   Testing: {$apiUrl}");
+        $ordersEndpoint = $apiUrl . '/pgw/api/v1/direct/order';
+        $this->info("   Testing: {$ordersEndpoint}");
         
         try {
-            // Test WITH SSL verification (production mode)
-            $response = Http::timeout(10)->get($apiUrl);
-            $this->info("   ✓ With SSL verification: {$response->status()}");
-        } catch (\Exception $e) {
-            $this->error("   ❌ With SSL verification: {$e->getMessage()}");
-            
-            // Test WITHOUT SSL verification
-            try {
-                $response = Http::withOptions(['verify' => false])->timeout(10)->get($apiUrl);
-                $this->warn("   ⚠ Without SSL verification: {$response->status()} (SSL cert issue!)");
-            } catch (\Exception $e2) {
-                $this->error("   ❌ Without SSL verification: {$e2->getMessage()}");
+            $response = Http::timeout(10)
+                ->withHeaders([
+                    'Authorization' => 'Basic ' . base64_encode("{$credentials['public_key']}:{$credentials['api_password']}"),
+                    'Accept' => 'application/json',
+                ])
+                ->get($ordersEndpoint, [
+                    'take' => 1,
+                    'skip' => 0,
+                ]);
+
+            $this->info("   ✓ Read-only request status: {$response->status()}");
+
+            if ($response->successful()) {
+                $body = $response->json();
+                $resultCount = is_array($body) ? count($body) : (isset($body['items']) && is_array($body['items']) ? count($body['items']) : null);
+
+                if ($resultCount !== null) {
+                    $this->info("   ✓ Response items: {$resultCount}");
+                } else {
+                    $this->info('   ✓ Response received and decoded successfully');
+                }
+            } else {
+                $this->warn('   ⚠ Response body: ' . $response->body());
             }
+        } catch (\Exception $e) {
+            $this->error("   ❌ Read-only request failed: {$e->getMessage()}");
         }
         $this->newLine();
 
