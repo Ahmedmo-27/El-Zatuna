@@ -141,11 +141,8 @@
         var courseCompletedLang = '{{ trans('update.course_completed') }}';
 
         var videoProtectionConfig = {
-            userName: @json($user->full_name ?? ''),
-            userEmail: @json($user->email ?? ''),
-            userId: @json($user->id ?? ''),
-            watermarkEnabled: true,
-            blackScreenDuration: 8000,
+            blackScreenDuration: 12000,
+            captureBlackScreenDuration: 20000,
         };
     </script>
 

@@ -135,6 +135,14 @@
             return;
         }
 
+        const media = player.media || (player.elements && player.elements[0]);
+
+        if (media && media.tagName === 'VIDEO') {
+            media.src = videoSource.src;
+            media.load();
+            return;
+        }
+
         player.source = {
             type: 'video',
             sources: [
@@ -164,12 +172,16 @@
                 }
 
                 if (usePlyr) {
+                    if (videoSource) {
+                        const videoEl = document.getElementById(videoTagId);
+
+                        if (videoEl) {
+                            videoEl.src = videoSource.src;
+                        }
+                    }
+
                     fileVideoPlayer = new Plyr(`#${videoTagId}`, options);
                     window.activeFileVideoPlayer = fileVideoPlayer;
-
-                    if (videoSource) {
-                        applyPlyrVideoSource(fileVideoPlayer, videoSource);
-                    }
 
                     // Auto-recover R2 stream when signed URL expires or stream stalls.
                     if (storage === 'r2') {

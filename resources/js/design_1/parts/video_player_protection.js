@@ -2,57 +2,15 @@
     "use strict";
 
     const DEFAULT_CONFIG = {
-        userName: '',
-        userEmail: '',
-        userId: '',
-        blackScreenDuration: 8000,
-        watermarkEnabled: true,
+        blackScreenDuration: 12000,
+        captureBlackScreenDuration: 20000,
     };
 
     let config = {...DEFAULT_CONFIG};
     let globalListenersAttached = false;
+    let captureLockUntil = 0;
     const protectedContainers = new WeakSet();
     const containerPlayers = new WeakMap();
-
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
-    function getWatermarkLabel() {
-        const parts = [];
-
-        if (config.userName) {
-            parts.push(config.userName);
-        }
-
-        if (config.userEmail) {
-            parts.push(config.userEmail);
-        }
-
-        if (config.userId) {
-            parts.push('ID: ' + config.userId);
-        }
-
-        return parts.join(' • ') || 'Protected content';
-    }
-
-    function buildWatermarkHtml() {
-        const label = escapeHtml(getWatermarkLabel());
-        const copies = [];
-
-        for (let i = 0; i < 6; i++) {
-            copies.push(
-                `<span class="video-player-watermark__text" style="--watermark-index:${i}">${label}</span>`
-            );
-        }
-
-        return `<div class="video-player-watermark-layer" aria-hidden="true">${copies.join('')}</div>`;
-    }
 
     function buildShieldHtml() {
         return `
@@ -77,10 +35,6 @@
             return mapped;
         }
 
-        if (typeof window.fileVideoPlayer !== 'undefined' && window.fileVideoPlayer) {
-            return window.fileVideoPlayer;
-        }
-
         if (typeof window.activeFileVideoPlayer !== 'undefined' && window.activeFileVideoPlayer) {
             return window.activeFileVideoPlayer;
         }
@@ -102,6 +56,25 @@
         }
     }
 
+    function pauseAllProtectedPlayback() {
+        $('.learning-page__file-player-card.video-player-protected').each(function () {
+            pauseContainerPlayback(this);
+        });
+    }
+
+    function isTypingTarget(target) {
+        if (!target) {
+            return false;
+        }
+
+        const tag = (target.tagName || '').toLowerCase();
+
+        return tag === 'input'
+            || tag === 'textarea'
+            || tag === 'select'
+            || target.isContentEditable;
+    }
+
     function isAnyProtectedVideoPlaying() {
         return $('.learning-page__file-player-card.video-player-protected').toArray().some(function (container) {
             const video = findVideoElement(container);
@@ -110,11 +83,82 @@
         });
     }
 
-    function activateBlackShield(container, reason) {
+    function isCaptureShortcut(event) {
+        const key = String(event.key || '');
+        const keyCode = event.keyCode || event.which;
+        const winKey = event.metaKey || event.getModifierState('Meta') || event.getModifierState('OS');
+        const shiftKey = event.shiftKey || event.getModifierState('Shift');
+        const altKey = event.altKey || event.getModifierState('Alt');
+        const ctrlKey = event.ctrlKey || event.getModifierState('Control');
+
+        if (key === 'PrintScreen' || keyCode === 44) {
+            return true;
+        }
+
+        if (winKey && shiftKey && /^s$/i.test(key)) {
+            return true;
+        }
+
+        if (winKey && shiftKey && /^g$/i.test(key)) {
+            return true;
+        }
+
+        if (winKey && altKey && /^r$/i.test(key)) {
+            return true;
+        }
+
+        if (winKey && /^g$/i.test(key)) {
+            return true;
+        }
+
+        if (altKey && keyCode === 44) {
+            return true;
+        }
+
+        if (event.metaKey && event.shiftKey && ['3', '4', '5'].includes(key)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function isSnippingToolFallback(event) {
+        if (isTypingTarget(event.target)) {
+            return false;
+        }
+
+        if (!isAnyProtectedVideoPlaying()) {
+            return false;
+        }
+
+        const key = String(event.key || '');
+
+        if (/^s$/i.test(key) && event.shiftKey && !event.ctrlKey && !event.altKey) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function activateBlackShield(container, reason, options) {
+        const opts = options || {};
+        const duration = opts.duration || (
+            reason && String(reason).indexOf('capture') === 0
+                ? config.captureBlackScreenDuration
+                : config.blackScreenDuration
+        );
+
+        if (opts.lockCapture) {
+            captureLockUntil = Date.now() + duration;
+        }
+
         if (!container) {
+            pauseAllProtectedPlayback();
+
             $('.learning-page__file-player-card.video-player-protected').each(function () {
-                activateBlackShield(this, reason);
+                activateBlackShield(this, reason, {...opts, duration: duration});
             });
+
             return;
         }
 
@@ -133,13 +177,22 @@
         clearTimeout($container.data('blackShieldTimer'));
 
         const timer = setTimeout(function () {
+            if (Date.now() < captureLockUntil) {
+                activateBlackShield(container, reason, {...opts, duration: captureLockUntil - Date.now()});
+                return;
+            }
+
             deactivateBlackShield(container);
-        }, config.blackScreenDuration);
+        }, duration);
 
         $container.data('blackShieldTimer', timer);
     }
 
     function deactivateBlackShield(container) {
+        if (Date.now() < captureLockUntil) {
+            return;
+        }
+
         const $container = $(container);
         const timer = $container.data('blackShieldTimer');
 
@@ -159,6 +212,12 @@
 
         $container.off('click.videoProtectionShield');
         $container.on('click.videoProtectionShield', '.video-player-black-shield--active', function (e) {
+            if (Date.now() < captureLockUntil) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
             e.preventDefault();
             e.stopPropagation();
             deactivateBlackShield(container);
@@ -166,11 +225,15 @@
     }
 
     function protectContainer(container, plyrPlayer) {
-        if (!container || protectedContainers.has(container)) {
-            if (container && plyrPlayer) {
-                containerPlayers.set(container, plyrPlayer);
-            }
+        if (!container) {
+            return;
+        }
 
+        if (plyrPlayer) {
+            containerPlayers.set(container, plyrPlayer);
+        }
+
+        if (protectedContainers.has(container)) {
             return;
         }
 
@@ -178,16 +241,8 @@
 
         $container.addClass('video-player-protected');
 
-        if (config.watermarkEnabled && !$container.find('.video-player-watermark-layer').length) {
-            $container.append(buildWatermarkHtml());
-        }
-
         if (!$container.find('.video-player-black-shield').length) {
             $container.append(buildShieldHtml());
-        }
-
-        if (plyrPlayer) {
-            containerPlayers.set(container, plyrPlayer);
         }
 
         attachContainerListeners(container);
@@ -197,6 +252,13 @@
     function refreshProtection() {
         $('.learning-page__file-player-card').each(function () {
             protectContainer(this);
+        });
+    }
+
+    function handleCaptureAttempt(reason) {
+        activateBlackShield(null, reason || 'capture-shortcut', {
+            lockCapture: true,
+            duration: config.captureBlackScreenDuration,
         });
     }
 
@@ -211,7 +273,7 @@
             const originalVideoCaptureStream = HTMLVideoElement.prototype.captureStream;
 
             HTMLVideoElement.prototype.captureStream = function () {
-                activateBlackShield(null, 'capture-stream');
+                handleCaptureAttempt('capture-stream');
                 return originalVideoCaptureStream.apply(this, arguments);
             };
         }
@@ -220,7 +282,7 @@
             const originalCanvasCaptureStream = HTMLCanvasElement.prototype.captureStream;
 
             HTMLCanvasElement.prototype.captureStream = function () {
-                activateBlackShield(null, 'canvas-capture');
+                handleCaptureAttempt('canvas-capture');
                 return originalCanvasCaptureStream.apply(this, arguments);
             };
         }
@@ -229,7 +291,7 @@
             const originalGetDisplayMedia = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
 
             navigator.mediaDevices.getDisplayMedia = function () {
-                activateBlackShield(null, 'display-media');
+                handleCaptureAttempt('display-media');
                 return originalGetDisplayMedia.apply(navigator.mediaDevices, arguments);
             };
         }
@@ -244,52 +306,59 @@
 
         hookCaptureApis();
 
-        $(document).on('keyup.videoProtection', function (e) {
-            if (e.key === 'PrintScreen' || e.keyCode === 44) {
-                activateBlackShield(null, 'print-screen');
+        document.addEventListener('keydown', function (e) {
+            if (isCaptureShortcut(e) || isSnippingToolFallback(e)) {
+                handleCaptureAttempt('capture-shortcut');
 
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText('').catch(function () {
                     });
                 }
             }
-        });
+        }, true);
 
-        $(document).on('keydown.videoProtection', function (e) {
-            if (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(String(e.key))) {
-                activateBlackShield(null, 'mac-screenshot');
+        document.addEventListener('keyup', function (e) {
+            if (isCaptureShortcut(e)) {
+                handleCaptureAttempt('capture-shortcut');
+            }
+        }, true);
+
+        window.addEventListener('blur', function () {
+            if (Date.now() < captureLockUntil) {
+                handleCaptureAttempt('capture-blur');
+                return;
             }
 
-            if (e.key === 'PrintScreen' || e.keyCode === 44) {
-                activateBlackShield(null, 'print-screen');
-            }
-        });
-
-        $(document).on('copy.videoProtection', function () {
             if (isAnyProtectedVideoPlaying()) {
-                activateBlackShield(null, 'copy');
+                handleCaptureAttempt('capture-blur');
             }
         });
 
         document.addEventListener('visibilitychange', function () {
-            if (document.hidden && isAnyProtectedVideoPlaying()) {
-                activateBlackShield(null, 'visibility-hidden');
+            if (!document.hidden) {
+                return;
+            }
+
+            if (Date.now() < captureLockUntil || isAnyProtectedVideoPlaying()) {
+                handleCaptureAttempt('capture-visibility');
             }
         });
 
-        window.addEventListener('blur', function () {
-            if (isAnyProtectedVideoPlaying()) {
-                activateBlackShield(null, 'window-blur');
+        setInterval(function () {
+            if (Date.now() >= captureLockUntil) {
+                return;
             }
-        });
 
-        if (window.matchMedia) {
-            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            $('.learning-page__file-player-card.video-player-protected').each(function () {
+                const $container = $(this);
 
-            if (motionQuery.matches) {
-                $('body').addClass('video-player-watermark-static');
-            }
-        }
+                if (!$container.hasClass('video-player-protected--blocked')) {
+                    activateBlackShield(this, 'capture-guard', {
+                        duration: captureLockUntil - Date.now(),
+                    });
+                }
+            });
+        }, 250);
     }
 
     window.VideoPlayerProtection = {
@@ -304,7 +373,7 @@
         refresh: refreshProtection,
 
         triggerBlackScreen: function (reason) {
-            activateBlackShield(null, reason || 'manual');
+            handleCaptureAttempt(reason || 'manual');
         },
     };
 

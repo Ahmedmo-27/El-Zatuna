@@ -255,32 +255,6 @@ body {
         }
 
         &.video-player-protected {
-            .video-player-watermark-layer {
-                position: absolute;
-                inset: 0;
-                z-index: 11;
-                overflow: hidden;
-                pointer-events: none;
-            }
-
-            .video-player-watermark__text {
-                position: absolute;
-                color: rgba(255, 255, 255, 0.38);
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: 0.02em;
-                line-height: 1.2;
-                white-space: nowrap;
-                user-select: none;
-                pointer-events: none;
-                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
-                transform: rotate(-18deg);
-                animation: video-player-watermark-drift 22s linear infinite;
-                animation-delay: calc(var(--watermark-index, 0) * -3.5s);
-                top: calc(8% + (var(--watermark-index, 0) * 14%));
-                left: calc(-20% + (var(--watermark-index, 0) * 8%));
-            }
-
             .video-player-black-shield {
                 position: absolute;
                 inset: 0;
@@ -292,7 +266,7 @@ body {
                 color: #fff;
                 opacity: 0;
                 visibility: hidden;
-                transition: opacity 0.15s ease, visibility 0.15s ease;
+                transition: opacity 0.05s ease, visibility 0.05s ease;
                 pointer-events: none;
             }
 
@@ -300,7 +274,7 @@ body {
                 opacity: 1;
                 visibility: visible;
                 pointer-events: auto;
-                cursor: pointer;
+                cursor: not-allowed;
             }
 
             .video-player-black-shield__message {
@@ -332,31 +306,10 @@ body {
                 .plyr,
                 .plyr__video-wrapper,
                 video,
-                iframe,
-                .video-player-watermark-layer {
-                    visibility: hidden;
+                iframe {
+                    opacity: 0 !important;
                 }
             }
-        }
-    }
-
-    @keyframes video-player-watermark-drift {
-        0% {
-            transform: translate(0, 0) rotate(-18deg);
-        }
-
-        50% {
-            transform: translate(42%, 18%) rotate(-18deg);
-        }
-
-        100% {
-            transform: translate(84%, 0) rotate(-18deg);
-        }
-    }
-
-    body.video-player-watermark-static {
-        .video-player-watermark__text {
-            animation: none;
         }
     }
 
